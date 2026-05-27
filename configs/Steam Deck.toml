@@ -49,10 +49,9 @@ LSTICK_DEADZONE    = "10"
 CURSOR_SPEED       = "5"
 CURSOR_ACCEL       = "0.3"
 
-# Rechter Stick → Scroll
-RSTICK = "scroll"
-RSTICK_SENSITIVITY = "6"
-RSTICK_DEADZONE    = "10"
+# Rechter Stick → deaktiviert (Steam Input übernimmt Cursor-Bewegung)
+RSTICK = "disabled"
+
 
 16_BIT_AXIS = "true"   # Steam Deck nutzt 16-bit Achswerte wie Xbox
 GRAB_DEVICE = "false"  # PHASE 1: false = safe, kein Konflikt mit Steam Input
