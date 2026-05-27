@@ -33,9 +33,17 @@ BTN_START      = ["KEY_LEFTMETA"]
 BTN_TL = ["KEY_LEFTCTRL"]   # L1
 BTN_TR = ["KEY_LEFTALT"]    # R1
 
-# --- Sprachsteuerung: L1 + R3 → OpenWhispr Shortcut ---
-# WICHTIG: Dieser Shortcut muss mit dem in OpenWhispr konfigurierten übereinstimmen
-# BTN_TL-BTN_THUMBR = ["KEY_..."]  # ← TODO: echten Shortcut eintragen
+# --- Back-Paddles ---
+BTN_GRIPL2  = ["KEY_LEFTMETA"]   # L4 (unten links)  → Super/Win
+BTN_GRIPL   = ["KEY_LEFTSHIFT"]  # L5 (oben links)   → Shift
+BTN_GRIPR2  = ["KEY_PAGEDOWN"]   # R4 (unten rechts) → PageDown
+BTN_GRIPR   = ["KEY_PAGEUP"]     # R5 (oben rechts)  → PageUp
+
+# --- Sprachsteuerung: L1 + R4 → OpenWhispr (Ctrl + PageDown) ---
+BTN_TL-BTN_GRIPR2 = ["KEY_LEFTCTRL", "KEY_PAGEDOWN"]
+
+# --- QAM-Button (Drei Punkte) ---
+# BTN_BASE = ["..."]  # ← TODO: Belegung festlegen
 
 [commands]
 # Shell-Commands können hier eingetragen werden, z.B.:
