@@ -1,0 +1,59 @@
+# Deckery — Steam Deck Default Config
+# Phase 1: GRAB_DEVICE = "false" → makima und Steam Input laufen parallel
+# Kein Konflikt, kein Ausfall. Erst testen, dann GRAB_DEVICE = "true" setzen.
+#
+# Button-Referenz Steam Deck:
+#   BTN_SOUTH   = A        BTN_NORTH   = Y
+#   BTN_EAST    = B        BTN_WEST    = X
+#   BTN_TL      = L1       BTN_TR      = R1
+#   ABS_Z       = L2 (Trigger analog)
+#   ABS_RZ      = R2 (Trigger analog)
+#   BTN_THUMBL  = L3       BTN_THUMBR  = R3
+#   BTN_SELECT  = Select   BTN_START   = Start
+#   BTN_MODE    = Steam Button
+
+[remap]
+# --- Maus-Klicks (Trigger als Buttons) ---
+ABS_Z  = ["BTN_LEFT"]   # L2 → Linksklick
+ABS_RZ = ["BTN_RIGHT"]  # R2 → Rechtsklick
+
+# --- Basis-Navigation ---
+BTN_DPAD_UP    = ["KEY_UP"]
+BTN_DPAD_DOWN  = ["KEY_DOWN"]
+BTN_DPAD_LEFT  = ["KEY_LEFT"]
+BTN_DPAD_RIGHT = ["KEY_RIGHT"]
+BTN_SOUTH      = ["KEY_ENTER"]   # A
+BTN_EAST       = ["KEY_ESC"]     # B
+BTN_NORTH      = ["KEY_PAGEUP"]  # Y
+BTN_WEST       = ["KEY_PAGEDOWN"] # X
+BTN_SELECT     = ["KEY_TAB"]
+BTN_START      = ["KEY_LEFTMETA"]
+
+# --- Modifier-Buttons ---
+BTN_TL = ["KEY_LEFTCTRL"]   # L1
+BTN_TR = ["KEY_LEFTALT"]    # R1
+
+# --- Sprachsteuerung: L1 + R3 → OpenWhispr Shortcut ---
+# WICHTIG: Dieser Shortcut muss mit dem in OpenWhispr konfigurierten übereinstimmen
+# BTN_TL-BTN_THUMBR = ["KEY_..."]  # ← TODO: echten Shortcut eintragen
+
+[commands]
+# Shell-Commands können hier eingetragen werden, z.B.:
+# BTN_MODE = ["notify-send 'Deckery' 'Steam Deck Mode aktiv'"]
+
+[settings]
+# Linker Stick → Maus-Cursor (für Phase 1 Test parallel zu Steam Trackpad)
+LSTICK = "cursor"
+LSTICK_SENSITIVITY = "6"    # niedriger = schneller, min 1
+LSTICK_DEADZONE    = "10"
+CURSOR_SPEED       = "5"
+CURSOR_ACCEL       = "0.3"
+
+# Rechter Stick → Scroll
+RSTICK = "scroll"
+RSTICK_SENSITIVITY = "6"
+RSTICK_DEADZONE    = "10"
+
+16_BIT_AXIS = "true"   # Steam Deck nutzt 16-bit Achswerte wie Xbox
+GRAB_DEVICE = "false"  # PHASE 1: false = safe, kein Konflikt mit Steam Input
+                       # PHASE 2: auf "true" setzen + Steam Desktop Config deaktivieren
