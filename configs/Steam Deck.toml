@@ -3,8 +3,8 @@
 # Kein Konflikt, kein Ausfall. Erst testen, dann GRAB_DEVICE = "true" setzen.
 #
 # Button-Referenz Steam Deck:
-#   BTN_SOUTH   = A        BTN_NORTH   = Y
-#   BTN_EAST    = B        BTN_WEST    = X
+#   BTN_SOUTH   = A        BTN_NORTH   = X  (Kernel: BTN_X = BTN_NORTH = 307)
+#   BTN_EAST    = B        BTN_WEST    = Y  (Kernel: BTN_Y = BTN_WEST  = 308)
 #   BTN_TL      = L1       BTN_TR      = R1
 #   ABS_Z       = L2 (Trigger analog)
 #   ABS_RZ      = R2 (Trigger analog)
@@ -14,8 +14,8 @@
 
 [remap]
 # --- Maus-Klicks (Trigger als Buttons) ---
-ABS_Z  = ["BTN_LEFT"]   # L2 → Linksklick
-ABS_RZ = ["BTN_RIGHT"]  # R2 → Rechtsklick
+BTN_TL2 = ["BTN_RIGHT"]  # L2 → Rechtsklick
+BTN_TR2 = ["BTN_LEFT"]   # R2 → Linksklick
 
 # --- Basis-Navigation ---
 BTN_DPAD_UP    = ["KEY_UP"]
@@ -24,8 +24,8 @@ BTN_DPAD_LEFT  = ["KEY_LEFT"]
 BTN_DPAD_RIGHT = ["KEY_RIGHT"]
 BTN_SOUTH      = ["KEY_ENTER"]   # A
 BTN_EAST       = ["KEY_ESC"]     # B
-BTN_NORTH      = ["KEY_PAGEUP"]  # Y
-BTN_WEST       = ["KEY_PAGEDOWN"] # X
+BTN_NORTH      = ["KEY_BACKSPACE"]  # X  (BTN_NORTH = BTN_X = physisch X-Button)
+BTN_WEST       = ["KEY_SPACE"]   # Y  (BTN_WEST  = BTN_Y = physisch Y-Button)
 BTN_SELECT     = ["KEY_TAB"]
 BTN_START      = ["KEY_LEFTMETA"]
 
@@ -42,6 +42,9 @@ BTN_GRIPR   = ["KEY_PAGEUP"]     # R5 (oben rechts)  → PageUp
 # --- Sprachsteuerung: L1 + R4 → OpenWhispr (Ctrl + PageDown) ---
 BTN_TL-BTN_GRIPR2 = ["KEY_LEFTCTRL", "KEY_PAGEDOWN"]
 
+# --- Steam-Layer: Steam+X → OSK (Steam Input übernimmt, makima blockt Backspace) ---
+BTN_MODE-BTN_NORTH = []  # Steam+X: makima tut nichts, Steam Input öffnet OSK
+
 # --- QAM-Button (Drei Punkte) ---
 # BTN_BASE = ["..."]  # ← TODO: Belegung festlegen
 
@@ -50,16 +53,11 @@ BTN_TL-BTN_GRIPR2 = ["KEY_LEFTCTRL", "KEY_PAGEDOWN"]
 # BTN_MODE = ["notify-send 'Deckery' 'Steam Deck Mode aktiv'"]
 
 [settings]
-# Linker Stick → Maus-Cursor (für Phase 1 Test parallel zu Steam Trackpad)
-LSTICK = "cursor"
-LSTICK_SENSITIVITY = "6"    # niedriger = schneller, min 1
-LSTICK_DEADZONE    = "10"
-CURSOR_SPEED       = "5"
-CURSOR_ACCEL       = "0.3"
+# Linker Stick → deaktiviert (Kando nutzt Achswerte direkt via Gamepad API)
+LSTICK = "disabled"
 
 # Rechter Stick → deaktiviert (Steam Input übernimmt Cursor-Bewegung)
 RSTICK = "disabled"
-
 
 16_BIT_AXIS = "true"   # Steam Deck nutzt 16-bit Achswerte wie Xbox
 GRAB_DEVICE = "false"  # PHASE 1: false = safe, kein Konflikt mit Steam Input
