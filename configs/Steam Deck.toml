@@ -33,6 +33,9 @@ BTN_START      = ["KEY_LEFTMETA"]
 BTN_TL = ["KEY_LEFTCTRL"]   # L1
 BTN_TR = ["KEY_LEFTALT"]    # R1
 
+# --- Rechter Stick ---
+BTN_THUMBR = ["BTN_LEFT"]   # R3 → Linksklick
+
 # --- Back-Paddles ---
 BTN_GRIPL2  = ["KEY_LEFTMETA"]   # L4 (unten links)  → Super/Win
 BTN_GRIPL   = ["KEY_LEFTSHIFT"]  # L5 (oben links)   → Shift
@@ -56,8 +59,10 @@ BTN_MODE-BTN_NORTH = []  # Steam+X: makima tut nichts, Steam Input öffnet OSK
 # Linker Stick → deaktiviert (Kando nutzt Achswerte direkt via Gamepad API)
 LSTICK = "disabled"
 
-# Rechter Stick → deaktiviert (Steam Input übernimmt Cursor-Bewegung)
-RSTICK = "disabled"
+# Rechter Stick → Maus (makima übernimmt, Steam group 25 inactive)
+RSTICK = "cursor"
+RSTICK_SENSITIVITY = "4"   # Polling-Intervall in ms (4 = 250Hz)
+RSTICK_DEADZONE = "15"    # Deadzone gegen Stick-Drift (Wert * 200 = Raw-Threshold)
 
 16_BIT_AXIS = "true"   # Steam Deck nutzt 16-bit Achswerte wie Xbox
 GRAB_DEVICE = "false"  # PHASE 1: false = safe, kein Konflikt mit Steam Input
