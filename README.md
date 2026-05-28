@@ -1,10 +1,8 @@
 # Deckery
 
-**Making the Steam Deck a fast, productive handheld — independent of Steam.**
+The Steam Deck shouldn't need Steam running to be useful in desktop mode. Deckery is an attempt to build a proper input stack directly on the hardware — independent of the Steam process, with more control and more room to experiment than Steam Input allows.
 
-Deckery replaces Steam Input with a direct evdev-based remapping stack that runs in any desktop session, no Steam process required. The goal is to make full use of the Steam Deck's input hardware — trackpads, back paddles, touch, and all buttons — and to put context-aware controls within instant reach without memorising config files.
-
-The **HUD** is the central interface: a transparent overlay that shows your current button mappings live, updating in real time as you hold modifiers or switch contexts.
+Deckery is an umbrella for several subprojects. The **HUD** is the central one: a live, interactive guide to your current shortcuts — so you never have to memorise layouts or dig through config files.
 
 ---
 
@@ -12,7 +10,7 @@ The **HUD** is the central interface: a transparent overlay that shows your curr
 
 ![Deckery HUD showing live button mappings on a Steam Deck diagram](docs/hud-screenshot.png)
 
-The HUD overlays a transparent Steam Deck diagram with live button labels. It updates instantly when a modifier is held or released. No focus, no interaction — just information. Per-app layout switching is planned for a future release.
+The HUD overlays a transparent Steam Deck diagram showing what every button does right now. Hold a modifier and the full combo layer appears instantly. The idea is simple: controls should explain themselves — whether you're learning a new layout, picking up the device after a long break, or handing it to someone else. Per-app layout switching is planned for a future release.
 
 ---
 
