@@ -10,7 +10,7 @@ No Steam required for desktop input. Full controller support via makima — radi
 
 ![Deckery HUD showing live button mappings on a Steam Deck diagram](docs/hud-screenshot.png)
 
-The HUD overlays a transparent Steam Deck diagram with live button labels. It updates instantly when a modifier is held, when the focused app changes, or when the layout switches. No focus, no interaction — just information.
+The HUD overlays a transparent Steam Deck diagram with live button labels. It updates instantly when a modifier is held or released. No focus, no interaction — just information. Per-app layout switching is planned for a future release.
 
 ---
 
