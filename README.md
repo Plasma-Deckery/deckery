@@ -64,6 +64,40 @@ Steam Deck hardware
 
 ---
 
+## Setup
+
+### Steam Input
+
+Deckery takes over buttons, stick navigation, and back paddles. Trackpad scrolling and mouse emulation still run through Steam Input for now — replacing those requires gesture recognition on raw HHD touch events, which is an open problem (see below).
+
+To avoid conflicts with Steam Input on the parts Deckery does own:
+
+1. **Lock the desktop controller config** so Steam can't overwrite it on restart:
+   ```bash
+   sudo chattr +i ~/.local/share/Steam/controller_base/desktop_neptune.vdf
+   ```
+
+2. **Disable Steam's right joystick handling** — in Steam's desktop controller settings, set group 25 (`right_joystick`) to `inactive`. This hands cursor control to makima-deckery's `RSTICK = "cursor"` mode.
+
+#### Trackpad scrolling — open problem
+
+The circular-gesture-to-scroll behaviour currently comes from Steam Input. Whether it can be replaced without Steam is an open question — it would need gesture recognition directly on the raw touch stream from HHD.
+
+There's also room for improvement beyond what Steam offers: Steam Input only supports vertical scroll (clockwise/counterclockwise circles). A smarter recogniser could distinguish circles from straight strokes and use horizontal swipes for horizontal scroll — or pick the scroll axis from the direction of the initial movement. If you're interested in working on this, contributions are very welcome.
+
+### KDE patches
+
+Two KWin scripts are patched and installed automatically via chezmoi. See [steamdeck-dotfiles](https://github.com/Plasma-Deckery/steamdeck-dotfiles) for the install scripts:
+
+- **maximized-window-gaps** — configurable gaps around tiled windows; patched to avoid spurious unmaximize on resize
+- **Better Dynamic Workspaces** ([Kyanite fork](https://github.com/phischdev/Kyanite)) — dynamic workspace management; patched for single-column vertical grid layout
+
+### HUD
+
+The HUD (deckery-hud) runs inside a [distrobox](https://github.com/containers/distrobox) container (`deckery`) because `gtk4-layer-shell` is not available as a GObject Typelib on the host. See [deckery-hud](https://github.com/Plasma-Deckery/deckery-hud) for setup.
+
+---
+
 ## Repos
 
 | Repo | Description |
