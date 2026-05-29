@@ -2,15 +2,28 @@
 
 The Steam Deck shouldn't need Steam running to be useful in desktop mode. Deckery is an attempt to build a proper input stack directly on the hardware — independent of the Steam process, with more control and more room to experiment than Steam Input allows.
 
-Deckery is an umbrella for several subprojects. The **HUD** is the central one: a live, interactive guide to your current shortcuts — so you never have to memorise layouts or dig through config files.
+Deckery is an umbrella for several subprojects:
 
 ---
 
-## HUD
+### [deckery-hud](https://github.com/Plasma-Deckery/deckery-hud)
+A live overlay showing what every button does right now — controls should explain themselves.
 
 ![Deckery HUD showing live button mappings on a Steam Deck diagram](docs/hud-screenshot.png)
 
-The HUD overlays a transparent Steam Deck diagram showing what every button does right now. Hold a modifier and the full combo layer appears instantly. The idea is simple: controls should explain themselves — whether you're learning a new layout, picking up the device after a long break, or handing it to someone else. Per-app layout switching is planned for a future release.
+---
+
+### [makima-deckery](https://github.com/Plasma-Deckery/makima-deckery)
+The input remapper. Reads raw evdev events, applies the config, emits keyboard/mouse events. No Steam Input in the loop.
+
+![makima-deckery](docs/screenshots/makima-placeholder.png)
+
+---
+
+### [steamdeck-dotfiles](https://github.com/Plasma-Deckery/steamdeck-dotfiles)
+System configuration and KDE patches managed with chezmoi.
+
+![steamdeck-dotfiles](docs/screenshots/dotfiles-placeholder.png)
 
 ---
 
