@@ -1,6 +1,6 @@
 # Deckery
 
-The Steam Deck shouldn't need Steam running to be useful in desktop mode. Deckery is an attempt to build a proper input stack directly on the hardware — independent of the Steam process, with more control and more room to experiment than Steam Input allows.
+The Steam Deck is a genuinely capable handheld computer. Deckery's goal is to get the most productive and efficient work out of it — making full use of the unique combination of touch, trackpads, and controller buttons on the input side, while also shaping the OS to work well in this input mode and on the small screen.
 
 Deckery is an umbrella for several subprojects:
 
@@ -14,7 +14,7 @@ A live overlay showing what every button does right now — controls should expl
 ---
 
 ### [makima-deckery](https://github.com/Plasma-Deckery/makima-deckery)
-The input remapper. Reads raw evdev events, applies the config, emits keyboard/mouse events. No Steam Input in the loop.
+The input remapper. Reads raw evdev events directly, applies the config, emits keyboard/mouse events — independent of Steam Input and the Steam process. This makes the full remapping stack available in any desktop session without Steam running in the background, and gives more control over every button, axis, and paddle than Steam Input allows.
 
 ![makima-deckery](docs/screenshots/makima-placeholder.png)
 
