@@ -102,8 +102,8 @@ There's also room for improvement beyond what Steam offers: Steam Input only sup
 
 Two KWin scripts are patched and installed automatically via chezmoi. See [steamdeck-dotfiles](https://github.com/Plasma-Deckery/steamdeck-dotfiles) for the install scripts:
 
-- **maximized-window-gaps** — configurable gaps around tiled windows; patched to avoid spurious unmaximize on resize
-- **Better Dynamic Workspaces** ([Kyanite fork](https://github.com/phischdev/Kyanite)) — dynamic workspace management; patched for single-column vertical grid layout
+- **[maximized-window-gaps](https://github.com/Plasma-Deckery/maximized-window-gaps)** — configurable gaps around tiled windows; patched to avoid spurious unmaximize on resize
+- **[Kyanite](https://github.com/Plasma-Deckery/kyanite)** — dynamic workspace management; patched for single-column vertical grid layout
 
 ### HUD
 
