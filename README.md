@@ -14,18 +14,32 @@ A live overlay showing what every button does right now. Controls should be disc
 ---
 
 ### [makima-deckery](https://github.com/Plasma-Deckery/makima-deckery)
-The input remapper. The goal is to be fully independent of Steam's input handler — reading raw evdev events directly, applying the config, emitting keyboard/mouse events without Steam in the loop.
+The input remapper. Two goals:
 
-Buttons, stick, and back paddles are fully covered. Trackpad scrolling is currently still handled by Steam Input — replacing it requires gesture recognition on the raw touch stream from HHD, which is an open problem. There's also room for improvement beyond what Steam offers: Steam Input only supports vertical scroll (circular gestures). A smarter recogniser could distinguish circles from straight strokes and use horizontal swipes for horizontal scroll. Contributions welcome.
+1. **Steam independence** — read raw evdev events directly, apply the config, emit keyboard/mouse events without Steam in the loop. We don't want to have to run Steam in the background in order to use the desktop mode efficiently.
+2. **Richer control** — context-aware button layouts, per-app configs, and automations that go beyond what Steam Input allows.
+
+**Progress**
+
+Button remapping is fully covered — buttons, D-Pad, back paddles, and modifier combos are all handled by makima-deckery. Two areas are still delegated to Steam Input:
+
+| Area | Status |
+|---|---|
+| Buttons, D-Pad, back paddles, modifiers | ✅ Covered |
+| Trackpad scrolling | ⚠️ Still via Steam Input |
+| Trackpad cursor movement | ⚠️ Still via Steam Input |
+| On-screen keyboard | ⚠️ Still via Steam |
+| Per-app button layouts | 🔧 In progress |
+
+**Challenges**
+
+- **Circular gesture recognition** — replacing Steam's scroll behaviour requires recognising circular gestures on the raw HHD touch stream. A smarter recogniser could also distinguish circles from straight strokes and support horizontal scroll — something Steam Input doesn't offer at all.
+- **Inertial trackpad mouse** — smooth, inertia-based cursor movement from the trackpad, independent of Steam Input.
+- **On-screen keyboard** — finding a good keyboard alternative that works well in desktop mode without Steam.
+
+Contributions welcome.
 
 ![makima-deckery](docs/screenshots/makima-placeholder.png)
-
----
-
-### [steamdeck-dotfiles](https://github.com/Plasma-Deckery/steamdeck-dotfiles)
-System configuration and KDE patches managed with chezmoi.
-
-![steamdeck-dotfiles](docs/screenshots/dotfiles-placeholder.png)
 
 ---
 
@@ -36,6 +50,13 @@ KWin script for dynamic workspace management — patched for single-column verti
 
 ### [maximized-window-gaps](https://github.com/Plasma-Deckery/maximized-window-gaps)
 KWin script for configurable gaps around windows — patched for correct behaviour on the Steam Deck screen geometry.
+
+---
+
+### [steamdeck-dotfiles](https://github.com/Plasma-Deckery/steamdeck-dotfiles)
+This is my personal dotfiles folder that also sets up scripts, panels, and settings in KDE. In the future I will document that better.
+
+![steamdeck-dotfiles](docs/screenshots/dotfiles-placeholder.png)
 
 ---
 
