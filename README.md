@@ -26,9 +26,9 @@ Button remapping is fully covered — buttons, D-Pad, back paddles, and modifier
 | Area | Status |
 |---|---|
 | Buttons, D-Pad, back paddles, modifiers | ✅ Covered |
-| Trackpad scrolling | ⚠️ Still via Steam Input |
-| Trackpad cursor movement | ⚠️ Still via Steam Input |
-| On-screen keyboard | ⚠️ Still via Steam |
+| Trackpad scrolling | ⚠️ Better experience via Steam Input |
+| Trackpad cursor movement | ⚠️ Better experience via Steam Input |
+| On-screen keyboard | ⚠️ Better experience via Steam |
 | Per-app button layouts | 🔧 In progress |
 
 **Challenges**
@@ -60,45 +60,17 @@ This is my personal dotfiles folder that also sets up scripts, panels, and setti
 
 ---
 
-## What it does
-
-### Remapping
-
-| Feature | Tool | Status |
-|---|---|---|
-| Steam-independent button remapping | [makima-deckery](https://github.com/Plasma-Deckery/makima-deckery) | ✅ Working |
-| D-Pad, back paddles, all buttons | makima-deckery | ✅ Working |
-| Right stick → cursor | makima-deckery | ✅ Working |
-| Per-app button layouts | makima-deckery + kdotool | 📋 Planned |
-| Config inheritance (`EXTENDS =`) | makima-deckery | 📋 Planned |
-
-### HUD
-
-See [deckery-hud](https://github.com/Plasma-Deckery/deckery-hud) for the full feature list and status.
-
-### Radial menus
-
-| Feature | Tool | Status |
-|---|---|---|
-| Context-aware radial menus | [Kando](https://github.com/kando-menu/kando) | 📋 Planned |
-
----
-
 ## Architecture
 
 ```
-Steam Deck hardware
-    │
-    ├─ HHD (virtual Xbox device) ──────────────► Kando (radial menus)
-    │
-    └─ /dev/input/event* (evdev)
-           │
-           └─ makima-deckery ──────────────────► virtual keyboard/mouse device
-                   │                                    │
-                   ├─ /tmp/makima-state.json             └─► KDE / apps
-                   └─ /tmp/makima.sock (IPC)
-                           │
-                           └─ deckery-hud
+/dev/input/event* (evdev)
+       │
+       └─ makima-deckery ──────────────────► virtual keyboard/mouse device
+               │                                    │
+               ├─ /tmp/makima-state.json             └─► KDE / apps
+               └─ /tmp/makima.sock (IPC)
+                       │
+                       └─ deckery-hud
 ```
 
 **makima-deckery** reads raw controller events, applies the config, emits keyboard/mouse events, and writes a fully-resolved state snapshot for the HUD. No Steam Input in the loop.
@@ -118,11 +90,11 @@ To avoid conflicts with Steam Input on the parts Deckery does own:
    sudo chattr +i ~/.local/share/Steam/controller_base/desktop_neptune.vdf
    ```
 
-2. **Disable Steam's right joystick handling** — in Steam's desktop controller settings, set group 25 (`right_joystick`) to `inactive`. This hands cursor control to makima-deckery's `RSTICK = "cursor"` mode.
+2. **Disable most of Steam's controller handling** — almost everything except trackpads and the Steam button is turned off in the desktop config. The full config is checked in at [`dot_local/share/Steam/controller_base/executable_desktop_neptune.vdf`](https://github.com/Plasma-Deckery/steamdeck-dotfiles/blob/main/dot_local/share/Steam/controller_base/executable_desktop_neptune.vdf) in steamdeck-dotfiles.
 
 ### KDE patches
 
-Two KWin scripts are patched and installed automatically via chezmoi. See [steamdeck-dotfiles](https://github.com/Plasma-Deckery/steamdeck-dotfiles) for the install scripts:
+Two KWin scripts are maintained as Plasma-Deckery forks and installed via chezmoi. See [steamdeck-dotfiles](https://github.com/Plasma-Deckery/steamdeck-dotfiles) for the install scripts:
 
 - **[maximized-window-gaps](https://github.com/Plasma-Deckery/maximized-window-gaps)** — configurable gaps around tiled windows; patched to avoid spurious unmaximize on resize
 - **[Kyanite](https://github.com/Plasma-Deckery/kyanite)** — dynamic workspace management; patched for single-column vertical grid layout
