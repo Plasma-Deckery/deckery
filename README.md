@@ -7,14 +7,16 @@ Deckery is an umbrella for several subprojects:
 ---
 
 ### [deckery-hud](https://github.com/Plasma-Deckery/deckery-hud)
-A live overlay showing what every button does right now — controls should explain themselves.
+A live overlay showing what every button does right now. Controls should be discoverable and explain themselves — for easier onboarding and faster recall.
 
 ![Deckery HUD showing live button mappings on a Steam Deck diagram](https://raw.githubusercontent.com/Plasma-Deckery/deckery-hud/main/docs/hud-screenshot.png)
 
 ---
 
 ### [makima-deckery](https://github.com/Plasma-Deckery/makima-deckery)
-The input remapper. Reads raw evdev events directly, applies the config, emits keyboard/mouse events — independent of Steam Input and the Steam process. This makes the full remapping stack available in any desktop session without Steam running in the background, and gives more control over every button, axis, and paddle than Steam Input allows.
+The input remapper. The goal is to be fully independent of Steam's input handler — reading raw evdev events directly, applying the config, emitting keyboard/mouse events without Steam in the loop.
+
+Buttons, stick, and back paddles are fully covered. Trackpad scrolling is currently still handled by Steam Input — replacing it requires gesture recognition on the raw touch stream from HHD, which is an open problem. There's also room for improvement beyond what Steam offers: Steam Input only supports vertical scroll (circular gestures). A smarter recogniser could distinguish circles from straight strokes and use horizontal swipes for horizontal scroll. Contributions welcome.
 
 ![makima-deckery](docs/screenshots/makima-placeholder.png)
 
@@ -24,6 +26,16 @@ The input remapper. Reads raw evdev events directly, applies the config, emits k
 System configuration and KDE patches managed with chezmoi.
 
 ![steamdeck-dotfiles](docs/screenshots/dotfiles-placeholder.png)
+
+---
+
+### [Kyanite](https://github.com/Plasma-Deckery/kyanite)
+KWin script for dynamic workspace management — patched for single-column vertical grid layout.
+
+---
+
+### [maximized-window-gaps](https://github.com/Plasma-Deckery/maximized-window-gaps)
+KWin script for configurable gaps around windows — patched for correct behaviour on the Steam Deck screen geometry.
 
 ---
 
@@ -76,7 +88,7 @@ Steam Deck hardware
 
 ### Steam Input
 
-Deckery takes over buttons, stick navigation, and back paddles. Trackpad scrolling and mouse emulation still run through Steam Input for now — replacing those requires gesture recognition on raw HHD touch events, which is an open problem (see below).
+Deckery takes over buttons, stick navigation, and back paddles. Trackpad scrolling and mouse emulation still run through Steam Input for now — see the makima-deckery section above for the full picture.
 
 To avoid conflicts with Steam Input on the parts Deckery does own:
 
@@ -87,33 +99,12 @@ To avoid conflicts with Steam Input on the parts Deckery does own:
 
 2. **Disable Steam's right joystick handling** — in Steam's desktop controller settings, set group 25 (`right_joystick`) to `inactive`. This hands cursor control to makima-deckery's `RSTICK = "cursor"` mode.
 
-#### Trackpad scrolling — open problem
-
-The circular-gesture-to-scroll behaviour currently comes from Steam Input. Whether it can be replaced without Steam is an open question — it would need gesture recognition directly on the raw touch stream from HHD.
-
-There's also room for improvement beyond what Steam offers: Steam Input only supports vertical scroll (clockwise/counterclockwise circles). A smarter recogniser could distinguish circles from straight strokes and use horizontal swipes for horizontal scroll — or pick the scroll axis from the direction of the initial movement. If you're interested in working on this, contributions are very welcome.
-
 ### KDE patches
 
 Two KWin scripts are patched and installed automatically via chezmoi. See [steamdeck-dotfiles](https://github.com/Plasma-Deckery/steamdeck-dotfiles) for the install scripts:
 
 - **[maximized-window-gaps](https://github.com/Plasma-Deckery/maximized-window-gaps)** — configurable gaps around tiled windows; patched to avoid spurious unmaximize on resize
 - **[Kyanite](https://github.com/Plasma-Deckery/kyanite)** — dynamic workspace management; patched for single-column vertical grid layout
-
-### HUD
-
-The HUD (deckery-hud) runs inside a [distrobox](https://github.com/containers/distrobox) container (`deckery`) because `gtk4-layer-shell` is not available as a GObject Typelib on the host. See [deckery-hud](https://github.com/Plasma-Deckery/deckery-hud) for setup.
-
----
-
-## Repos
-
-| Repo | Description |
-|---|---|
-| [Plasma-Deckery/deckery](https://github.com/Plasma-Deckery/deckery) | This repo — configs, docs, patches |
-| [Plasma-Deckery/makima-deckery](https://github.com/Plasma-Deckery/makima-deckery) | Patched makima fork with state export + IPC |
-| [Plasma-Deckery/deckery-hud](https://github.com/Plasma-Deckery/deckery-hud) | HUD overlay |
-| [Plasma-Deckery/steamdeck-dotfiles](https://github.com/Plasma-Deckery/steamdeck-dotfiles) | System dotfiles |
 
 ---
 
