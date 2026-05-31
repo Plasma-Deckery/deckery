@@ -9,7 +9,7 @@ Deckery is an umbrella for several subprojects:
 ### [deckery-hud](https://github.com/Plasma-Deckery/deckery-hud)
 A live overlay showing what every button does right now — controls should explain themselves.
 
-![Deckery HUD showing live button mappings on a Steam Deck diagram](docs/hud-screenshot.png)
+![Deckery HUD showing live button mappings on a Steam Deck diagram](https://raw.githubusercontent.com/Plasma-Deckery/deckery-hud/main/docs/hud-screenshot.png)
 
 ---
 
@@ -41,12 +41,7 @@ System configuration and KDE patches managed with chezmoi.
 
 ### HUD
 
-| Feature | Tool | Status |
-|---|---|---|
-| Steam Deck diagram overlay | deckery-hud | 🔧 In Progress |
-| Live button labels | deckery-hud | 🔧 In Progress |
-| Modifier overlay (live shortcut view) | deckery-hud | 🔧 In Progress |
-| Per-app context switching | deckery-hud | 📋 Planned |
+See [deckery-hud](https://github.com/Plasma-Deckery/deckery-hud) for the full feature list and status.
 
 ### Radial menus
 
