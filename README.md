@@ -9,7 +9,7 @@ Deckery is an umbrella for several subprojects:
 ### [deckery-hud](https://github.com/Plasma-Deckery/deckery-hud)
 A live overlay showing what every button does right now. Controls should be discoverable and explain themselves — for easier onboarding and faster recall.
 
-![Deckery HUD showing live button mappings on a Steam Deck diagram](https://raw.githubusercontent.com/Plasma-Deckery/deckery-hud/main/docs/hud-screenshot.png)
+<video src="https://github.com/Plasma-Deckery/deckery-hud/releases/download/v0.1.0/Deckery.HUD.mp4" controls autoplay loop muted></video>
 
 ---
 
