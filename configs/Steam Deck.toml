@@ -88,9 +88,10 @@ CUSTOM_MODIFIERS = "BTN_TL-BTN_TR-BTN_MODE"   # Layer-Modifier-Buttons
 
 LSTICK = "disabled"
 
-# Trackpads → virtuelle MT-Touchpad-Devices (libinput übernimmt Verhalten)
-LPAD = "trackpad"
-RPAD = "trackpad"
+# Trackpads → deaktiviert (State wird trotzdem in state.json exportiert)
+# Auf "trackpad" setzen um virtuelle MT-Touchpad-Devices zu aktivieren.
+LPAD = "disabled"
+RPAD = "disabled"
 
 # Rechter Stick → Maus (makima übernimmt, Steam group 25 inactive)
 RSTICK = "cursor"
