@@ -21,20 +21,22 @@ The input remapper. Two goals:
 
 **Progress**
 
-Button remapping is fully covered — buttons, D-Pad, back paddles, and modifier combos are all handled by makima-deckery. Two areas are still delegated to Steam Input:
-
 | Area | Status |
 |---|---|
 | Buttons, D-Pad, back paddles, modifiers | ✅ Covered |
+| Per-app button layouts | ✅ Covered |
 | Trackpad scrolling | ⚠️ Better experience via Steam Input |
 | Trackpad cursor movement | ⚠️ Better experience via Steam Input |
+| Full trackpad emulation (MT devices) | ✅ Available — `LPAD/RPAD = "trackpad"` |
+| Trackpad gesture tools | 🔧 MT device ready; no tested gesture config yet |
+| Lizard Mode suppression | 🔧 Required for full Steam independence (Phase 2) |
 | On-screen keyboard | ⚠️ Better experience via Steam |
-| Per-app button layouts | 🔧 In progress |
 
 **Challenges**
 
-- **Circular gesture recognition** — replacing Steam's scroll behaviour requires recognising circular gestures on the raw HHD touch stream. A smarter recogniser could also distinguish circles from straight strokes and support horizontal scroll — something Steam Input doesn't offer at all.
-- **Inertial trackpad mouse** — smooth, inertia-based cursor movement from the trackpad, independent of Steam Input.
+- **Trackpad gesture setup** — the virtual MT devices expose both trackpads to tools like `libinput-gestures` or `fusuma`, making it possible to map swipes, taps, and zones to arbitrary actions without implementing gesture recognition inside makima. A tested, documented setup for this is still work in progress.
+- **Lizard Mode suppression** — the `hid-steam` kernel driver keeps a built-in mouse/scroll fallback (Lizard Mode) active unless suppressed. Steam handles this while it's running; once makima takes full ownership (`GRAB_DEVICE = true`), it needs to send the suppression HID reports itself on startup and periodically.
+- **Inertial trackpad mouse** — smooth, inertia-based cursor movement from the right trackpad, independent of Steam Input.
 - **On-screen keyboard** — finding a good keyboard alternative that works well in desktop mode without Steam.
 
 Contributions welcome.
@@ -66,14 +68,21 @@ This is my personal dotfiles folder that also sets up scripts, panels, and setti
 /dev/input/event* (evdev)
        │
        └─ makima-deckery ──────────────────► virtual keyboard/mouse device
-               │                                    │
-               ├─ /tmp/makima-state.json             └─► KDE / apps
-               └─ /tmp/makima.sock (IPC)
+               │                            │                    │
+               │                            ├─► KDE / apps       │
+               │                            │                    │
+               │                            └─► virtual trackpad MT devices
+               │                                 (Deckery Left/Right Trackpad)
+               │                                        │
+               │                                        └─► libinput / gesture tools
+               │
+               ├─ /tmp/makima-state.json
+               └─ /tmp/makima-control.sock (IPC)
                        │
                        └─ deckery-hud
 ```
 
-**makima-deckery** reads raw controller events, applies the config, emits keyboard/mouse events, and writes a fully-resolved state snapshot for the HUD. No Steam Input in the loop.
+**makima-deckery** reads raw controller events, applies the config, emits keyboard/mouse events, and writes a fully-resolved state snapshot for the HUD. When `LPAD/RPAD = "trackpad"` is set, it additionally exposes the trackpads as standard uinput MT devices, making them available to libinput and gesture tools. No Steam Input in the loop.
 
 ---
 
@@ -82,6 +91,8 @@ This is my personal dotfiles folder that also sets up scripts, panels, and setti
 ### Steam Input
 
 Deckery takes over buttons, stick navigation, and back paddles. Trackpad scrolling and mouse emulation still run through Steam Input for now — see the makima-deckery section above for the full picture.
+
+> **Lizard Mode:** The `hid-steam` kernel driver keeps a built-in mouse/scroll fallback active at all times. Steam suppresses it while running. Until makima-deckery implements its own Lizard Mode suppression (planned for Phase 2), Steam needs to be running in the background for the trackpad emulation to work cleanly — otherwise the kernel driver's fallback behaviour interferes.
 
 To avoid conflicts with Steam Input on the parts Deckery does own:
 
@@ -115,4 +126,3 @@ Two KWin scripts are maintained as Plasma-Deckery forks and installed via chezmo
 ## Device
 
 Tested on: Steam Deck (Bazzite, KDE Plasma 6, Wayland)
-Should work on: any handheld Linux device running HHD
