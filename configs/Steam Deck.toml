@@ -14,8 +14,8 @@
 
 [remap]
 # --- Maus-Klicks (Trigger als Buttons) ---
-BTN_TL2 = ["BTN_RIGHT"]  # L2 → Rechtsklick
-BTN_TR2 = ["BTN_LEFT"]   # R2 → Linksklick
+BTN_TL2 = { keys = ["BTN_RIGHT"], no_pause = true }  # L2 → Rechtsklick
+BTN_TR2 = { keys = ["BTN_LEFT"],  no_pause = true }  # R2 → Linksklick
 
 # --- Basis-Navigation ---
 BTN_DPAD_UP    = ["KEY_UP"]
@@ -29,34 +29,63 @@ BTN_WEST       = ["KEY_SPACE"]   # Y  (BTN_WEST  = BTN_Y = physisch Y-Button)
 BTN_SELECT     = ["KEY_TAB"]
 BTN_START      = ["KEY_LEFTMETA"]
 
-# --- Modifier-Buttons ---
-BTN_TL = ["KEY_LEFTCTRL"]   # L1
-BTN_TR = ["KEY_LEFTALT"]    # R1
+# --- Layer-Modifier-Buttons (CUSTOM_MODIFIERS + Remap) ---
+# Diese Buttons senden beim Halten den Output-Key als echten System-Modifier
+# UND agieren als Layer-Modifier für Combos (BTN_TL-* combos).
+BTN_TL = []   # L1 → reiner Layer-Modifier, kein Output-Key
+BTN_TR = []   # R1 → reiner Layer-Modifier, kein Output-Key
+
+# --- Internal Modifier: Steam Button ---
+# BTN_MODE (Steam Button) ist als Internal Modifier in CUSTOM_MODIFIERS definiert.
+# Es wird NICHT direkt remapped (kein BTN_MODE = [...]), sondern nur für Combos genutzt.
+# State-Tracking: BTN_MODE wird in held_modifiers (state.json) exportiert.
+# Combos: BTN_MODE-BTN_* prefix für combo-Bindings (z.B. BTN_MODE-BTN_NORTH, BTN_MODE-BTN_GRIPR2)
 
 # --- Rechter Stick ---
 BTN_THUMBR = ["BTN_LEFT"]   # R3 → Linksklick
 
 # --- Back-Paddles ---
-BTN_GRIPL2  = ["KEY_LEFTMETA"]   # L4 (unten links)  → Super/Win
-BTN_GRIPL   = ["KEY_LEFTSHIFT"]  # L5 (oben links)   → Shift
-BTN_GRIPR2  = ["KEY_PAGEDOWN"]   # R4 (unten rechts) → PageDown
-BTN_GRIPR   = ["KEY_PAGEUP"]     # R5 (oben rechts)  → PageUp
+BTN_GRIPL   = ["KEY_LEFTSHIFT"]  # L4 (oben links)   → Shift
+BTN_GRIPL2  = ["KEY_LEFTMETA"]   # L5 (unten links)  → Super/Win
+BTN_GRIPR   = ["KEY_LEFTALT"]    # R4 (oben rechts)  → Alt
+BTN_GRIPR2  = ["KEY_LEFTCTRL"]  # R5 (unten rechts) → Ctrl
 
-# --- Sprachsteuerung: L1 + R4 → OpenWhispr (Ctrl + PageDown) ---
-BTN_TL-BTN_GRIPR2 = ["KEY_LEFTCTRL", "KEY_PAGEDOWN"]
+# --- L1+X/Y → Copy/Paste ---
+BTN_TL-BTN_NORTH = { keys = ["KEY_LEFTCTRL", "KEY_C"], label = "Copy (Ctrl+C)" }   # L1+X
+BTN_TL-BTN_WEST  = { keys = ["KEY_LEFTCTRL", "KEY_V"], label = "Paste (Ctrl+V)" }  # L1+Y
+
+
+# --- Sprachsteuerung: L1 + R5 → OpenWhispr (Ctrl + PageDown) ---
+BTN_TL-BTN_GRIPR2 = { keys = ["KEY_LEFTCTRL", "KEY_PAGEDOWN"], label = "Text to Speech (Ctrl+PgDn)" }
 
 # --- Steam-Layer: Steam+X → OSK (Steam Input übernimmt, makima blockt Backspace) ---
-BTN_MODE-BTN_NORTH = []  # Steam+X: makima tut nichts, Steam Input öffnet OSK
+BTN_MODE-BTN_NORTH = { keys = [], label = "(Steam OSK)" }  # Steam+X: makima tut nichts, Steam Input öffnet OSK
 
 # --- QAM-Button (Drei Punkte) ---
 # BTN_BASE = ["..."]  # ← TODO: Belegung festlegen
 
 [commands]
-# Shell-Commands können hier eingetragen werden, z.B.:
-# BTN_MODE = ["notify-send 'Deckery' 'Steam Deck Mode aktiv'"]
+BTN_THUMBL = { run = ["deckery-hud-toggle"], no_pause = true, label = "Toggle HUD" }  # L3 → Deckery HUD ein/ausblenden
+
+# --- L1 + Pfeiltasten → KDE Virtual Desktop wechseln ---
+BTN_TL-BTN_DPAD_UP    = { run = ["qdbus org.kde.KWin /KWin previousDesktop"], label = "Previous Desktop" }
+BTN_TL-BTN_DPAD_DOWN  = { run = ["qdbus org.kde.KWin /KWin nextDesktop"], label = "Next Desktop" }
+
+# --- L1+R1+DPad → Fenster auf anderen Virtual Desktop schieben ---
+BTN_TL-BTN_TR-BTN_DPAD_UP    = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Window One Desktop Up'"],   label = "Window to Previous Desktop" }
+BTN_TL-BTN_TR-BTN_DPAD_DOWN  = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Window One Desktop Down'"], label = "Window to Next Desktop" }
+BTN_TL-BTN_TR-BTN_DPAD_RIGHT = { run = ["bash -c 'N=$(qdbus org.kde.KWin /KWin numberOfDesktops); for i in $(seq $(qdbus org.kde.KWin /KWin currentDesktop) $((N-1))); do qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut \"Window One Desktop to the Right\"; done'"], label = "Window to Last Desktop" }
+
+# --- L1+R1+Face → Fensterverwaltung ---
+BTN_TL-BTN_TR-BTN_SOUTH = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Window Fullscreen'"],     label = "Fullscreen" }         # L1+R1+A
+BTN_TL-BTN_TR-BTN_NORTH = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Window Maximize'"],        label = "Maximize/Restore" }  # L1+R1+X
+BTN_TL-BTN_TR-BTN_WEST  = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'KrohnkiteToggleFloat'"], label = "Toggle Float" }       # L1+R1+Y
+BTN_TL-BTN_TR-BTN_EAST  = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Window Close'"],         label = "Close Window" }       # L1+R1+B
 
 [settings]
 # Linker Stick → deaktiviert (Kando nutzt Achswerte direkt via Gamepad API)
+CUSTOM_MODIFIERS = "BTN_TL-BTN_TR-BTN_MODE"   # Layer-Modifier-Buttons
+
 LSTICK = "disabled"
 
 # Rechter Stick → Maus (makima übernimmt, Steam group 25 inactive)
