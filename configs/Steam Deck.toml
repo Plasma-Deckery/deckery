@@ -88,6 +88,10 @@ CUSTOM_MODIFIERS = "BTN_TL-BTN_TR-BTN_MODE"   # Layer-Modifier-Buttons
 
 LSTICK = "disabled"
 
+# Trackpads → virtuelle MT-Touchpad-Devices (libinput übernimmt Verhalten)
+LPAD = "trackpad"
+RPAD = "trackpad"
+
 # Rechter Stick → Maus (makima übernimmt, Steam group 25 inactive)
 RSTICK = "cursor"
 RSTICK_SENSITIVITY = "4"   # Polling-Intervall in ms (4 = 250Hz)

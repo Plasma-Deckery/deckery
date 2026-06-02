@@ -37,6 +37,22 @@ inotifywait -m -e moved_to /tmp/ | grep --line-buffered "makima-state.json"
     "action": ["KEY_ENTER"],
     "kind": "remap",
     "value": 1
+  },
+  "trackpads": {
+    "lpad": {
+      "mode": "trackpad",
+      "x": 1234,
+      "y": -567,
+      "touching": true,
+      "pressed": false
+    },
+    "rpad": {
+      "mode": "trackpad",
+      "x": 0,
+      "y": 0,
+      "touching": false,
+      "pressed": false
+    }
   }
 }
 ```
@@ -89,6 +105,23 @@ Empty `{}` when no modifier is held.
 
 **Use this to replace `bindings` in the display when `held_modifiers` is non-empty.**
 The frontend does not need to filter `bindings` manually — makima does it.
+
+---
+
+### `trackpads`
+
+Present when `LPAD` or `RPAD` is set to `"trackpad"` in the config.
+Always contains both `lpad` and `rpad` entries.
+
+| Field | Type | Meaning |
+|---|---|---|
+| `mode` | `string` | `"trackpad"` or `"disabled"` — value of `LPAD`/`RPAD` setting |
+| `x` | `number` | Raw X position, range −32767…32767. `0` when not touching. |
+| `y` | `number` | Raw Y position, range −32767…32767. `0` when not touching. Positive = up (hardware convention). |
+| `touching` | `bool` | `true` when finger is on the pad (`x != 0 \|\| y != 0`). |
+| `pressed` | `bool` | `true` when the pad is physically clicked (haptic click). |
+
+Updated on every trackpad position change and on every click event.
 
 ---
 
@@ -177,6 +210,7 @@ if context.paused:
 - On modifier state change (held_modifiers changes)
 - On config switch (active window changes)
 - On pause/resume via IPC socket
+- On every trackpad position update (when `LPAD`/`RPAD = "trackpad"`)
 
 The file is **not** updated continuously — only on events. The frontend does not need to poll.
 
