@@ -14,8 +14,8 @@
 
 [remap]
 # --- Maus-Klicks (Trigger als Buttons) ---
-BTN_TL2 = { keys = ["BTN_RIGHT"], no_pause = true }  # L2 → Rechtsklick
-BTN_TR2 = { keys = ["BTN_LEFT"],  no_pause = true }  # R2 → Linksklick
+BTN_TL2 = { keys = ["BTN_RIGHT"], no_pause = true, silent = true }  # L2 → Rechtsklick
+BTN_TR2 = { keys = ["BTN_LEFT"],  no_pause = true, silent = true }  # R2 → Linksklick
 
 # --- Basis-Navigation ---
 BTN_DPAD_UP    = ["KEY_UP"]
@@ -51,8 +51,8 @@ BTN_GRIPR   = ["KEY_LEFTALT"]    # R4 (oben rechts)  → Alt
 BTN_GRIPR2  = ["KEY_LEFTCTRL"]  # R5 (unten rechts) → Ctrl
 
 # --- L1+X/Y → Copy/Paste ---
-BTN_TL-BTN_NORTH = { keys = ["KEY_LEFTCTRL", "KEY_C"], label = "Copy (Ctrl+C)" }   # L1+X
-BTN_TL-BTN_WEST  = { keys = ["KEY_LEFTCTRL", "KEY_V"], label = "Paste (Ctrl+V)" }  # L1+Y
+BTN_TL-BTN_NORTH = { keys = ["KEY_LEFTCTRL", "KEY_C"], label = "Copy" }   # L1+X
+BTN_TL-BTN_WEST  = { keys = ["KEY_LEFTCTRL", "KEY_V"], label = "Paste" }  # L1+Y
 
 
 # --- Sprachsteuerung: L1 + R5 → OpenWhispr (Ctrl + PageDown) ---
