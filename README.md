@@ -25,10 +25,9 @@ The input remapper. Two goals:
 |---|---|
 | Buttons, D-Pad, back paddles, modifiers | ✅ Covered |
 | Per-app button layouts | ✅ Covered |
-| Trackpad scrolling | ⚠️ Currently via Steam Input — implementation planned |
-| Trackpad cursor movement | ⚠️ Currently via Steam Input — libinput tuning required, planned |
-| Full trackpad emulation (MT devices) | ✅ Available — `LPAD/RPAD = "trackpad"` |
-| Trackpad gesture tools | 🔧 MT device ready; gesture tool integration planned ([deckery#3](https://github.com/Plasma-Deckery/deckery/issues/3)) |
+| Trackpad scrolling | ⚠️ Better experience via Steam Input — implementation planned ([deckery#4](https://github.com/Plasma-Deckery/deckery/issues/4)) |
+| Trackpad cursor movement | ⚠️ Better experience via Steam Input — implementation planned ([deckery#5](https://github.com/Plasma-Deckery/deckery/issues/5)) |
+| Trackpad gestures | ✅ MT devices available (`LPAD/RPAD = "trackpad"`) — gesture tool integration planned ([deckery#3](https://github.com/Plasma-Deckery/deckery/issues/3)) |
 | Lizard Mode suppression | 🔧 Required for full Steam independence — planned ([makima-deckery#11](https://github.com/Plasma-Deckery/makima-deckery/issues/11)) |
 | Haptic feedback on trackpads | 🔧 Kernel support available in Linux 6.18+ / Bazzite 6.19+ — planned ([makima-deckery#9](https://github.com/Plasma-Deckery/makima-deckery/issues/9)) |
 | On-screen keyboard | ⚠️ Better experience via Steam |
