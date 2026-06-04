@@ -1,6 +1,6 @@
 # Deckery
 
-The Steam Deck is a genuinely capable handheld computer. Deckery's goal is to get the most productive and efficient work out of it — making full use of the unique combination of touch, trackpads, and controller buttons on the input side, while also shaping the OS to work well in this input mode and on the small screen.
+The Steam Deck is a genuinely capable handheld computer. Deckery's goal is to get the most productive and efficient workflows out of it — making full use of the unique combination of touch, trackpads, and controller buttons on the input side, while also shaping the OS to work well in this input mode and on the small screen.
 
 Deckery is an umbrella for several subprojects:
 
@@ -24,7 +24,7 @@ The input remapper. Two goals:
 ---
 
 ### [steamdeck-dotfiles](https://github.com/Plasma-Deckery/steamdeck-dotfiles)
-An opinionated KDE desktop setup — scripts, panels, KWin configuration, and system settings tuned specifically for the Steam Deck's screen size and input methods. Managed via chezmoi.
+An opinionated KDE desktop setup — scripts, panels, KWin configuration, and system settings tuned specifically for the Steam Deck's screen size and input methods. Managed via chezmoi. Proper documentation missing for now.
 
 ![steamdeck-dotfiles](docs/screenshots/dotfiles-placeholder.png)
 
@@ -149,4 +149,17 @@ Two KWin scripts are maintained as Plasma-Deckery forks and installed via chezmo
 
 ## Device
 
-Tested on: Steam Deck (Bazzite, KDE Plasma 6, Wayland)
+Tested on: Steam Deck (Bazzite 43, KDE Plasma 6, Wayland)
+
+### Coffee
+Deckery is free and open-source. If you find the project useful and want to support its ambitious goal, i would be honoured if you considered donating. Thanks :)
+
+<p align="center">
+  <a href="https://ko-fi.com/phischdev" target="_blank">
+    <img src="https://storage.ko-fi.com/cdn/kofi3.png" alt="Buy Me a Coffee at ko-fi.com" height="40" />
+  </a>
+  &nbsp;&nbsp;&nbsp;
+  <a href="https://github.com/sponsors/phischdev" target="_blank">
+    <img src="https://img.shields.io/badge/Sponsor-%E2%9D%A4-brightgreen?style=for-the-badge&logo=github&logoColor=white" alt="Sponsor on GitHub" height="40" />
+  </a>
+</p>
