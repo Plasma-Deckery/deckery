@@ -41,7 +41,7 @@ The input remapper. Two goals:
 
 - **Haptic feedback** — Linux 6.18 introduced `FF_HAPTIC` for haptic-capable touchpads, and Bazzite ships kernel 6.19+. The infrastructure (hidraw fd held open for Lizard Mode suppression) doubles as the back-channel for sending haptic HID reports to the trackpad actuators. See [makima-deckery#9](https://github.com/Plasma-Deckery/makima-deckery/issues/9).
 
-- **On-screen keyboard** — finding a good keyboard alternative that works well in desktop mode without Steam. The Steam on-screen keyboard works well but requires Steam to be running. A controller-native text input UI (e.g. PIN-style number pad, or a gamepad-driven character picker for quick inputs like passwords and lock screens) would remove this last Steam dependency.
+- **On-screen keyboard** — finding a good keyboard alternative that works well in desktop mode without Steam. The Steam on-screen keyboard works well but requires Steam to be running. Voice input via OpenWhispr covers most free-text input at a desk; the remaining gap is structured input (passwords, PIN fields, forms) where dictation is impractical. A controller-native text entry UI for those cases would remove the last Steam dependency.
 
 - **libinput tuning for trackpad cursor** — the virtual MT devices expose the trackpads to libinput, but libinput applies generic touchpad profiles to unknown devices. For good cursor movement with proper acceleration curves and inertia, the Deckery trackpad devices need custom libinput configuration — either via `libinput quirks` (device property overrides) or a minimal libinput fork. This is a prerequisite for making right-trackpad mouse movement feel as good as Steam Input's trackball mode. See [deckery#2](https://github.com/Plasma-Deckery/deckery/issues/2) for right-stick ball roll as an interim solution.
 
@@ -64,6 +64,13 @@ KWin script for dynamic workspace management — patched for single-column verti
 
 ### [maximized-window-gaps](https://github.com/Plasma-Deckery/maximized-window-gaps)
 KWin script for configurable gaps around windows — patched for correct behaviour on the Steam Deck screen geometry.
+
+---
+
+### [OpenWhispr](https://github.com/OpenWhispr/openwhispr) — voice input
+Privacy-first, hotkey-activated voice-to-text running fully local via Whisper / NVIDIA Parakeet. On a handheld device without a physical keyboard, voice input is the practical text entry method when away from a desk — for messages, searches, quick notes. Triggered from makima via `BTN_TL + R5 → Ctrl+PgDn`.
+
+Works well in quiet environments. Outdoor use is still imperfect — background noise and wind require a noise suppressor (e.g. RNNoise) in the audio pipeline. Not a full keyboard replacement but covers most on-the-go input needs.
 
 ---
 
