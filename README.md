@@ -78,9 +78,7 @@ Outdoor use improves significantly with a noise suppressor in the audio pipeline
 
 ### Further challenges (out of scope, but relevant for handheld desktop use)
 
-- **PIN / lock screen entry** — the Steam Deck lock screen requires keyboard input for the login PIN. A controller-native PIN entry UI (d-pad or face buttons to select digits, confirm with A — similar to Steam's number pad) would make the device usable without attaching a keyboard for unlock.
-
-- **Second-factor authentication** — TOTP prompts and passkey confirmations require text input or a hardware key. A controller-native TOTP entry flow, or integration with a software authenticator that can be triggered from the HUD, would remove the need to reach for a keyboard or phone.
+- **Controller-native authentication input** — two places require a password or PIN without a keyboard: the lock screen, and system authentication prompts (sudo, polkit). The lock screen needs a controller-native PIN entry UI (d-pad or face buttons to select digits, confirm with A). For sudo/polkit, the existing system prompt dialogs would need to be intercepted or replaced with a controller-friendly equivalent — so that privilege escalation flows work without reaching for a keyboard. See [deckery#6](https://github.com/Plasma-Deckery/deckery/issues/6).
 
 Contributions welcome.
 
