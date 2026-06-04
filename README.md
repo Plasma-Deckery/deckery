@@ -19,40 +19,14 @@ The input remapper. Two goals:
 1. **Steam independence** — read raw evdev events directly, apply the config, emit keyboard/mouse events without Steam in the loop. We don't want to have to run Steam in the background in order to use the desktop mode efficiently.
 2. **Richer control** — context-aware button layouts, per-app configs, and automations that go beyond what Steam Input allows.
 
-**Progress**
-
-| Area | Status |
-|---|---|
-| Buttons, D-Pad, back paddles, modifiers | ✅ Covered |
-| Per-app button layouts | ✅ Covered |
-| Trackpad scrolling | ⚠️ Better experience via Steam Input — implementation planned ([deckery#4](https://github.com/Plasma-Deckery/deckery/issues/4)) |
-| Trackpad cursor movement | ⚠️ Better experience via Steam Input — implementation planned ([deckery#5](https://github.com/Plasma-Deckery/deckery/issues/5)) |
-| Trackpad gestures | ✅ MT devices available (`LPAD/RPAD = "trackpad"`) — gesture tool integration planned ([deckery#3](https://github.com/Plasma-Deckery/deckery/issues/3)) |
-| Lizard Mode suppression | 🔧 Required for full Steam independence — planned ([makima-deckery#11](https://github.com/Plasma-Deckery/makima-deckery/issues/11)) |
-| Haptic feedback on trackpads | 🔧 Kernel support available in Linux 6.18+ / Bazzite 6.19+ — planned ([makima-deckery#9](https://github.com/Plasma-Deckery/makima-deckery/issues/9)) |
-| On-screen keyboard | ⚠️ Better experience via Steam |
-
-**Open challenges**
-
-- **Lizard Mode suppression** — the `hid-steam` kernel driver keeps a built-in mouse/scroll fallback (Lizard Mode) active unless suppressed via periodic hidraw HID reports. Steam handles this while running. Makima-deckery needs to take over this role for full Steam independence: open the hidraw device on startup, send feature reports `0x85` + `0x8d` every ~4s. The heartbeat is a useful safety mechanism — if makima crashes, Lizard Mode re-activates automatically. See [makima-deckery#11](https://github.com/Plasma-Deckery/makima-deckery/issues/11).
-
-- **Trackpad gesture tool** — the virtual MT devices expose both trackpads to gesture tools (syngesture, fusuma, libinput-gestures). The missing piece is a minimal fork that outputs discrete gesture events to `/tmp/makima-control.sock` and sends haptic pulses via FF_HAPTIC. A tested, documented setup for this is still in progress. See [deckery#3](https://github.com/Plasma-Deckery/deckery/issues/3).
-
-- **Haptic feedback** — Linux 6.18 introduced `FF_HAPTIC` for haptic-capable touchpads, and Bazzite ships kernel 6.19+. The infrastructure (hidraw fd held open for Lizard Mode suppression) doubles as the back-channel for sending haptic HID reports to the trackpad actuators. See [makima-deckery#9](https://github.com/Plasma-Deckery/makima-deckery/issues/9).
-
-- **On-screen keyboard** — finding a good keyboard alternative that works well in desktop mode without Steam. The Steam on-screen keyboard works well but requires Steam to be running. Voice input via OpenWhispr covers most free-text input at a desk; the remaining gap is structured input (passwords, PIN fields, forms) where dictation is impractical. A controller-native text entry UI for those cases would remove the last Steam dependency.
-
-- **libinput tuning for trackpad cursor** — the virtual MT devices expose the trackpads to libinput, but libinput applies generic touchpad profiles to unknown devices. For good cursor movement with proper acceleration curves and inertia, the Deckery trackpad devices need custom libinput configuration — either via `libinput quirks` (device property overrides) or a minimal libinput fork. This is a prerequisite for making right-trackpad mouse movement feel as good as Steam Input's trackball mode. See [deckery#2](https://github.com/Plasma-Deckery/deckery/issues/2) for right-stick ball roll as an interim solution.
-
-**Further challenges (out of scope, but relevant for handheld desktop use)**
-
-- **PIN / lock screen entry** — the Steam Deck lock screen requires keyboard input for the login PIN. A controller-native PIN entry UI (d-pad or face buttons to select digits, confirm with A — similar to Steam's number pad) would make the device usable without attaching a keyboard for unlock.
-
-- **Second-factor authentication** — TOTP prompts and passkey confirmations require text input or a hardware key. A controller-native TOTP entry flow, or integration with a software authenticator that can be triggered from the HUD, would remove the need to reach for a keyboard or phone.
-
-Contributions welcome.
-
 ![makima-deckery](docs/screenshots/makima-placeholder.png)
+
+---
+
+### [steamdeck-dotfiles](https://github.com/Plasma-Deckery/steamdeck-dotfiles)
+An opinionated KDE desktop setup — scripts, panels, KWin configuration, and system settings tuned specifically for the Steam Deck's screen size and input methods. Managed via chezmoi.
+
+![steamdeck-dotfiles](docs/screenshots/dotfiles-placeholder.png)
 
 ---
 
@@ -67,16 +41,48 @@ KWin script for configurable gaps around windows — patched for correct behavio
 ---
 
 ### [OpenWhispr](https://github.com/OpenWhispr/openwhispr) — voice input
-Privacy-first, hotkey-activated voice-to-text running fully local via Whisper / NVIDIA Parakeet. On a handheld device without a physical keyboard, voice input is the practical text entry method when away from a desk — for messages, searches, quick notes. Triggered from makima via `BTN_TL + R5 → Ctrl+PgDn`.
+A hotkey-activated, bring-your-own-keys Whisper frontend — can run fully locally. On a handheld device without a physical keyboard, voice input is the practical text entry method when away from a desk — for messages, searches, quick notes.
 
-Works well in quiet environments. Outdoor use is still imperfect — background noise and wind require a noise suppressor (e.g. RNNoise) in the audio pipeline. Not a full keyboard replacement but covers most on-the-go input needs.
+There are open issues in OpenWhispr that noticeably affect usability, but it's still a good input method for on-the-go text entry.
+
+Outdoor use improves significantly with a noise suppressor in the audio pipeline. The [steamdeck-dotfiles](https://github.com/Plasma-Deckery/steamdeck-dotfiles) include an RNNoise configuration that handles background noise and wind well enough for practical outdoor use.
 
 ---
 
-### [steamdeck-dotfiles](https://github.com/Plasma-Deckery/steamdeck-dotfiles)
-This is my personal dotfiles folder that also sets up scripts, panels, and settings in KDE. In the future I will document that better.
+## Status
 
-![steamdeck-dotfiles](docs/screenshots/dotfiles-placeholder.png)
+### makima-deckery
+
+| Area | Status |
+|---|---|
+| Buttons, D-Pad, back paddles, modifiers | ✅ Covered |
+| Per-app button layouts | ✅ Covered |
+| Trackpad scrolling | ⚠️ Better experience via Steam Input — implementation planned ([deckery#4](https://github.com/Plasma-Deckery/deckery/issues/4)) |
+| Trackpad cursor movement | ⚠️ Better experience via Steam Input — implementation planned ([deckery#5](https://github.com/Plasma-Deckery/deckery/issues/5)) |
+| Trackpad gestures | ✅ MT devices available (`LPAD/RPAD = "trackpad"`) — gesture tool integration planned ([deckery#3](https://github.com/Plasma-Deckery/deckery/issues/3)) |
+| Lizard Mode suppression | 🔧 Required for full Steam independence — planned ([makima-deckery#11](https://github.com/Plasma-Deckery/makima-deckery/issues/11)) |
+| Haptic feedback on trackpads | 🔧 Kernel support available in Linux 6.18+ / Bazzite 6.19+ — planned ([makima-deckery#9](https://github.com/Plasma-Deckery/makima-deckery/issues/9)) |
+| On-screen keyboard | ⚠️ Better experience via Steam |
+
+### Open challenges
+
+- **Lizard Mode suppression** — the `hid-steam` kernel driver keeps a built-in mouse/scroll fallback (Lizard Mode) active unless suppressed via periodic hidraw HID reports. Steam handles this while running. Makima-deckery needs to take over this role for full Steam independence: open the hidraw device on startup, send feature reports `0x85` + `0x8d` every ~4s. The heartbeat is a useful safety mechanism — if makima crashes, Lizard Mode re-activates automatically. See [makima-deckery#11](https://github.com/Plasma-Deckery/makima-deckery/issues/11).
+
+- **Trackpad gesture tool** — the virtual MT devices expose both trackpads to gesture tools (syngesture, fusuma, libinput-gestures). The missing piece is a minimal fork that outputs discrete gesture events to `/tmp/makima-control.sock` and sends haptic pulses via FF_HAPTIC. A tested, documented setup for this is still in progress. See [deckery#3](https://github.com/Plasma-Deckery/deckery/issues/3).
+
+- **Haptic feedback** — Linux 6.18 introduced `FF_HAPTIC` for haptic-capable touchpads, and Bazzite ships kernel 6.19+. The infrastructure (hidraw fd held open for Lizard Mode suppression) doubles as the back-channel for sending haptic HID reports to the trackpad actuators. See [makima-deckery#9](https://github.com/Plasma-Deckery/makima-deckery/issues/9).
+
+- **On-screen keyboard** — finding a good keyboard alternative that works well in desktop mode without Steam. The Steam on-screen keyboard works well but requires Steam to be running. Voice input via OpenWhispr covers most free-text input at a desk; the remaining gap is structured input (passwords, PIN fields, forms) where dictation is impractical. A controller-native text entry UI for those cases would remove the last Steam dependency.
+
+- **libinput tuning for trackpad cursor** — the virtual MT devices expose the trackpads to libinput, but libinput applies generic touchpad profiles to unknown devices. For good cursor movement with proper acceleration curves and inertia, the Deckery trackpad devices need custom libinput configuration — either via `libinput quirks` (device property overrides) or a minimal libinput fork. This is a prerequisite for making right-trackpad mouse movement feel as good as Steam Input's trackball mode. See [deckery#2](https://github.com/Plasma-Deckery/deckery/issues/2) for right-stick ball roll as an interim solution.
+
+### Further challenges (out of scope, but relevant for handheld desktop use)
+
+- **PIN / lock screen entry** — the Steam Deck lock screen requires keyboard input for the login PIN. A controller-native PIN entry UI (d-pad or face buttons to select digits, confirm with A — similar to Steam's number pad) would make the device usable without attaching a keyboard for unlock.
+
+- **Second-factor authentication** — TOTP prompts and passkey confirmations require text input or a hardware key. A controller-native TOTP entry flow, or integration with a software authenticator that can be triggered from the HUD, would remove the need to reach for a keyboard or phone.
+
+Contributions welcome.
 
 ---
 
@@ -105,6 +111,8 @@ This is my personal dotfiles folder that also sets up scripts, panels, and setti
 ---
 
 ## Setup
+
+Both **makima-deckery** and **deckery-hud** run as systemd user services in the background. A step-by-step setup guide is planned.
 
 ### Steam Input
 
