@@ -28,6 +28,7 @@ The input remapper. Two goals:
 | Trackpad scrolling | ⚠️ Better experience via Steam Input |
 | Trackpad cursor movement | ⚠️ Better experience via Steam Input |
 | Full trackpad emulation (MT devices) | ✅ Available — `LPAD/RPAD = "trackpad"` |
+| libinput tuning for trackpad cursor | 🔧 Requires libinput quirks or fork for proper acceleration + inertia |
 | Trackpad gesture tools | 🔧 MT device ready; gesture tool integration in progress ([deckery#3](https://github.com/Plasma-Deckery/deckery/issues/3)) |
 | Lizard Mode suppression | 🔧 Required for full Steam independence — planned ([makima-deckery#11](https://github.com/Plasma-Deckery/makima-deckery/issues/11)) |
 | Haptic feedback on trackpads | 🔧 Kernel support available in Linux 6.18+ / Bazzite 6.19+ — planned ([makima-deckery#9](https://github.com/Plasma-Deckery/makima-deckery/issues/9)) |
@@ -43,7 +44,7 @@ The input remapper. Two goals:
 
 - **On-screen keyboard** — finding a good keyboard alternative that works well in desktop mode without Steam. The Steam on-screen keyboard works well but requires Steam to be running. A controller-native text input UI (e.g. PIN-style number pad, or a gamepad-driven character picker for quick inputs like passwords and lock screens) would remove this last Steam dependency.
 
-- **Inertial trackpad mouse** — smooth, inertia-based cursor movement from the right trackpad, independent of Steam Input. See [deckery#2](https://github.com/Plasma-Deckery/deckery/issues/2) for right-stick ball roll as an interim solution.
+- **libinput tuning for trackpad cursor** — the virtual MT devices expose the trackpads to libinput, but libinput applies generic touchpad profiles to unknown devices. For good cursor movement with proper acceleration curves and inertia, the Deckery trackpad devices need custom libinput configuration — either via `libinput quirks` (device property overrides) or a minimal libinput fork. This is a prerequisite for making right-trackpad mouse movement feel as good as Steam Input's trackball mode. See [deckery#2](https://github.com/Plasma-Deckery/deckery/issues/2) for right-stick ball roll as an interim solution.
 
 **Further challenges (out of scope, but relevant for handheld desktop use)**
 
