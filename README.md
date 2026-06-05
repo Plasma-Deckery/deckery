@@ -2,6 +2,21 @@
 
 The Steam Deck is a genuinely capable handheld computer. Deckery's goal is to get the most productive and efficient workflows out of it — making full use of the unique combination of touch, trackpads, and controller buttons on the input side, while also shaping the OS to work well in this input mode and on the small screen.
 
+## ☕ Support Deckery
+
+Deckery is free and open-source. If you use this project or share the vision of a truly efficient Linux handheld, your support directly fuels its development.
+
+**Current Focus:** Funding the final push to 1.0, specifically working on touchpad support, gesture integration, and undocumented Steam Deck features.
+
+**How funds are used:**
+- 🛠️ Dedicated development hours for feature implementation and testing
+- ☕ Coffee for late-night debugging sessions
+- 🏆 **Sponsor Recognition:** Monthly sponsors get their name/logo added to the `README.md`.
+
+Every contribution brings the 1.0 release closer.
+
+
+## Subprojects
 Deckery is an umbrella for several subprojects:
 
 ---
@@ -16,9 +31,11 @@ A live overlay showing what every button does right now. Controls should be disc
 ### [makima-deckery](https://github.com/Plasma-Deckery/makima-deckery)
 The input remapper. Two goals:
 
-1. **Steam independence** — read raw evdev events directly, apply the config, emit keyboard/mouse events without Steam in the loop. We don't want to have to run Steam in the background in order to use the desktop mode efficiently.
+1. **Steam App independence** — read raw evdev events directly, apply the config, emit keyboard/mouse events without Steam in the loop. We don't want to have to run Steam in the background in order to use the desktop mode efficiently.
 2. **Richer control** — context-aware button layouts, per-app configs, and automations that go beyond what Steam Input allows.
 
+makima-deckery reads raw controller events, applies the config, emits keyboard/mouse events, and writes a fully-resolved state snapshot for the HUD. When LPAD/RPAD = "trackpad" is set, it additionally exposes the trackpads as standard uinput MT devices, making them available to libinput and other gesture tools.
+Additionally, makima-deckery combines both trackpads into a third combined multi-touch trackpad for multi-touch gesture recognition.
 ![makima-deckery](docs/screenshots/makima-placeholder.png)
 
 ---
@@ -40,16 +57,24 @@ KWin script for configurable gaps around windows — patched for correct behavio
 
 ---
 
-### [OpenWhispr](https://github.com/OpenWhispr/openwhispr) — voice input
-A hotkey-activated, bring-your-own-keys Whisper frontend — can run fully locally. On a handheld device without a physical keyboard, voice input is the practical text entry method when away from a desk — for messages, searches, quick notes.
+### [Kröhnkite](https://github.com/esjeon/krohnkite) - not part of deckery
+KWin script for dynamic window tiling - perfect for maximizing use of screen space while keeping window management via mouse actions at a minimum.
+Not patched yet.
 
+---
+
+### Voice Input (via [OpenWhispr](https://github.com/OpenWhispr/openwhispr)) - not part of deckery
+On a handheld device without a physical keyboard, voice input is the practical text entry method when away from a desk — for messages, quick notes, and agent instructions.
+
+OpenWhisper is a hotkey-activated, bring-your-own-keys Whisper frontend but can also run fully locally. 
 There are open issues in OpenWhispr that noticeably affect usability, but it's still a good input method for on-the-go text entry.
 
+#### Noise Filtering
 Outdoor use improves significantly with a noise suppressor in the audio pipeline. The [steamdeck-dotfiles](https://github.com/Plasma-Deckery/steamdeck-dotfiles) include an RNNoise configuration that handles background noise and wind well enough for practical outdoor use.
 
 ---
 
-## Status
+## Progress
 
 ### makima-deckery
 
@@ -59,7 +84,7 @@ Outdoor use improves significantly with a noise suppressor in the audio pipeline
 | Per-app button layouts | ✅ Covered |
 | Trackpad scrolling | ⚠️ Better experience via Steam Input — implementation planned ([deckery#4](https://github.com/Plasma-Deckery/deckery/issues/4)) |
 | Trackpad cursor movement | ⚠️ Better experience via Steam Input — implementation planned ([deckery#5](https://github.com/Plasma-Deckery/deckery/issues/5)) |
-| Trackpad gestures | ✅ MT devices available (`LPAD/RPAD = "trackpad"`) — gesture tool integration planned ([deckery#3](https://github.com/Plasma-Deckery/deckery/issues/3)) |
+| Trackpad gestures | ✅ MT devices are emulated — gesture tool integration planned ([deckery#3](https://github.com/Plasma-Deckery/deckery/issues/3)) |
 | Lizard Mode suppression | 🔧 Required for full Steam independence — planned ([makima-deckery#11](https://github.com/Plasma-Deckery/makima-deckery/issues/11)) |
 | Haptic feedback on trackpads | 🔧 Kernel support available in Linux 6.18+ / Bazzite 6.19+ — planned ([makima-deckery#9](https://github.com/Plasma-Deckery/makima-deckery/issues/9)) |
 | On-screen keyboard | ⚠️ Better experience via Steam |
