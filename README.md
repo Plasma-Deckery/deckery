@@ -1,12 +1,12 @@
 # Deckery
 
-The Steam Deck is a genuinely capable handheld computer. Deckery's goal is to get the most productive and efficient workflows out of it — making full use of the unique combination of touch, trackpads, and controller buttons on the input side, while also shaping the OS to work well in this input mode and on the small screen.
+The Steam Deck is a genuinely capable handheld computer. Deckery's goal is to get the most productive and efficient workflows out of it — making full use of the unique combination of touch, trackpads, and controller buttons on the input side, while also shaping the OS to work well in this input mode and on the small screen. The goal is fast and intuitive control of the device — without needing an external keyboard and without relying on the Steam application running.
 
 ## ☕ Support Deckery
 
 Deckery is free and open-source. If you use this project or share the vision of a truly efficient Linux handheld, your support directly fuels its development.
 
-**Current Focus:** Funding the final push to 1.0, specifically working on touchpad support, gesture integration, and undocumented Steam Deck features.
+**Current Focus:** Funding the final push to 1.0, specifically working on touchpad support and gesture integration in undocumented Steam Deck hardware features.
 
 **How funds are used:**
 - 🛠️ Dedicated development hours for feature implementation and testing
@@ -49,18 +49,18 @@ An opinionated KDE desktop setup — scripts, panels, KWin configuration, and sy
 ---
 
 ### [Kyanite](https://github.com/Plasma-Deckery/kyanite)
-KWin script for dynamic workspace management — patched for single-column vertical grid layout.
+KWin script for dynamic workspace management — patched for single-column vertical grid layout. Kyanite ensures there is always a free space available, so you never have to manage workspaces manually. We use vertical spaces to rotate around the short edge of the screen. In the future, Kyanite will be driven by controller shortcuts via makima-deckery — fullscreen, switching tiling mode, reordering layouts — without ever reaching for a keyboard.
 
 ---
 
 ### [maximized-window-gaps](https://github.com/Plasma-Deckery/maximized-window-gaps)
-KWin script for configurable gaps around windows — patched for correct behaviour on the Steam Deck screen geometry.
+KWin script for configurable gaps around windows — patched for correct behaviour on the Steam Deck screen geometry. It just looks better.
 
 ---
 
 ### [Kröhnkite](https://github.com/esjeon/krohnkite) - not part of deckery
 KWin script for dynamic window tiling - perfect for maximizing use of screen space while keeping window management via mouse actions at a minimum.
-Not patched yet.
+Not patched yet. In the future, Kröhnkite will be driven by controller shortcuts via makima-deckery — toggling fullscreen, switching tiling modes, and reordering layouts without a keyboard. Not started yet.
 
 ---
 
@@ -152,15 +152,6 @@ sudo chattr +i ~/.local/share/Steam/controller_base/desktop_neptune.vdf
 ```
 
 > **Why the lock?** Steam silently resets `desktop_neptune.vdf` to its defaults whenever it updates or rewrites its controller config. The `chattr +i` immutable flag prevents any process (including Steam running as your user) from modifying or replacing the file. If Steam updates and the lock is gone, restore the file and re-apply the flag.
-
-> **Lizard Mode:** The `hid-steam` kernel driver keeps a built-in mouse/scroll fallback active at all times. Makima-deckery suppresses it via a periodic hidraw heartbeat — set `SUPPRESS_LIZARD_MODE = "buttons,mouse"` in your base config. Steam no longer needs to run in the background for this.
-
-### KDE patches (optional)
-
-Two KWin scripts are maintained as Plasma-Deckery forks and installed via chezmoi. See [steamdeck-dotfiles](https://github.com/Plasma-Deckery/steamdeck-dotfiles) for the install scripts:
-
-- **[maximized-window-gaps](https://github.com/Plasma-Deckery/maximized-window-gaps)** — configurable gaps around tiled windows; patched to avoid spurious unmaximize on resize
-- **[Kyanite](https://github.com/Plasma-Deckery/kyanite)** — dynamic workspace management; patched for single-column vertical grid layout
 
 ---
 
