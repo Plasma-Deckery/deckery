@@ -49,7 +49,7 @@ An opinionated KDE desktop setup — scripts, panels, KWin configuration, and sy
 ---
 
 ### [Kyanite](https://github.com/Plasma-Deckery/kyanite)
-KWin script for dynamic workspace management — patched for single-column vertical grid layout. Kyanite ensures there is always a free space available, so you never have to manage workspaces manually. We use vertical spaces to rotate around the short edge of the screen. In the future, Kyanite will be driven by controller shortcuts via makima-deckery — fullscreen, switching tiling mode, reordering layouts — without ever reaching for a keyboard.
+KWin script for dynamic workspace management — patched for single-column vertical grid layout. Kyanite ensures there is always a free space available, so you never have to manage workspaces manually. We use vertical spaces to rotate around the short edge of the screen.
 
 ---
 
@@ -60,7 +60,7 @@ KWin script for configurable gaps around windows — patched for correct behavio
 
 ### [Kröhnkite](https://github.com/esjeon/krohnkite) - not part of deckery
 KWin script for dynamic window tiling - perfect for maximizing use of screen space while keeping window management via mouse actions at a minimum.
-Not patched yet. In the future, Kröhnkite will be driven by controller shortcuts via makima-deckery — toggling fullscreen, switching tiling modes, and reordering layouts without a keyboard. Not started yet.
+Not patched yet. With the right config, Kröhnkite can be driven by controller shortcuts via makima-deckery — toggling fullscreen, switching tiling modes, and reordering layouts without a keyboard.
 
 ---
 
@@ -76,8 +76,6 @@ Outdoor use improves significantly with a noise suppressor in the audio pipeline
 ---
 
 ## Progress
-
-### makima-deckery
 
 | Area | Status |
 |---|---|
@@ -130,8 +128,6 @@ Contributions welcome.
                        └─ deckery-hud
 ```
 
-**makima-deckery** reads raw controller events, applies the config, emits keyboard/mouse events, and writes a fully-resolved state snapshot for the HUD. When `LPAD/RPAD = "trackpad"` is set, it additionally exposes the trackpads as standard uinput MT devices, making them available to libinput and gesture tools. No Steam Input in the loop.
-
 ---
 
 ## Setup
@@ -140,7 +136,7 @@ Both **makima-deckery** and **deckery-hud** run as systemd user services in the 
 
 ### Configure Steam Input for coexistence
 
-Steam Input must be minimally configured so it doesn't conflict with makima-deckery on the inputs Deckery owns. A ready-to-use desktop config is checked in at [`dot_local/share/Steam/controller_base/executable_desktop_neptune.vdf`](https://github.com/Plasma-Deckery/steamdeck-dotfiles/blob/main/dot_local/share/Steam/controller_base/executable_desktop_neptune.vdf) in steamdeck-dotfiles — it disables almost everything in Steam Input except the trackpads and the Steam button.
+Steam Input must be minimally configured so it doesn't conflict with makima-deckery on the inputs Deckery owns. A ready-to-use desktop config is checked in at [`dot_local/share/Steam/controller_base/executable_desktop_neptune.vdf`](https://github.com/Plasma-Deckery/steamdeck-dotfiles/blob/main/dot_local/share/Steam/controller_base/executable_desktop_neptune.vdf) in steamdeck-dotfiles — it disables almost everything in Steam Input except the trackpads and the Steam button, and moves the on-screen keyboard to Steam+X.
 
 Copy it into place, then **lock the file** so Steam can't overwrite it on updates or restarts:
 
