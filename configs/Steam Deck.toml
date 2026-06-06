@@ -88,10 +88,10 @@ CUSTOM_MODIFIERS = "BTN_TL-BTN_TR-BTN_MODE"   # Layer-Modifier-Buttons
 
 LSTICK = "disabled"
 
-# Trackpads → deaktiviert (State wird trotzdem in state.json exportiert)
-# Auf "trackpad" setzen um virtuelle MT-Touchpad-Devices zu aktivieren.
+# Linkes Trackpad → deaktiviert (State wird trotzdem in state.json exportiert)
 LPAD = "disabled"
-RPAD = "disabled"
+
+# Rechtes und linkes Trackpad → via [trackpad]-Sektion konfiguriert (unten)
 
 # Rechter Stick → Maus (makima übernimmt, Steam group 25 inactive)
 RSTICK = "cursor"
@@ -99,5 +99,27 @@ RSTICK_SENSITIVITY = "4"   # Polling-Intervall in ms (4 = 250Hz)
 RSTICK_DEADZONE = "15"    # Deadzone gegen Stick-Drift (Wert * 200 = Raw-Threshold)
 
 16_BIT_AXIS = "true"   # Steam Deck nutzt 16-bit Achswerte wie Xbox
-GRAB_DEVICE = "false"  # PHASE 1: false = safe, kein Konflikt mit Steam Input
-                       # PHASE 2: auf "true" setzen + Steam Desktop Config deaktivieren
+GRAB_DEVICE = "false"  # Phase 1: parallel zu Steam Input
+
+# Lizard Mode Unterdrückung — verhindert, dass der hid-steam Kernel-Treiber
+# die Trackpads als Maus/Scroll emuliert wenn Steam nicht läuft.
+# "buttons"      → nur Keyboard-Mappings unterdrücken (ID_CLEAR_DIGITAL_MAPPINGS)
+# "mouse"        → nur Trackpad-Maus/Scroll unterdrücken (ID_SET_SETTINGS_VALUES)
+# "buttons,mouse"→ beides (empfohlen)
+# "false"        → aus
+SUPPRESS_LIZARD_MODE = "buttons"
+
+# Trackpad-Konfiguration
+# mode = "mt-trackpad" → virtuelles uinput MT-Device (libinput/Gestures)
+# mode = "trackball"   → Firmware-Trackball (TRACKPAD_RELATIVE_MOUSE via HID)
+# mode = "disabled"    → nur State-Export, kein Device (default)
+# combined_gesture_device = true → "Deckery Combined Trackpad" wenn beide Pads gleichzeitig aktiv
+
+[trackpad]
+combined_gesture_device = true
+
+[trackpad.right]
+mode = "trackball"
+
+[trackpad.left]
+mode = "disabled"

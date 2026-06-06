@@ -32,7 +32,8 @@ A live overlay showing what every button does right now. Controls should be disc
 The input remapper. Two goals:
 
 1. **Steam App independence** — read raw evdev events directly, apply the config, emit keyboard/mouse events without Steam in the loop. We don't want to have to run Steam in the background in order to use the desktop mode efficiently.
-2. **Richer control** — context-aware button layouts, per-app configs, and automations that go beyond what Steam Input allows.
+2. **Richer control** — context-aware button layouts, per-app configs, touch and scroll gestures, and automations that go beyond what Steam Input allows.
+3. **Reactive UI** — on every input event, makima writes a fully-resolved state snapshot for the HUD. This lets deckery-hud display a live button map without re-implementing any of makima's lookup logic.
 
 makima-deckery reads raw controller events, applies the config, emits keyboard/mouse events, and writes a fully-resolved state snapshot for the HUD. When LPAD/RPAD = "trackpad" is set, it additionally exposes the trackpads as standard uinput MT devices, making them available to libinput and other gesture tools.
 Additionally, makima-deckery combines both trackpads into a third combined multi-touch trackpad for multi-touch gesture recognition.
@@ -85,7 +86,7 @@ Outdoor use improves significantly with a noise suppressor in the audio pipeline
 | Trackpad scrolling | ⚠️ Better experience via Steam Input — implementation planned ([deckery#4](https://github.com/Plasma-Deckery/deckery/issues/4)) |
 | Trackpad cursor movement | ⚠️ Better experience via Steam Input — implementation planned ([deckery#5](https://github.com/Plasma-Deckery/deckery/issues/5)) |
 | Trackpad gestures | ✅ MT devices are emulated — gesture tool integration planned ([deckery#3](https://github.com/Plasma-Deckery/deckery/issues/3)) |
-| Lizard Mode suppression | 🔧 Required for full Steam independence — planned ([makima-deckery#11](https://github.com/Plasma-Deckery/makima-deckery/issues/11)) |
+| Lizard Mode suppression | 🔧 In progress — hidraw heartbeat implemented, configurable via `SUPPRESS_LIZARD_MODE` ([makima-deckery#11](https://github.com/Plasma-Deckery/makima-deckery/issues/11)) |
 | Haptic feedback on trackpads | 🔧 Kernel support available in Linux 6.18+ / Bazzite 6.19+ — planned ([makima-deckery#9](https://github.com/Plasma-Deckery/makima-deckery/issues/9)) |
 | On-screen keyboard | ⚠️ Better experience via Steam |
 
@@ -101,7 +102,7 @@ Outdoor use improves significantly with a noise suppressor in the audio pipeline
 
 - **libinput tuning for trackpad cursor** — the virtual MT devices expose the trackpads to libinput, but libinput applies generic touchpad profiles to unknown devices. For good cursor movement with proper acceleration curves and inertia, the Deckery trackpad devices need custom libinput configuration — either via `libinput quirks` (device property overrides) or a minimal libinput fork. This is a prerequisite for making right-trackpad mouse movement feel as good as Steam Input's trackball mode. See [deckery#2](https://github.com/Plasma-Deckery/deckery/issues/2) for right-stick ball roll as an interim solution.
 
-### Further challenges (out of scope, but relevant for handheld desktop use)
+### Further challenges
 
 - **Controller-native authentication input** — two places require a password or PIN without a keyboard: the lock screen, and system authentication prompts (sudo, polkit). The lock screen needs a controller-native PIN entry UI (d-pad or face buttons to select digits, confirm with A). For sudo/polkit, the existing system prompt dialogs would need to be intercepted or replaced with a controller-friendly equivalent — so that privilege escalation flows work without reaching for a keyboard. See [deckery#6](https://github.com/Plasma-Deckery/deckery/issues/6).
 
@@ -135,24 +136,26 @@ Contributions welcome.
 
 ## Setup
 
-Both **makima-deckery** and **deckery-hud** run as systemd user services in the background. A step-by-step setup guide is planned.
+Both **makima-deckery** and **deckery-hud** run as systemd user services in the background. Install them as described in their respective Setup sections: [makima-deckery](https://github.com/Plasma-Deckery/makima-deckery#setup) · [deckery-hud](https://github.com/Plasma-Deckery/deckery-hud#setup).
 
-### Steam Input
+### Configure Steam Input for coexistence
 
-Deckery takes over buttons, stick navigation, and back paddles. Trackpad scrolling and mouse emulation still run through Steam Input for now — see the makima-deckery section above for the full picture.
+Steam Input must be minimally configured so it doesn't conflict with makima-deckery on the inputs Deckery owns. A ready-to-use desktop config is checked in at [`dot_local/share/Steam/controller_base/executable_desktop_neptune.vdf`](https://github.com/Plasma-Deckery/steamdeck-dotfiles/blob/main/dot_local/share/Steam/controller_base/executable_desktop_neptune.vdf) in steamdeck-dotfiles — it disables almost everything in Steam Input except the trackpads and the Steam button.
 
-> **Lizard Mode:** The `hid-steam` kernel driver keeps a built-in mouse/scroll fallback active at all times. Steam suppresses it while running. Until makima-deckery implements its own Lizard Mode suppression (planned for Phase 2), Steam needs to be running in the background for the trackpad emulation to work cleanly — otherwise the kernel driver's fallback behaviour interferes.
+Copy it into place, then **lock the file** so Steam can't overwrite it on updates or restarts:
 
-To avoid conflicts with Steam Input on the parts Deckery does own:
+```bash
+cp executable_desktop_neptune.vdf \
+  ~/.local/share/Steam/controller_base/desktop_neptune.vdf
 
-1. **Lock the desktop controller config** so Steam can't overwrite it on restart:
-   ```bash
-   sudo chattr +i ~/.local/share/Steam/controller_base/desktop_neptune.vdf
-   ```
+sudo chattr +i ~/.local/share/Steam/controller_base/desktop_neptune.vdf
+```
 
-2. **Disable most of Steam's controller handling** — almost everything except trackpads and the Steam button is turned off in the desktop config. The full config is checked in at [`dot_local/share/Steam/controller_base/executable_desktop_neptune.vdf`](https://github.com/Plasma-Deckery/steamdeck-dotfiles/blob/main/dot_local/share/Steam/controller_base/executable_desktop_neptune.vdf) in steamdeck-dotfiles.
+> **Why the lock?** Steam silently resets `desktop_neptune.vdf` to its defaults whenever it updates or rewrites its controller config. The `chattr +i` immutable flag prevents any process (including Steam running as your user) from modifying or replacing the file. If Steam updates and the lock is gone, restore the file and re-apply the flag.
 
-### KDE patches
+> **Lizard Mode:** The `hid-steam` kernel driver keeps a built-in mouse/scroll fallback active at all times. Makima-deckery suppresses it via a periodic hidraw heartbeat — set `SUPPRESS_LIZARD_MODE = "buttons,mouse"` in your base config. Steam no longer needs to run in the background for this.
+
+### KDE patches (optional)
 
 Two KWin scripts are maintained as Plasma-Deckery forks and installed via chezmoi. See [steamdeck-dotfiles](https://github.com/Plasma-Deckery/steamdeck-dotfiles) for the install scripts:
 
