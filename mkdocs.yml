@@ -22,6 +22,7 @@ theme:
         icon: material/brightness-4
         name: Switch to light mode
   features:
+    - navigation.tabs
     - navigation.sections
     - navigation.expand
     - navigation.top
@@ -31,20 +32,35 @@ theme:
     - content.code.copy
     - content.action.edit
 
+extra_css:
+  - stylesheets/extra.css
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+
 nav:
-  - Home: index.md
-  - Setup Guide: setup-guide.md
-  - Open Challenges: open-challenges.md
+  - Home:
+    - index.md
+    - Setup Guide: setup-guide.md
+    - Configuration: configuration.md
+    - Progress & Challenges: progress-and-challenges.md
   - Projects:
     - projects/index.md
-    - makima-deckery: projects/makima-deckery.md
-    - deckery-hud: projects/deckery-hud.md
-    - steamdeck-dotfiles: projects/steamdeck-dotfiles.md
-    - Kyanite: projects/kyanite.md
-    - maximized-window-gaps: projects/maximized-window-gaps.md
-    - Kröhnkite: projects/krohnkite.md
-    - OpenWhispr: projects/openwhispr.md
+    - Own Projects:
+      - Deckery HUD: projects/deckery-hud.md
+      - Makima Deckery: projects/makima-deckery.md
+      - Deckery Tray: projects/deckery-tray.md
+      - Steam Deck Dotfiles: projects/steamdeck-dotfiles.md
+    - Forked Tools:
+      - Kyanite: projects/kyanite.md
+      - maximized-window-gaps: projects/maximized-window-gaps.md
+    - Further Tools:
+      - Kröhnkite: projects/krohnkite.md
+      - OpenWhispr: projects/openwhispr.md
   - Reference:
+    - Installer Script: reference/installer-script.md
     - IPC: reference/ipc.md
     - State JSON: reference/state-json.md
     - Steam Input Mapping: reference/steam-input-mapping.md

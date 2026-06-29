@@ -1,0 +1,23 @@
+# Firefox — Overrides
+# Alles andere wird aus "Steam Deck.toml" geerbt.
+# L1+DPad-Links/Rechts fällt zurück auf Desktop-Wechsel (aus Base).
+
+[remap]
+# --- R1 + DPad → Browser-Navigation ---
+BTN_TR-BTN_DPAD_LEFT  = { keys = ["KEY_LEFTALT", "KEY_LEFT"],  label = "Back" }
+BTN_TR-BTN_DPAD_RIGHT = { keys = ["KEY_LEFTALT", "KEY_RIGHT"], label = "Forward" }
+BTN_TR-BTN_DPAD_UP    = { keys = ["KEY_LEFTCTRL", "KEY_LEFTSHIFT", "KEY_TAB"], label = "Previous Tab" }
+BTN_TR-BTN_DPAD_DOWN  = { keys = ["KEY_LEFTCTRL", "KEY_TAB"],  label = "Next Tab" }
+
+# --- R1 + Face → Tab-Verwaltung ---
+BTN_TR-BTN_SOUTH = { keys = ["KEY_LEFTCTRL", "KEY_T"],                      label = "New Tab" }           # R1+A
+BTN_TR-BTN_EAST  = { keys = ["KEY_LEFTCTRL", "KEY_W"],                      label = "Close Tab" }          # R1+B
+BTN_TR-BTN_NORTH = { keys = ["KEY_LEFTCTRL", "KEY_LEFTSHIFT", "KEY_T"],     label = "Reopen Closed Tab" }  # R1+X
+BTN_TR-BTN_WEST  = { keys = ["KEY_LEFTCTRL", "KEY_R"],                      label = "Reload" }             # R1+Y
+
+# --- R1 + drei-Striche (BTN_START) → Sidebar Collapse ---
+BTN_TR-BTN_START = { keys = ["KEY_LEFTALT", "KEY_LEFTCTRL", "KEY_Z"], label = "Collapse Sidebar" }
+
+[settings]
+CUSTOM_MODIFIERS = "BTN_TL-BTN_TR-BTN_MODE"
+GRAB_DEVICE = "false"

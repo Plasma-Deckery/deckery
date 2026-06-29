@@ -1,0 +1,6 @@
+#!/bin/bash
+# Launcher — finds the repo via symlink resolution so it works
+# regardless of where the repository is cloned.
+REPO="$(dirname "$(readlink -f "$0")")"
+exec distrobox enter deckery -- bash -c \
+  "python3 '$REPO/tray/deckery-tray.py'"

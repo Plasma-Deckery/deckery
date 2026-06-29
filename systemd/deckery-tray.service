@@ -1,0 +1,17 @@
+[Unit]
+Description=Deckery system tray — service monitor and control
+After=graphical-session.target
+PartOf=graphical-session.target
+Wants=makima.service deckery-hud.service
+
+[Service]
+Type=simple
+ExecStartPre=/usr/bin/podman start deckery
+ExecStart=%h/.local/bin/deckery-tray
+Restart=on-failure
+RestartSec=3
+Environment=XDG_SESSION_TYPE=wayland
+Environment=XDG_CURRENT_DESKTOP=KDE
+
+[Install]
+WantedBy=graphical-session.target

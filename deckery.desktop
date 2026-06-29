@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Deckery
+Comment=Start Deckery controller remapping services
+Icon=deckery
+Exec=systemctl --user start makima.service deckery-hud.service deckery-tray.service
+Terminal=false
+Categories=Utility;Game;
+Keywords=controller;gamepad;steam deck;remapping;deckery;

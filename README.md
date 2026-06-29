@@ -17,164 +17,50 @@ Every contribution brings the 1.0 release closer.
 
 
 ## Subprojects
-Deckery is an umbrella for several subprojects:
+
+Deckery is an umbrella for several subprojects. Some form the core — remapping controller buttons to system functions, with visual companion apps like the HUD and tray. Others extend KDE Plasma with configurations and additional tooling so the desktop is optimally suited for handheld use on the Steam Deck.
+
+→ [Full documentation](https://plasma-deckery.github.io/deckery/projects/)
 
 ---
 
 ### [deckery-hud](https://github.com/Plasma-Deckery/deckery-hud)
-A live overlay showing what every button does right now. Controls should be discoverable and explain themselves — for easier onboarding and faster recall.
+A live overlay for visualising and exploring your button config. See what every button does right now — controls should be discoverable and explain themselves, for easier onboarding and faster recall.
 
 <video src="https://github.com/user-attachments/assets/728cf2dc-443e-446e-8714-4931174684ad" controls autoplay loop muted></video>
 
 ---
 
 ### [makima-deckery](https://github.com/Plasma-Deckery/makima-deckery)
-The input remapper. Two goals:
+The heart of Deckery — the input remapper. Reads raw evdev events directly, applies context-aware button configs, and emits keyboard/mouse events. Supports per-app layouts, modifier keys, and trackpad gesture devices.
 
-1. **Steam App independence** — read raw evdev events directly, apply the config, emit keyboard/mouse events without Steam in the loop. We don't want to have to run Steam in the background in order to use the desktop mode efficiently.
-2. **Richer control** — context-aware button layouts, per-app configs, touch and scroll gestures, and automations that go beyond what Steam Input allows.
-3. **Reactive UI** — on every input event, makima writes a fully-resolved state snapshot for the HUD. This lets deckery-hud display a live button map without re-implementing any of makima's lookup logic.
-
-makima-deckery reads raw controller events, applies the config, emits keyboard/mouse events, and writes a fully-resolved state snapshot for the HUD. When LPAD/RPAD = "trackpad" is set, it additionally exposes the trackpads as standard uinput MT devices, making them available to libinput and other gesture tools.
-Additionally, makima-deckery combines both trackpads into a third combined multi-touch trackpad for multi-touch gesture recognition.
-![makima-deckery](docs/screenshots/makima-placeholder.png)
+→ [Full documentation](https://plasma-deckery.github.io/deckery/projects/makima-deckery/)
 
 ---
+
+### [deckery-tray](https://github.com/Plasma-Deckery/deckery-tray)
+System tray applet for monitoring and controlling the Deckery service stack. → [Full documentation](https://plasma-deckery.github.io/deckery/projects/deckery-tray/)
 
 ### [steamdeck-dotfiles](https://github.com/Plasma-Deckery/steamdeck-dotfiles)
-An opinionated KDE desktop setup — scripts, panels, KWin configuration, and system settings tuned specifically for the Steam Deck's screen size and input methods. Managed via chezmoi. Proper documentation missing for now.
-
-![steamdeck-dotfiles](docs/screenshots/dotfiles-placeholder.png)
+An opinionated KDE desktop setup tuned for the Steam Deck's screen size and input methods. → [Full documentation](https://plasma-deckery.github.io/deckery/projects/steamdeck-dotfiles/)
 
 ---
 
-### [Kyanite](https://github.com/Plasma-Deckery/kyanite)
-KWin script for dynamic workspace management — patched for single-column vertical grid layout. Kyanite ensures there is always a free space available, so you never have to manage workspaces manually. We use vertical spaces to rotate around the short edge of the screen.
+## Progress & Challenges
 
----
-
-### [maximized-window-gaps](https://github.com/Plasma-Deckery/maximized-window-gaps)
-KWin script for configurable gaps around windows — patched for correct behaviour on the Steam Deck screen geometry. It just looks better.
-
----
-
-### [Kröhnkite](https://github.com/esjeon/krohnkite) - not part of deckery
-KWin script for dynamic window tiling - perfect for maximizing use of screen space while keeping window management via mouse actions at a minimum.
-Not patched yet. With the right config, Kröhnkite can be driven by controller shortcuts via makima-deckery — toggling fullscreen, switching tiling modes, and reordering layouts without a keyboard.
-
----
-
-### Voice Input (via [OpenWhispr](https://github.com/OpenWhispr/openwhispr)) - not part of deckery
-On a handheld device without a physical keyboard, voice input is the practical text entry method when away from a desk — for messages, quick notes, and agent instructions.
-
-OpenWhisper is a hotkey-activated, bring-your-own-keys Whisper frontend but can also run fully locally. 
-There are open issues in OpenWhispr that noticeably affect usability, but it's still a good input method for on-the-go text entry.
-
-#### Noise Filtering
-Outdoor use improves significantly with a noise suppressor in the audio pipeline. The [steamdeck-dotfiles](https://github.com/Plasma-Deckery/steamdeck-dotfiles) include an RNNoise configuration that handles background noise and wind well enough for practical outdoor use.
-
----
-
-## Progress
-
-> 📋 **→ WIKI** *(this table and the challenges below go to the wiki — too detailed for a quick-start page, but valuable as living project status)*
-
-| Area | Status |
-|---|---|
-| Buttons, D-Pad, back paddles, modifiers | ✅ Covered |
-| Per-app button layouts | ✅ Covered |
-| Trackpad scrolling | ⚠️ Better experience via Steam Input — implementation planned ([deckery#4](https://github.com/Plasma-Deckery/deckery/issues/4)) |
-| Trackpad cursor movement | ⚠️ Better experience via Steam Input — implementation planned ([deckery#5](https://github.com/Plasma-Deckery/deckery/issues/5)) |
-| Trackpad gestures | ✅ MT devices are emulated — gesture tool integration planned ([deckery#3](https://github.com/Plasma-Deckery/deckery/issues/3)) |
-| Lizard Mode suppression | 🔧 In progress — hidraw heartbeat implemented, configurable via `SUPPRESS_LIZARD_MODE` ([makima-deckery#11](https://github.com/Plasma-Deckery/makima-deckery/issues/11)) |
-| Haptic feedback on trackpads | 🔧 Kernel support available in Linux 6.18+ / Bazzite 6.19+ — planned ([makima-deckery#9](https://github.com/Plasma-Deckery/makima-deckery/issues/9)) |
-| On-screen keyboard | ⚠️ Better experience via Steam |
-
-### Open challenges
-
-> 📋 **→ WIKI** *(detailed technical challenges — each one should become its own wiki page)*
-
-- **Lizard Mode suppression** — the `hid-steam` kernel driver keeps a built-in mouse/scroll fallback (Lizard Mode) active unless suppressed via periodic hidraw HID reports. Steam handles this while running. Makima-deckery needs to take over this role for full Steam independence: open the hidraw device on startup, send feature reports `0x85` + `0x8d` every ~4s. The heartbeat is a useful safety mechanism — if makima crashes, Lizard Mode re-activates automatically. See [makima-deckery#11](https://github.com/Plasma-Deckery/makima-deckery/issues/11).
-
-- **Trackpad gesture tool** — the virtual MT devices expose both trackpads to gesture tools (syngesture, fusuma, libinput-gestures). The missing piece is a minimal fork that outputs discrete gesture events to `/tmp/makima-control.sock` and sends haptic pulses via FF_HAPTIC. A tested, documented setup for this is still in progress. See [deckery#3](https://github.com/Plasma-Deckery/deckery/issues/3).
-
-- **Haptic feedback** — Linux 6.18 introduced `FF_HAPTIC` for haptic-capable touchpads, and Bazzite ships kernel 6.19+. The infrastructure (hidraw fd held open for Lizard Mode suppression) doubles as the back-channel for sending haptic HID reports to the trackpad actuators. See [makima-deckery#9](https://github.com/Plasma-Deckery/makima-deckery/issues/9).
-
-- **On-screen keyboard** — finding a good keyboard alternative that works well in desktop mode without Steam. The Steam on-screen keyboard works well but requires Steam to be running. Voice input via OpenWhispr covers most free-text input at a desk; the remaining gap is structured input (passwords, PIN fields, forms) where dictation is impractical. A controller-native text entry UI for those cases would remove the last Steam dependency.
-
-- **libinput tuning for trackpad cursor** — the virtual MT devices expose the trackpads to libinput, but libinput applies generic touchpad profiles to unknown devices. For good cursor movement with proper acceleration curves and inertia, the Deckery trackpad devices need custom libinput configuration — either via `libinput quirks` (device property overrides) or a minimal libinput fork. This is a prerequisite for making right-trackpad mouse movement feel as good as Steam Input's trackball mode. See [deckery#2](https://github.com/Plasma-Deckery/deckery/issues/2) for right-stick ball roll as an interim solution.
-
-### Further challenges
-
-> 📋 **→ WIKI** *(same as above)*
-
-- **Controller-native authentication input** — two places require a password or PIN without a keyboard: the lock screen, and system authentication prompts (sudo, polkit). The lock screen needs a controller-native PIN entry UI (d-pad or face buttons to select digits, confirm with A). For sudo/polkit, the existing system prompt dialogs would need to be intercepted or replaced with a controller-friendly equivalent — so that privilege escalation flows work without reaching for a keyboard. See [deckery#6](https://github.com/Plasma-Deckery/deckery/issues/6).
-
-Contributions welcome.
-
----
-
-## Architecture
-
-> 📋 **→ WIKI** *(developer-facing; link to a wiki page — a one-liner summary can stay here)*
-
-```
-/dev/input/event* (evdev)
-       │
-       └─ makima-deckery ──────────────────► virtual keyboard/mouse device
-               │                            │                    │
-               │                            ├─► KDE / apps       │
-               │                            │                    │
-               │                            └─► virtual trackpad MT devices
-               │                                 (Deckery Left/Right Trackpad)
-               │                                        │
-               │                                        └─► libinput / gesture tools
-               │
-               ├─ /tmp/makima-state.json
-               └─ /tmp/makima-control.sock (IPC)
-                       │
-                       └─ deckery-hud
-```
+Current status and open challenges: [plasma-deckery.github.io/deckery/progress-and-challenges/](https://plasma-deckery.github.io/deckery/progress-and-challenges/)
 
 ---
 
 ## Setup
 
-> ⚠️ **ÜBERARBEITEN** *(dieser Abschnitt bleibt, aber muss stark vereinfacht werden — ein einziger curl-Befehl + "das war's". Details wie der Steam-Input-Lock und chattr wandern ins Wiki unter "Setup Guide".)*
-
-Both **makima-deckery** and **deckery-hud** run as systemd user services in the background. Install them as described in their respective Setup sections: [makima-deckery](https://github.com/Plasma-Deckery/makima-deckery#setup) · [deckery-hud](https://github.com/Plasma-Deckery/deckery-hud#setup).
-
-### Configure Steam Input for coexistence
-
-> 📋 **→ WIKI** *(how-to guide, not quick-start content — move to "Setup Guide" wiki page)*
-
-Steam Input must be minimally configured so it doesn't conflict with makima-deckery on the inputs Deckery owns. A ready-to-use desktop config is checked in at [`dot_local/share/Steam/controller_base/executable_desktop_neptune.vdf`](https://github.com/Plasma-Deckery/steamdeck-dotfiles/blob/main/dot_local/share/Steam/controller_base/executable_desktop_neptune.vdf) in steamdeck-dotfiles — it disables almost everything in Steam Input except the trackpads and the Steam button, and moves the on-screen keyboard to Steam+X.
-
-Copy it into place, then **lock the file** so Steam can't overwrite it on updates or restarts:
-
 ```bash
-cp executable_desktop_neptune.vdf \
-  ~/.local/share/Steam/controller_base/desktop_neptune.vdf
-
-sudo chattr +i ~/.local/share/Steam/controller_base/desktop_neptune.vdf
+curl -sSL https://raw.githubusercontent.com/Plasma-Deckery/deckery/main/get.sh | bash
 ```
 
-> **Why the lock?** Steam silently resets `desktop_neptune.vdf` to its defaults whenever it updates or rewrites its controller config. The `chattr +i` immutable flag prevents any process (including Steam running as your user) from modifying or replacing the file. If Steam updates and the lock is gone, restore the file and re-apply the flag.
+> **Reading the full installation guide is required** — the installer alone is not enough. Steam needs to be configured for coexistence with Deckery after installation.
 >
-> ⚠️ **Warning:** The `chattr +i` lock blocks Steam's updater from doing an atomic rename on this file, which causes the entire Steam client update to fail and corrupt the installation. A better solution is being tracked in [#11](https://github.com/Plasma-Deckery/deckery/issues/11) — replacing the lock with a Makima file watcher that restores the config after updates without blocking them.
-
----
-
-## Upstream contributions
-
-> 📋 **→ WIKI** *(contributor/developer content — belongs in a "Contributing" wiki page, not the landing page)*
-
-| Project | PR | Description |
-|---|---|---|
-| cyber-sushi/makima | [#57](https://github.com/cyber-sushi/makima/pull/57) | Fix BTN_DPAD_* silently ignored in config |
-| cyber-sushi/makima | [#58](https://github.com/cyber-sushi/makima/pull/58) | Fix x11rb::connect panic after suspend |
-| emberian/evdev | [#178](https://github.com/emberian/evdev/pull/178) | Add BTN_GRIPL/R/L2/R2 keycodes for Steam Deck back paddles |
-| MurderFromMars/Kyanite | [#3](https://github.com/MurderFromMars/Kyanite/pull/3) | Vertical grid layout for single-column workspace switching |
+> → [Setup Guide](https://plasma-deckery.github.io/deckery/setup-guide/) · [Steam Input configuration](https://plasma-deckery.github.io/deckery/setup-guide/#2-configure-steam-input-for-coexistence)
 
 ---
 
@@ -184,8 +70,6 @@ Tested on: Steam Deck (Bazzite 43, KDE Plasma 6, Wayland)
 
 ### Coffee
 Deckery is free and open-source. If you find the project useful and want to support its ambitious goal, i would be honoured if you considered donating. Thanks :)
-
-> ⚠️ **ÜBERARBEITEN** *(Coffee/Ko-fi-Block existiert schon oben im "Support Deckery"-Abschnitt — dieser Block hier ist ein Duplikat und kann raus)*
 
 <p align="center">
   <a href="https://ko-fi.com/phischdev" target="_blank">

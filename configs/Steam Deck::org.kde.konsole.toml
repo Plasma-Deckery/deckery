@@ -1,0 +1,11 @@
+# Terminal (Konsole) — Override
+# Alles andere wird aus "Steam Deck.toml" geerbt.
+
+[remap]
+BTN_EAST         = ["KEY_LEFTCTRL", "KEY_C"]                                                     # B → Ctrl+C statt Esc
+BTN_TL-BTN_NORTH = { keys = ["KEY_LEFTCTRL", "KEY_LEFTSHIFT", "KEY_C"], label = "Copy" }        # L1+X → Ctrl+Shift+C (terminal copy)
+BTN_TL-BTN_WEST  = { keys = ["KEY_LEFTCTRL", "KEY_LEFTSHIFT", "KEY_V"], label = "Paste" }  # L1+Y → Ctrl+Shift+V (terminal paste)
+
+[settings]
+CUSTOM_MODIFIERS = "BTN_TL-BTN_MODE"
+GRAB_DEVICE = "false"

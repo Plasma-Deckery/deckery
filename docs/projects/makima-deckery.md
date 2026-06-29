@@ -26,7 +26,7 @@ makima listens on a Unix socket at `/tmp/makima-control.sock`. Commands (newline
 
 ## Config
 
-Configs live in `~/.config/makima/`. The base config `Steam Deck.toml` is a symlink to `~/Programming/deckery/configs/Steam Deck.toml` and is version-controlled. App-specific configs follow the naming pattern `Steam Deck::<AppName>.toml`.
+Configs live in `~/.config/makima/`. The base config `Steam Deck.toml` is a symlink to `~/.local/share/deckery/deckery/configs/Steam Deck.toml` and is version-controlled. App-specific configs follow the naming pattern `Steam Deck::<AppName>.toml`.
 
 Key config attributes:
 
