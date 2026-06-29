@@ -77,6 +77,8 @@ Outdoor use improves significantly with a noise suppressor in the audio pipeline
 
 ## Progress
 
+> 📋 **→ WIKI** *(this table and the challenges below go to the wiki — too detailed for a quick-start page, but valuable as living project status)*
+
 | Area | Status |
 |---|---|
 | Buttons, D-Pad, back paddles, modifiers | ✅ Covered |
@@ -90,6 +92,8 @@ Outdoor use improves significantly with a noise suppressor in the audio pipeline
 
 ### Open challenges
 
+> 📋 **→ WIKI** *(detailed technical challenges — each one should become its own wiki page)*
+
 - **Lizard Mode suppression** — the `hid-steam` kernel driver keeps a built-in mouse/scroll fallback (Lizard Mode) active unless suppressed via periodic hidraw HID reports. Steam handles this while running. Makima-deckery needs to take over this role for full Steam independence: open the hidraw device on startup, send feature reports `0x85` + `0x8d` every ~4s. The heartbeat is a useful safety mechanism — if makima crashes, Lizard Mode re-activates automatically. See [makima-deckery#11](https://github.com/Plasma-Deckery/makima-deckery/issues/11).
 
 - **Trackpad gesture tool** — the virtual MT devices expose both trackpads to gesture tools (syngesture, fusuma, libinput-gestures). The missing piece is a minimal fork that outputs discrete gesture events to `/tmp/makima-control.sock` and sends haptic pulses via FF_HAPTIC. A tested, documented setup for this is still in progress. See [deckery#3](https://github.com/Plasma-Deckery/deckery/issues/3).
@@ -102,6 +106,8 @@ Outdoor use improves significantly with a noise suppressor in the audio pipeline
 
 ### Further challenges
 
+> 📋 **→ WIKI** *(same as above)*
+
 - **Controller-native authentication input** — two places require a password or PIN without a keyboard: the lock screen, and system authentication prompts (sudo, polkit). The lock screen needs a controller-native PIN entry UI (d-pad or face buttons to select digits, confirm with A). For sudo/polkit, the existing system prompt dialogs would need to be intercepted or replaced with a controller-friendly equivalent — so that privilege escalation flows work without reaching for a keyboard. See [deckery#6](https://github.com/Plasma-Deckery/deckery/issues/6).
 
 Contributions welcome.
@@ -109,6 +115,8 @@ Contributions welcome.
 ---
 
 ## Architecture
+
+> 📋 **→ WIKI** *(developer-facing; link to a wiki page — a one-liner summary can stay here)*
 
 ```
 /dev/input/event* (evdev)
@@ -132,9 +140,13 @@ Contributions welcome.
 
 ## Setup
 
+> ⚠️ **ÜBERARBEITEN** *(dieser Abschnitt bleibt, aber muss stark vereinfacht werden — ein einziger curl-Befehl + "das war's". Details wie der Steam-Input-Lock und chattr wandern ins Wiki unter "Setup Guide".)*
+
 Both **makima-deckery** and **deckery-hud** run as systemd user services in the background. Install them as described in their respective Setup sections: [makima-deckery](https://github.com/Plasma-Deckery/makima-deckery#setup) · [deckery-hud](https://github.com/Plasma-Deckery/deckery-hud#setup).
 
 ### Configure Steam Input for coexistence
+
+> 📋 **→ WIKI** *(how-to guide, not quick-start content — move to "Setup Guide" wiki page)*
 
 Steam Input must be minimally configured so it doesn't conflict with makima-deckery on the inputs Deckery owns. A ready-to-use desktop config is checked in at [`dot_local/share/Steam/controller_base/executable_desktop_neptune.vdf`](https://github.com/Plasma-Deckery/steamdeck-dotfiles/blob/main/dot_local/share/Steam/controller_base/executable_desktop_neptune.vdf) in steamdeck-dotfiles — it disables almost everything in Steam Input except the trackpads and the Steam button, and moves the on-screen keyboard to Steam+X.
 
@@ -148,10 +160,14 @@ sudo chattr +i ~/.local/share/Steam/controller_base/desktop_neptune.vdf
 ```
 
 > **Why the lock?** Steam silently resets `desktop_neptune.vdf` to its defaults whenever it updates or rewrites its controller config. The `chattr +i` immutable flag prevents any process (including Steam running as your user) from modifying or replacing the file. If Steam updates and the lock is gone, restore the file and re-apply the flag.
+>
+> ⚠️ **Warning:** The `chattr +i` lock blocks Steam's updater from doing an atomic rename on this file, which causes the entire Steam client update to fail and corrupt the installation. A better solution is being tracked in [#11](https://github.com/Plasma-Deckery/deckery/issues/11) — replacing the lock with a Makima file watcher that restores the config after updates without blocking them.
 
 ---
 
 ## Upstream contributions
+
+> 📋 **→ WIKI** *(contributor/developer content — belongs in a "Contributing" wiki page, not the landing page)*
 
 | Project | PR | Description |
 |---|---|---|
@@ -168,6 +184,8 @@ Tested on: Steam Deck (Bazzite 43, KDE Plasma 6, Wayland)
 
 ### Coffee
 Deckery is free and open-source. If you find the project useful and want to support its ambitious goal, i would be honoured if you considered donating. Thanks :)
+
+> ⚠️ **ÜBERARBEITEN** *(Coffee/Ko-fi-Block existiert schon oben im "Support Deckery"-Abschnitt — dieser Block hier ist ein Duplikat und kann raus)*
 
 <p align="center">
   <a href="https://ko-fi.com/phischdev" target="_blank">

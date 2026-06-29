@@ -1,0 +1,18 @@
+blank_issues_enabled: false
+
+contact_links:
+  - name: 🐛 Bug in Deckery (tray / installer / config)
+    url: https://github.com/Plasma-Deckery/deckery/issues/new
+    about: Bugs in the tray icon, installer, config format, or other core Deckery components
+
+  - name: 🐛 Bug in Deckery Makima (controller mapping / IPC)
+    url: https://github.com/Plasma-Deckery/makima-deckery/issues/new
+    about: Bugs in button/axis mapping or the IPC socket — please report in the Deckery Makima repository
+
+  - name: 🐛 Bug in Deckery HUD (OSD / overlay)
+    url: https://github.com/Plasma-Deckery/deckery-hud/issues/new
+    about: Bugs in the on-screen display or HUD overlay
+
+  - name: 💡 Propose a feature or ask a question
+    url: https://github.com/Plasma-Deckery/deckery/discussions/new/choose
+    about: Ideas, questions, and general discussion — open a Discussion

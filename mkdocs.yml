@@ -1,0 +1,50 @@
+site_name: Deckery
+site_url: https://plasma-deckery.github.io/deckery/
+repo_url: https://github.com/Plasma-Deckery/deckery
+repo_name: Plasma-Deckery/deckery
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: blue grey
+      accent: teal
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: blue grey
+      accent: teal
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.indexes
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.action.edit
+
+nav:
+  - Home: index.md
+  - Setup Guide: setup-guide.md
+  - Open Challenges: open-challenges.md
+  - Projects:
+    - projects/index.md
+    - makima-deckery: projects/makima-deckery.md
+    - deckery-hud: projects/deckery-hud.md
+    - steamdeck-dotfiles: projects/steamdeck-dotfiles.md
+    - Kyanite: projects/kyanite.md
+    - maximized-window-gaps: projects/maximized-window-gaps.md
+    - Kröhnkite: projects/krohnkite.md
+    - OpenWhispr: projects/openwhispr.md
+  - Reference:
+    - IPC: reference/ipc.md
+    - State JSON: reference/state-json.md
+    - Steam Input Mapping: reference/steam-input-mapping.md
