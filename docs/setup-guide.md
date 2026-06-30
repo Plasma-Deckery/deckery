@@ -37,14 +37,14 @@ A few features from the original Steam layout are kept and adapted:
 The Deckery config file is located at:
 
 ```
-~/.local/share/deckery/deckery/docs/desktop_neptune.vdf
+~/.local/share/deckery/deckery/configs/desktop_neptune.vdf
 ```
 
 The installer copies this automatically on every run. To manually copy or restore it:
 
 !!! info "Manually apply the config"
     ```bash
-    cp ~/.local/share/deckery/deckery/docs/desktop_neptune.vdf \
+    cp ~/.local/share/deckery/deckery/configs/desktop_neptune.vdf \
        ~/.local/share/Steam/controller_base/desktop_neptune.vdf
     ```
 
@@ -67,7 +67,7 @@ This approach has an inconvenient drawback.
     sudo chattr -i ~/.local/share/Steam/controller_base/desktop_neptune.vdf
 
     # After the Steam update — restore and re-lock
-    cp ~/.local/share/deckery/deckery/docs/desktop_neptune.vdf \
+    cp ~/.local/share/deckery/deckery/configs/desktop_neptune.vdf \
        ~/.local/share/Steam/controller_base/desktop_neptune.vdf
     sudo chattr +i ~/.local/share/Steam/controller_base/desktop_neptune.vdf
     ```
