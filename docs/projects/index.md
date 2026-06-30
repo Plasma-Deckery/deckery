@@ -14,7 +14,7 @@ The HUD reads makima's state snapshot and renders the current button map as a GT
 
 ---
 
-### [Makima Deckery](makima-deckery.md)
+### [Makima Deckery](makima-deckery/index.md)
 
 The input remapper. Two goals:
 

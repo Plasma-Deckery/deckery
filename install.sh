@@ -112,7 +112,7 @@ echo ""
 
 echo "── Steam Input config ───────────────────────────────────────────────────"
 
-VDF_SRC="$DECKERY_DIR/docs/desktop_neptune.vdf"
+VDF_SRC="$DECKERY_DIR/configs/desktop_neptune.vdf"
 VDF_DST="$HOME/.local/share/Steam/controller_base/desktop_neptune.vdf"
 
 if [ -f "$VDF_SRC" ]; then
@@ -184,5 +184,5 @@ echo ""
 echo "  Try it: hold L1 on your Steam Deck — the HUD overlay should appear."
 echo ""
 echo "  Your config: $DECKERY_DIR/configs/Steam Deck.toml"
-echo "  Docs:        https://github.com/Plasma-Deckery/deckery/wiki"
+echo "  Docs:        https://plasma-deckery.github.io/deckery/"
 echo ""

@@ -39,5 +39,5 @@ Status updates run on a background thread to keep the GTK main loop responsive. 
 
 ## Related
 
-- [makima-deckery](makima-deckery.md) — produces the state JSON and IPC socket
+- [makima-deckery](makima-deckery/index.md) — produces the state JSON and IPC socket
 - [deckery-hud](deckery-hud.md) — managed by the tray as a dependent service

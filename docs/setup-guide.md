@@ -21,7 +21,7 @@ git clone https://github.com/Plasma-Deckery/deckery.git ~/.local/share/deckery/d
 bash ~/.local/share/deckery/deckery/install.sh
 ```
 
-Re-running is safe — the script is idempotent. See [Installer Script](../reference/installer-script.md) for details.
+Re-running is safe — the script is idempotent. See [Installer Script](reference/installer-script.md) for details.
 
 After setup, **Deckery** appears in your application launcher. Opening it starts the system tray icon — a small D-pad icon in the taskbar. If the tray icon is visible and shows all services as active, the installation is complete.
 

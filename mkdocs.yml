@@ -50,7 +50,11 @@ nav:
     - projects/index.md
     - Own Projects:
       - Deckery HUD: projects/deckery-hud.md
-      - Makima Deckery: projects/makima-deckery.md
+      - Makima Deckery:
+        - projects/makima-deckery/index.md
+        - App Config: projects/makima-deckery/app-config.md
+        - Bindings: projects/makima-deckery/bindings.md
+        - Trackpad: projects/makima-deckery/trackpad.md
       - Deckery Tray: projects/deckery-tray.md
       - Steam Deck Dotfiles: projects/steamdeck-dotfiles.md
     - Forked Tools:
