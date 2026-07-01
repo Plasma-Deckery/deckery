@@ -31,7 +31,6 @@ Deckery is an umbrella for several subprojects. Some form the core — remapping
 ### [deckery-hud](https://github.com/Plasma-Deckery/deckery-hud)
 A live overlay for visualising and exploring your button config. See what every button does right now — controls should be discoverable and explain themselves, for easier onboarding and faster recall.
 
-<video src="https://github.com/user-attachments/assets/728cf2dc-443e-446e-8714-4931174684ad" controls autoplay loop muted></video>
 
 ---
 
