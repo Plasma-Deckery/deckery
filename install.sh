@@ -157,9 +157,10 @@ EOF
 echo "Installed: makima drop-in (PartOf deckery-tray)"
 
 systemctl --user daemon-reload
-systemctl --user enable --now deckery-tray.service \
-    && echo "Service: deckery-tray started" \
-    || echo "Service: could not start deckery-tray (check: systemctl --user status deckery-tray)"
+systemctl --user enable deckery-tray.service
+systemctl --user restart deckery-tray.service \
+    && echo "Service: deckery-tray restarted" \
+    || echo "Service: could not restart deckery-tray (check: systemctl --user status deckery-tray)"
 echo ""
 
 # ── 6. Steam Input config (desktop_neptune.vdf) ──────────────────────────────
