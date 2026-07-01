@@ -2,6 +2,8 @@
 
 The Steam Deck is a genuinely capable handheld computer. Deckery's goal is to get the most productive and efficient workflows out of it — making full use of the unique combination of touch, trackpads, and controller buttons on the input side, while also shaping the OS to work well in this input mode and on the small screen. The goal is fast and intuitive control of the device — without needing an external keyboard and without relying on the Steam application running.
 
+[![Watch on YouTube](https://img.youtube.com/vi/KEW9rSAQW04/maxresdefault.jpg)](https://www.youtube.com/watch?v=KEW9rSAQW04)
+
 ## ☕ Support Deckery
 
 Deckery is free and open-source. If you use this project or share the vision of a truly efficient Linux handheld, your support directly fuels its development.

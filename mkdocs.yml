@@ -64,6 +64,7 @@ nav:
       - Kröhnkite: projects/krohnkite.md
       - OpenWhispr: projects/openwhispr.md
   - Reference:
+    - Architecture: reference/architecture.md
     - Installer Script: reference/installer-script.md
     - IPC: reference/ipc.md
     - State JSON: reference/state-json.md
