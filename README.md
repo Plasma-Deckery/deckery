@@ -26,28 +26,25 @@ Every contribution brings the 1.0 release closer.
 
 Deckery is an umbrella for several subprojects. Some form the core — remapping controller buttons to system functions, with visual companion apps like the HUD and tray. Others extend KDE Plasma with configurations and additional tooling so the desktop is optimally suited for handheld use on the Steam Deck.
 
-→ [Full documentation](https://plasma-deckery.github.io/deckery/projects/)
+→ [Full project documentation](https://plasma-deckery.github.io/deckery/projects/)
 
 ---
 
 ### [deckery-hud](https://github.com/Plasma-Deckery/deckery-hud)
-A live overlay for visualising and exploring your button config. See what every button does right now — controls should be discoverable and explain themselves, for easier onboarding and faster recall.
-
+A live overlay for visualising and exploring your button config. See what every button does at any given moment — controls should be discoverable and explain themselves, for easier onboarding and faster recall.
 
 ---
 
 ### [makima-deckery](https://github.com/Plasma-Deckery/makima-deckery)
-The heart of Deckery — the input remapper. Reads raw evdev events directly, applies context-aware button configs, and emits keyboard/mouse events. Supports per-app layouts, modifier keys, and trackpad gesture devices.
-
-→ [Full documentation](https://plasma-deckery.github.io/deckery/projects/makima-deckery/)
+The heart of Deckery — the input remapper. Remaps controller buttons to keyboard keys, shortcuts, and actions, with per-app layouts, modifier layers, and trackpad gesture devices.
 
 ---
 
 ### [deckery-tray](https://github.com/Plasma-Deckery/deckery-tray)
-System tray applet for monitoring and controlling the Deckery service stack. → [Full documentation](https://plasma-deckery.github.io/deckery/projects/deckery-tray/)
+System tray applet for monitoring and controlling the Deckery service stack.
 
 ### [steamdeck-dotfiles](https://github.com/Plasma-Deckery/steamdeck-dotfiles)
-An opinionated KDE desktop setup tuned for the Steam Deck's screen size and input methods. → [Full documentation](https://plasma-deckery.github.io/deckery/projects/steamdeck-dotfiles/)
+An opinionated KDE desktop setup tuned for the Steam Deck's screen size and input methods.
 
 ---
 
