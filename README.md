@@ -1,6 +1,8 @@
 # Deckery
 
-The Steam Deck is a genuinely capable handheld computer. Deckery's goal is to get the most productive and efficient workflows out of it — making full use of the unique combination of touch, trackpads, and controller buttons on the input side, while also shaping the OS to work well in this input mode and on the small screen. The goal is fast and intuitive control of the device — without needing an external keyboard and without relying on the Steam application running.
+The Steam Deck is a capable handheld computer — but in desktop mode, it's awkward to use without a physical keyboard. The mouse works reasonably well, but real desktop efficiency depends on shortcuts, and those simply aren't available when you're away from a desk. The Steam on-screen keyboard doesn't fill that gap. You can remap controller buttons with other tools, but that comes with its own friction: layouts are easy to forget when you're not practising them daily.
+
+Deckery remaps controller buttons to keyboard keys, shortcuts, and actions — with per-app layouts, modifier layers, and a live overlay that shows exactly what every button does at any given moment. The goal is full desktop productivity with just the controller in hand, without requiring the Steam process to run in the background. In addition, the project includes opinionated KDE Plasma 6 configurations that better adapt the operating system to handheld use.
 
 ## YouTube Tutorial
 
