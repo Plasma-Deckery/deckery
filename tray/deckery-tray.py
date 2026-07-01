@@ -26,9 +26,10 @@ from updater import Updater
 
 _DIR        = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _ICONS      = os.path.join(_DIR, "tray", "icons")
-_ICON_OK   = os.path.join(_ICONS, "tray-ok.svg")    # dark bg + white D-pad
-_ICON_WARN = os.path.join(_ICONS, "tray-warn.svg")  # orange bg + white D-pad
-_ICON_ERR  = os.path.join(_ICONS, "tray-err.svg")   # red bg   + white D-pad
+_ICON_OK     = os.path.join(_ICONS, "tray-ok.svg")      # dark bg + white D-pad
+_ICON_WARN   = os.path.join(_ICONS, "tray-warn.svg")    # orange bg + white D-pad
+_ICON_ERR    = os.path.join(_ICONS, "tray-err.svg")     # red bg   + white D-pad
+_ICON_UPDATE = os.path.join(_ICONS, "tray-update.svg")  # dark bg + cyan badge
 
 # Small dot SVGs for the menu status column (12 px, no D-pad shape)
 _DOT_OK       = os.path.join(_ICONS, "dot-ok.svg")
@@ -340,14 +341,18 @@ class DeckeryTray:
         self._items["stop"]   .set_visible(makima_active and not paused)
 
         # ── Tray icon ─────────────────────────────────────────────────────
-        any_failed = any(s == "failed" for s in statuses.values())
-        any_down   = any(s not in ("active",) for s in statuses.values())
+        from updater import UpdateState
+        any_failed  = any(s == "failed" for s in statuses.values())
+        any_down    = any(s not in ("active",) for s in statuses.values())
+        has_update  = self._updater.state == UpdateState.UPDATE_AVAILABLE
         if any_failed:
-            self._indicator.set_icon_full(_ICON_ERR,  "Deckery: error")
+            self._indicator.set_icon_full(_ICON_ERR,    "Deckery: error")
         elif any_down or paused:
-            self._indicator.set_icon_full(_ICON_WARN, "Deckery: needs attention")
+            self._indicator.set_icon_full(_ICON_WARN,   "Deckery: needs attention")
+        elif has_update:
+            self._indicator.set_icon_full(_ICON_UPDATE, "Deckery: update available")
         else:
-            self._indicator.set_icon_full(_ICON_OK,   "Deckery: running")
+            self._indicator.set_icon_full(_ICON_OK,     "Deckery: running")
 
         return GLib.SOURCE_REMOVE
 
@@ -374,6 +379,8 @@ class DeckeryTray:
         if item:
             item.set_label(self._updater.label)
             item.set_sensitive(self._updater.sensitive)
+        # Trigger a poll so the tray icon reflects the new update state
+        self._poll()
         return GLib.SOURCE_REMOVE
 
     def _on_quit(self, _item):

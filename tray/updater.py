@@ -1,16 +1,12 @@
 """
 updater.py — Release check and update logic for deckery-tray.
 
-Feature flag: set UPDATES_ENABLED = True once the first release is published
-on https://github.com/Plasma-Deckery/deckery/releases
-
 State machine:
 
-    DISABLED         → menu item grayed out, "not yet available"
     IDLE             → "Check for Updates"            clickable → starts check
     CHECKING         → "Checking for updates…"        grayed out
     UP_TO_DATE       → "Up to date (vX.Y.Z)"          grayed out
-    UPDATE_AVAILABLE → "Update available: vX.Y.Z"     clickable → runs installer
+    UPDATE_AVAILABLE → "Update available: vX.Y.Z"     clickable → runs get.sh
     ERROR            → "Update check failed — retry"  clickable → retries
 """
 
@@ -23,15 +19,10 @@ from enum import Enum, auto
 
 from gi.repository import GLib
 
-# ── Feature flag ──────────────────────────────────────────────────────────────
-# Flip to True once the first GitHub release is published.
-UPDATES_ENABLED = False
-
 # ── Paths (derived from this file's location, install-path-agnostic) ──────────
 _TRAY_DIR    = os.path.dirname(os.path.abspath(__file__))
 _DECKERY_DIR = os.path.dirname(_TRAY_DIR)
-_VERSION_FILE = os.path.join(_DECKERY_DIR, "VERSION")
-_INSTALL_SH   = os.path.join(_DECKERY_DIR, "install.sh")
+_GET_SH      = os.path.join(_DECKERY_DIR, "get.sh")
 
 _GITHUB_API = "https://api.github.com/repos/Plasma-Deckery/deckery/releases/latest"
 
@@ -39,7 +30,6 @@ _GITHUB_API = "https://api.github.com/repos/Plasma-Deckery/deckery/releases/late
 # ── State ─────────────────────────────────────────────────────────────────────
 
 class UpdateState(Enum):
-    DISABLED         = auto()
     IDLE             = auto()
     CHECKING         = auto()
     UP_TO_DATE       = auto()
@@ -48,7 +38,6 @@ class UpdateState(Enum):
 
 
 _SENSITIVE = {
-    UpdateState.DISABLED:         False,
     UpdateState.IDLE:             True,
     UpdateState.CHECKING:         False,
     UpdateState.UP_TO_DATE:       False,
@@ -60,9 +49,15 @@ _SENSITIVE = {
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 def _local_version() -> str:
+    """Returns the currently installed version from the git tag (e.g. '0.1.0').
+    Returns 'unknown' if the repo has no tags or git is unavailable."""
     try:
-        return open(_VERSION_FILE).read().strip()
-    except FileNotFoundError:
+        r = subprocess.run(
+            ["git", "-C", _DECKERY_DIR, "describe", "--tags", "--abbrev=0"],
+            capture_output=True, text=True, timeout=5,
+        )
+        return r.stdout.strip().lstrip("v") if r.returncode == 0 else "unknown"
+    except Exception:
         return "unknown"
 
 
@@ -91,10 +86,24 @@ class Updater:
         updater.on_clicked()   # wire to menu item's "activate" signal
     """
 
+    # How often to auto-check (seconds). First check after INITIAL_CHECK_DELAY_S.
+    CHECK_INTERVAL_S      = 3600
+    INITIAL_CHECK_DELAY_S = 30
+
     def __init__(self, on_state_change):
         self._on_state_change = on_state_change
         self._latest: str | None = None
-        self._state = UpdateState.DISABLED if not UPDATES_ENABLED else UpdateState.IDLE
+        self._state = UpdateState.IDLE
+
+        # Schedule initial check, then repeat hourly
+        GLib.timeout_add_seconds(self.INITIAL_CHECK_DELAY_S, self._auto_check)
+
+    def _auto_check(self) -> bool:
+        """Called by GLib timer. Runs a check if idle, then reschedules."""
+        if self._state in (UpdateState.IDLE, UpdateState.UP_TO_DATE, UpdateState.ERROR):
+            self._start_check()
+        GLib.timeout_add_seconds(self.CHECK_INTERVAL_S, self._auto_check)
+        return GLib.SOURCE_REMOVE  # don't repeat this particular timeout
 
     # ── Public interface ──────────────────────────────────────────────────────
 
@@ -104,15 +113,14 @@ class Updater:
 
     @property
     def label(self) -> str:
+        local = _local_version()
         match self._state:
-            case UpdateState.DISABLED:
-                return "Check for Updates — not yet available"
             case UpdateState.IDLE:
-                return "Check for Updates"
+                return f"Check for Updates (v{local})" if local != "unknown" else "Check for Updates"
             case UpdateState.CHECKING:
                 return "Checking for updates…"
             case UpdateState.UP_TO_DATE:
-                return f"Up to date (v{_local_version()})"
+                return f"Up to date (v{local})"
             case UpdateState.UPDATE_AVAILABLE:
                 return f"Update available: v{self._latest} — Install"
             case UpdateState.ERROR:
@@ -127,7 +135,7 @@ class Updater:
         if self._state in (UpdateState.IDLE, UpdateState.ERROR):
             self._start_check()
         elif self._state == UpdateState.UPDATE_AVAILABLE:
-            self._run_install()
+            self._run_update()
 
     # ── Internal ──────────────────────────────────────────────────────────────
 
@@ -151,9 +159,9 @@ class Updater:
         except Exception:
             self._set_state(UpdateState.ERROR)
 
-    def _run_install(self):
-        """Open a terminal and run install.sh so the user can see the output."""
+    def _run_update(self):
+        """Open a terminal and run get.sh — fetches latest tag and re-runs install."""
         subprocess.Popen([
             "distrobox-host-exec", "konsole", "--noclose",
-            "-e", "bash", _INSTALL_SH,
+            "-e", "bash", _GET_SH,
         ])

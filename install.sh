@@ -36,7 +36,9 @@ echo ""
 # If running from an untagged commit (development / main), sub-repos are
 # cloned or updated to their latest main branch.
 
-RELEASE_TAG="$(git -C "$DECKERY_DIR" describe --exact-match HEAD 2>/dev/null || true)"
+# DECKERY_RELEASE_TAG may be set by get.sh; fall back to git describe for
+# direct invocations (e.g. manual update: cd repo && git checkout vX.Y.Z && bash install.sh)
+RELEASE_TAG="${DECKERY_RELEASE_TAG:-$(git -C "$DECKERY_DIR" describe --tags --exact-match HEAD 2>/dev/null || true)}"
 
 if [ -n "$RELEASE_TAG" ]; then
     echo "  Release: $RELEASE_TAG"
