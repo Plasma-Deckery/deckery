@@ -200,7 +200,9 @@ class DeckeryTray:
         m = self._menu
 
         # ── Header ────────────────────────────────────────────────────────
-        header = Gtk.MenuItem(label="Deckery")
+        from updater import _local_version
+        _v = _local_version()
+        header = Gtk.MenuItem(label=f"Deckery v{_v}" if _v != "unknown" else "Deckery")
         header.set_sensitive(False)
         m.append(header)
         m.append(Gtk.SeparatorMenuItem())

@@ -40,7 +40,7 @@ class UpdateState(Enum):
 _SENSITIVE = {
     UpdateState.IDLE:             True,
     UpdateState.CHECKING:         False,
-    UpdateState.UP_TO_DATE:       False,
+    UpdateState.UP_TO_DATE:       True,
     UpdateState.UPDATE_AVAILABLE: True,
     UpdateState.ERROR:            True,
 }
@@ -49,14 +49,18 @@ _SENSITIVE = {
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 def _local_version() -> str:
-    """Returns the currently installed version from the git tag (e.g. '0.1.0').
+    """Returns the highest version tag in the repo (e.g. '0.1.2').
+    Uses version sort so the result is always the numerically greatest tag,
+    even when multiple tags point to the same commit.
     Returns 'unknown' if the repo has no tags or git is unavailable."""
     try:
         r = subprocess.run(
-            ["git", "-C", _DECKERY_DIR, "describe", "--tags", "--abbrev=0"],
+            ["git", "-C", _DECKERY_DIR, "tag", "--sort=-version:refname"],
             capture_output=True, text=True, timeout=5,
         )
-        return r.stdout.strip().lstrip("v") if r.returncode == 0 else "unknown"
+        if r.returncode == 0 and r.stdout.strip():
+            return r.stdout.strip().splitlines()[0].lstrip("v")
+        return "unknown"
     except Exception:
         return "unknown"
 
@@ -116,11 +120,11 @@ class Updater:
         local = _local_version()
         match self._state:
             case UpdateState.IDLE:
-                return f"Check for Updates (v{local})" if local != "unknown" else "Check for Updates"
+                return "Check for Updates"
             case UpdateState.CHECKING:
                 return "Checking for updates…"
             case UpdateState.UP_TO_DATE:
-                return f"Up to date (v{local})"
+                return "Up to date"
             case UpdateState.UPDATE_AVAILABLE:
                 return f"Update available: v{self._latest} — Install"
             case UpdateState.ERROR:
@@ -132,7 +136,7 @@ class Updater:
 
     def on_clicked(self):
         """Call when the menu item is activated."""
-        if self._state in (UpdateState.IDLE, UpdateState.ERROR):
+        if self._state in (UpdateState.IDLE, UpdateState.UP_TO_DATE, UpdateState.ERROR):
             self._start_check()
         elif self._state == UpdateState.UPDATE_AVAILABLE:
             self._run_update()
