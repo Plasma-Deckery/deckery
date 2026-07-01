@@ -8,6 +8,8 @@ The Steam Deck is a genuinely capable handheld computer. Deckery's goal is to ge
 
 Deckery runs as a set of background services. After installation, **Deckery** appears in your application launcher — opening it starts the system tray icon.
 
+![Deckery tray menu](assets/tray-cropped.png)
+
 The tray icon shows service status at a glance and gives quick access to:
 
 - **Pause / Resume** controller remapping (makima)

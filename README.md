@@ -43,6 +43,8 @@ The heart of Deckery — the input remapper. Remaps controller buttons to keyboa
 ### [deckery-tray](https://github.com/Plasma-Deckery/deckery-tray)
 System tray applet for monitoring and controlling the Deckery service stack.
 
+![Deckery tray menu](docs/assets/tray-cropped.png)
+
 ### [steamdeck-dotfiles](https://github.com/Plasma-Deckery/steamdeck-dotfiles)
 An opinionated KDE desktop setup tuned for the Steam Deck's screen size and input methods.
 

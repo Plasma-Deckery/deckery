@@ -4,6 +4,8 @@
 
 System tray applet that monitors and controls the full Deckery stack from a single icon in the KDE panel.
 
+![Deckery tray menu](../assets/tray-cropped.png)
+
 ## What it does
 
 - **Service status** — live display of the running state of makima and the HUD in the tray menu
