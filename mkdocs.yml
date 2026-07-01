@@ -66,6 +66,7 @@ nav:
   - Reference:
     - Architecture: reference/architecture.md
     - Installer Script: reference/installer-script.md
+    - Updates: reference/updates.md
     - IPC: reference/ipc.md
     - State JSON: reference/state-json.md
     - Steam Input Mapping: reference/steam-input-mapping.md
