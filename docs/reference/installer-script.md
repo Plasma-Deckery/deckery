@@ -4,7 +4,7 @@
 
 ## What it does
 
-1. **Clone / update sub-repos** — clones `makima-deckery` and `deckery-hud` next to the deckery repo, or pulls the latest if already present.
+1. **Clone / update sub-repos** — clones `makima-deckery` and `deckery-hud` next to the deckery repo. When running from a tagged release, each sub-repo is checked out at the **same tag** as the main repo. If a matching tag is missing in a sub-repo, the installer exits with a clear error. See [Updates](updates.md) for details on the release-pinning mechanism.
 
 2. **Create the distrobox container** — runs `distrobox assemble create` using `distrobox.ini` in the repo root. The container (Arch Linux) is shared by all three services. On subsequent runs this step is a no-op.
 
@@ -35,10 +35,8 @@ Starting the tray starts everything. Stopping it stops everything cleanly.
 ## Manual invocation
 
 ```bash
-# First install
-git clone https://github.com/Plasma-Deckery/deckery.git ~/.local/share/deckery/deckery
-bash ~/.local/share/deckery/deckery/install.sh
-
-# Update
-cd ~/.local/share/deckery/deckery && git pull && bash install.sh
+# First install / update — always use get.sh
+bash <(curl -sSL https://raw.githubusercontent.com/Plasma-Deckery/deckery/main/get.sh)
 ```
+
+`get.sh` fetches the latest release tag, checks out that tag, sets `DECKERY_RELEASE_TAG`, and then calls `install.sh`. Running `install.sh` directly without this env var skips release pinning and runs in development mode (sub-repos pull their latest main branch instead of a matching tag).
