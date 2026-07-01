@@ -27,25 +27,82 @@ echo "║         Deckery Installer            ║"
 echo "╚══════════════════════════════════════╝"
 echo ""
 
+# ── Detect release tag ────────────────────────────────────────────────────────
+#
+# If install.sh is running from a tagged release commit, all sub-repos are
+# checked out at the matching tag. This guarantees that every component is
+# from a tested, compatible set.
+#
+# If running from an untagged commit (development / main), sub-repos are
+# cloned or updated to their latest main branch.
+
+RELEASE_TAG="$(git -C "$DECKERY_DIR" describe --exact-match HEAD 2>/dev/null || true)"
+
+if [ -n "$RELEASE_TAG" ]; then
+    echo "  Release: $RELEASE_TAG"
+else
+    echo "  Release: development (untagged)"
+fi
+echo ""
+
+# ── Clone or checkout a sub-repo at the correct ref ──────────────────────────
+
+_checkout_subrepo() {
+    local name="$1"
+    local url="$2"
+    local dir="$3"
+
+    if [ ! -d "$dir" ]; then
+        if [ -n "$RELEASE_TAG" ]; then
+            echo "Cloning $name @ $RELEASE_TAG..."
+            if ! git clone --branch "$RELEASE_TAG" --depth 1 "$url" "$dir" 2>/dev/null; then
+                echo ""
+                echo "✗ ERROR: Release tag '$RELEASE_TAG' not found in $name."
+                echo ""
+                echo "  This means $name has not yet published a matching release."
+                echo "  All three repos must be tagged together for a release to be installable."
+                echo ""
+                echo "  → https://github.com/Plasma-Deckery/$name/releases"
+                echo ""
+                exit 1
+            fi
+        else
+            echo "Cloning $name (latest main)..."
+            git clone "$url" "$dir"
+        fi
+    else
+        if [ -n "$RELEASE_TAG" ]; then
+            echo "$name: checking out $RELEASE_TAG..."
+            git -C "$dir" fetch --tags
+            if ! git -C "$dir" checkout "$RELEASE_TAG" 2>/dev/null; then
+                echo ""
+                echo "✗ ERROR: Release tag '$RELEASE_TAG' not found in $name."
+                echo ""
+                echo "  This means $name has not yet published a matching release."
+                echo "  All three repos must be tagged together for a release to be installable."
+                echo ""
+                echo "  → https://github.com/Plasma-Deckery/$name/releases"
+                echo ""
+                exit 1
+            fi
+        else
+            echo "$name: pulling latest..."
+            git -C "$dir" pull --ff-only || echo "  (skipped — local changes present)"
+        fi
+    fi
+}
+
 # ── 1. Clone / update sub-repos ──────────────────────────────────────────────
 
 echo "── Repositories ─────────────────────────────────────────────────────────"
 
-if [ ! -d "$MAKIMA_DIR" ]; then
-    echo "Cloning makima-deckery..."
-    git clone https://github.com/Plasma-Deckery/makima-deckery.git "$MAKIMA_DIR"
-else
-    echo "makima-deckery: pulling latest..."
-    git -C "$MAKIMA_DIR" pull --ff-only || echo "  (skipped — local changes present)"
-fi
+_checkout_subrepo "makima-deckery" \
+    "https://github.com/Plasma-Deckery/makima-deckery.git" \
+    "$MAKIMA_DIR"
 
-if [ ! -d "$HUD_DIR" ]; then
-    echo "Cloning deckery-hud..."
-    git clone https://github.com/Plasma-Deckery/deckery-hud.git "$HUD_DIR"
-else
-    echo "deckery-hud: pulling latest..."
-    git -C "$HUD_DIR" pull --ff-only || echo "  (skipped — local changes present)"
-fi
+_checkout_subrepo "deckery-hud" \
+    "https://github.com/Plasma-Deckery/deckery-hud.git" \
+    "$HUD_DIR"
 
 echo ""
 
