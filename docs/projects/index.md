@@ -27,7 +27,21 @@ On every input event, makima writes a fully-resolved state snapshot to `/tmp/mak
 
 ### [Deckery Tray](deckery-tray.md)
 
-System tray applet for monitoring and controlling the Deckery service stack. Shows live service status, provides pause/resume/restart controls, OSD toggle, config access, and one-click updates — without needing a terminal.
+The control panel for the entire Deckery stack, living in the KDE system tray. No terminal needed for day-to-day use.
+
+![Deckery tray menu](../assets/tray-cropped.png)
+
+The tray icon changes colour to reflect the current system state at a glance — green when everything runs, orange when makima is paused or a service is down, red on failure, and a cyan badge when an update is available.
+
+The menu provides:
+
+- **Live service status** — colour-coded dot and state label for each service
+- **Pause / Resume / Restart / Stop** controls for makima — context-sensitive, only the relevant action is shown
+- **Restart HUD** and **Onscreen Display toggle**
+- **Open config folder** — direct access to `~/.config/makima/`
+- **One-click updates** — checks GitHub on startup and hourly, installs by running `get.sh` in a terminal window
+
+The tray also owns the systemd service hierarchy: `makima.service` and `deckery-hud.service` are both declared `PartOf=deckery-tray.service`, so starting the tray starts everything and stopping it stops everything cleanly.
 
 ---
 
