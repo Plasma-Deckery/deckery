@@ -23,10 +23,10 @@ fi
 LATEST_TAG="$(git -C "$DECKERY_DIR" tag --sort=-version:refname | head -1)"
 if [ -n "$LATEST_TAG" ]; then
     echo "Checking out latest release: $LATEST_TAG"
-    git -C "$DECKERY_DIR" checkout "$LATEST_TAG"
+    git -C "$DECKERY_DIR" checkout --force "$LATEST_TAG"
 else
     echo "No release tag found — running from main (development mode)"
-    git -C "$DECKERY_DIR" checkout main
+    git -C "$DECKERY_DIR" checkout --force main
 fi
 
 export DECKERY_RELEASE_TAG="$LATEST_TAG"
