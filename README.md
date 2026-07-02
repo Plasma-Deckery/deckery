@@ -8,16 +8,26 @@ Deckery remaps controller buttons to keyboard keys, shortcuts, and actions — w
 
 [![Watch on YouTube](https://img.youtube.com/vi/KEW9rSAQW04/maxresdefault.jpg)](https://www.youtube.com/watch?v=KEW9rSAQW04)
 
+## The Mission
+
+- Get the most out of the Steam Deck as a desktop device, without a physical keyboard.
+- Become fully independent from the Steam process: all buttons, triggers, trackpads and inputs from the Deck should be usable without running Steam.
+- Get the most out of the trackpads — gestures, scrolling, and cursor movement that feel as good as Steam Input, without relying on it.
+- Build a community library of well-crafted shortcut configs for the most commonly used apps. If you have a config you're happy with, please contribute.
+
+→ [Progress & open challenges](https://plasma-deckery.github.io/deckery/progress-and-challenges/)
+
 ## ☕ Support Deckery
 
 Deckery is free and open-source. If you use this project or share the vision of a truly efficient Linux handheld, your support directly fuels its development.
 
-**Current Focus:** Funding the final push to 1.0, specifically working on touchpad support and gesture integration in undocumented Steam Deck hardware features.
+A significant amount of development hours goes into this project. Small contributions help to get the whole thing across the finish line.
 
 **How funds are used:**
 - 🛠️ Dedicated development hours for feature implementation and testing
 - ☕ Coffee for late-night debugging sessions
 - 🏆 **Sponsor Recognition:** Monthly sponsors get their name/logo added to the `README.md`.
+- 🎯 **Prioritization:** If you sponsor or contribute, I'm happy to prioritize your wishes for the project.
 
 Every contribution brings the 1.0 release closer.
 
@@ -57,12 +67,6 @@ An opinionated KDE desktop setup tuned for the Steam Deck's screen size and inpu
 Beyond its own services, Deckery pulls in and patches a set of existing KDE and desktop tools to make them work well on the Steam Deck's screen size and controller input. Some are forked to apply targeted fixes; others are used as-is. Together they form an opinionated, curated desktop environment that goes beyond what any single tool provides.
 
 → [Full project overview](https://plasma-deckery.github.io/deckery/projects/)
-
----
-
-## Progress & Challenges
-
-Current status and open challenges: [plasma-deckery.github.io/deckery/progress-and-challenges/](https://plasma-deckery.github.io/deckery/progress-and-challenges/)
 
 ---
 

@@ -39,6 +39,8 @@ A KWin script ([Kyanite](../kyanite.md)) ensures there is always exactly one fre
 
 The pointer focus policy is set so that moving the cursor to a window focuses it immediately, without clicking. On a small screen with a trackpad, this removes a significant source of friction.
 
+KWin's focus stealing prevention is set to Medium — this stops the Steam on-screen keyboard from grabbing focus away from the app you're typing into, so input lands where you intended.
+
 ## Voice input
 
 A [RNNoise](https://github.com/xiph/rnnoise) PipeWire filter-chain is configured for noise suppression during voice input. This is particularly useful outdoors. Works together with [OpenWhispr](../openwhispr.md) for hotkey-activated speech-to-text.
