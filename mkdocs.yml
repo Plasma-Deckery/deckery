@@ -65,7 +65,8 @@ nav:
     - Further Tools:
       - Kröhnkite: projects/krohnkite.md
       - OpenWhispr: projects/openwhispr.md
-  - Reference:
+  - Development:
+    - Development Guide: development.md
     - Architecture: reference/architecture.md
     - Installer Script: reference/installer-script.md
     - Updates: reference/updates.md
