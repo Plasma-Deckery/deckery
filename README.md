@@ -12,7 +12,7 @@ Deckery remaps controller buttons to keyboard keys, shortcuts, and actions — w
 
 - Get the most out of the Steam Deck as a desktop device, without a physical keyboard.
 - Become fully independent from the Steam process: all buttons, triggers, trackpads and inputs from the Deck should be usable without running Steam.
-- Get the most out of the trackpads — gestures, scrolling, and cursor movement that feel as good as Steam Input, without relying on it.
+- Get the most out of the trackpads — cursor movement, scrolling, gestures, and haptics that match and go beyond Steam Input, without relying on it. → [Trackpad roadmap](https://plasma-deckery.github.io/deckery/projects/makima-deckery/trackpad/)
 - Build a community library of well-crafted shortcut configs for the most commonly used apps. If you have a config you're happy with, please contribute.
 
 → [Progress & open challenges](https://plasma-deckery.github.io/deckery/progress-and-challenges/)

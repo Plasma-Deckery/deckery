@@ -1,6 +1,23 @@
 # Trackpad Emulation
 
-The Steam Deck trackpads are capable input surfaces, but the raw events they produce are not visible to gesture tools — those expect standard Linux multi-touch devices. Makima-deckery translates the raw trackpad data into proper MT events and exposes virtual uinput devices, making both pads available to tools like `libinput-gestures` or `fusuma`.
+The Steam Deck trackpads are exceptional input hardware. Steam Input's trackpad support — trackball-style cursor with inertia, scroll with momentum, haptic click-grid feedback, configurable sensitivity — is one of the best controller-based trackpad experiences available. Deckery's goal is to match this quality, and go beyond it, without Steam in the loop.
+
+## The Goal
+
+Currently, cursor movement and scrolling on the Steam Deck depend on either the kernel's Lizard Mode (when Steam isn't running) or Steam Input itself. Both are limited: Lizard Mode is hardcoded with no customisation, and Steam Input requires Steam to run. Deckery replaces this dependency layer by layer.
+
+The full roadmap:
+
+| Status | Feature | Issue |
+|---|---|---|
+| ✅ | Virtual MT devices — expose raw trackpad data to the Linux input stack | — |
+| ⏳ | Lizard Mode suppression — hold the hidraw device open so the kernel driver doesn't override our output | [makima-deckery#11](https://github.com/Plasma-Deckery/makima-deckery/issues/11) |
+| ⏳ | libinput device profile — tune acceleration curves and trackball inertia for Steam Input-quality cursor feel | [deckery#5](https://github.com/Plasma-Deckery/deckery/issues/5) |
+| ⏳ | Scrolling via gesture tool — replace Steam Input's scroll emulation entirely | [deckery#4](https://github.com/Plasma-Deckery/deckery/issues/4) |
+| ⏳ | Gesture tool integration — discrete gesture zones trigger makima actions; continuous gestures go directly to the input stack | [deckery#3](https://github.com/Plasma-Deckery/deckery/issues/3) |
+| ⏳ | Combined two-pad gesture device — both pads together as two fingers for pinch-zoom and pan | [deckery#7](https://github.com/Plasma-Deckery/deckery/issues/7) |
+| ⏳ | Haptic feedback — haptic pulses via FF_HAPTIC back-channel, matching Steam's click-grid feel | [makima-deckery#9](https://github.com/Plasma-Deckery/makima-deckery/issues/9) |
+| ⏳ | Hardware settings via TOML — trackpad pressure thresholds, sensitivity, haptic intensity in the makima config | [makima-deckery#13](https://github.com/Plasma-Deckery/makima-deckery/issues/13) |
 
 ## How it works
 
