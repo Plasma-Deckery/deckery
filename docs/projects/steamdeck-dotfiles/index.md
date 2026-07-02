@@ -25,6 +25,10 @@ Within each activity, each virtual desktop holds at most one or two applications
 
 <video src="../../assets/tiling.mp4" controls autoplay loop muted></video>
 
+## Window tiling
+
+[Kröhnkite](../krohnkite.md) provides dynamic window tiling — windows automatically arrange to fill the available space without manual resizing. [maximized-window-gaps](../maximized-window-gaps.md) adds configurable gaps around tiled windows so the layout breathes a little on the small screen.
+
 ## Dynamic workspace management
 
 A KWin script ([Kyanite](../kyanite.md)) ensures there is always exactly one free desktop available at the end of the list. When you close the last app on a space, that space is cleaned up automatically. When all spaces are occupied, a new one is created. Workspace management is fully automatic — you never have to create or delete desktops manually.
