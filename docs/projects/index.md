@@ -45,7 +45,7 @@ The tray also owns the systemd service hierarchy: `makima.service` and `deckery-
 
 ---
 
-### [Steam Deck Dotfiles](steamdeck-dotfiles.md)
+### [Steam Deck Dotfiles](steamdeck-dotfiles/index.md)
 
 An opinionated KDE desktop setup — scripts, panels, KWin configuration, and system settings tuned specifically for the Steam Deck's screen size and input methods. Managed via chezmoi. Proper documentation missing for now.
 

@@ -56,7 +56,9 @@ nav:
         - Bindings: projects/makima-deckery/bindings.md
         - Trackpad: projects/makima-deckery/trackpad.md
       - Deckery Tray: projects/deckery-tray.md
-      - Steam Deck Dotfiles: projects/steamdeck-dotfiles.md
+      - Steam Deck Dotfiles:
+        - projects/steamdeck-dotfiles/index.md
+        - Chezmoi & Tracking: projects/steamdeck-dotfiles/chezmoi.md
     - Forked Tools:
       - Kyanite: projects/kyanite.md
       - maximized-window-gaps: projects/maximized-window-gaps.md
