@@ -64,7 +64,7 @@ echo ""
 # ── 4. Remove distrobox container ────────────────────────────────────────────
 
 echo "── Removing distrobox container ─────────────────────────────────────────"
-if distrobox list 2>/dev/null | grep -q "^| deckery "; then
+if distrobox list 2>/dev/null | grep -q "| deckery "; then
     distrobox rm deckery --force
     echo "Removed: deckery container"
 else
