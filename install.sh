@@ -114,7 +114,7 @@ echo ""
 # All sub-repos share this single container — package list lives here.
 
 echo "── Container ────────────────────────────────────────────────────────────"
-distrobox assemble create --file "$DECKERY_DIR/distrobox.ini"
+distrobox create --name deckery --image archlinux:latest || true
 echo ""
 
 # ── 3. Build and install Makima ───────────────────────────────────────────────
