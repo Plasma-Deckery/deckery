@@ -65,6 +65,21 @@ KWin script for configurable gaps around maximized windows, patched for correct 
 
 ---
 
+### [evdev (Plasma-Deckery fork)](https://github.com/Plasma-Deckery/evdev)
+
+A minimal fork of the Rust [evdev](https://github.com/emberian/evdev) crate, based on release 0.12.1, with four additional keycodes for the Steam Deck back paddles:
+
+| Keycode | Code | Button |
+|---|---|---|
+| `BTN_GRIPL` | `0x224` | L4 (top left) |
+| `BTN_GRIPR` | `0x225` | R4 (top right) |
+| `BTN_GRIPL2` | `0x226` | L5 (bottom left) |
+| `BTN_GRIPR2` | `0x227` | R5 (bottom right) |
+
+These codes were contributed upstream via [emberian/evdev#178](https://github.com/emberian/evdev/pull/178), which merged in May 2026 but has not yet appeared in a crates.io release. This fork exists solely to bridge that gap — it will be retired and replaced with the upstream crate as soon as a release including these codes is available.
+
+---
+
 ## Third-Party Tools in Use
 
 ### [Kröhnkite](krohnkite.md)

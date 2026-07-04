@@ -83,3 +83,33 @@ cd ~/.local/share/deckery/deckery && git pull && bash install.sh
 ```
 
 Or use the **Search for Updates** entry in the Deckery tray menu.
+
+## Uninstall
+
+To remove all Deckery services, binaries, and the distrobox container:
+
+```bash
+bash ~/.local/share/deckery/deckery/uninstall.sh
+```
+
+This will ask for confirmation before doing anything. Pass `--yes` to skip:
+
+```bash
+bash ~/.local/share/deckery/deckery/uninstall.sh --yes
+```
+
+**What gets removed:**
+
+- All Deckery systemd user services (stopped, disabled, and deleted)
+- Installed binaries and symlinks in `~/.local/bin/`
+- The `deckery` distrobox container
+- The app icon and `.desktop` launcher
+- The `Steam Deck.toml` config symlink in `~/.config/makima/`
+
+**What is kept:**
+
+- The cloned repos in `~/.local/share/deckery/` (your configs live there)
+- App-specific config files in `~/.config/makima/`
+- `desktop_neptune.vdf` (Steam Input config)
+
+To also remove the repos and all custom configs, delete `~/.local/share/deckery/` manually after uninstalling.
