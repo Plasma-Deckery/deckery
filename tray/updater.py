@@ -24,7 +24,7 @@ _TRAY_DIR    = os.path.dirname(os.path.abspath(__file__))
 _DECKERY_DIR = os.path.dirname(_TRAY_DIR)
 _GET_SH      = os.path.join(_DECKERY_DIR, "get.sh")
 
-_GITHUB_API = "https://api.github.com/repos/Plasma-Deckery/deckery/releases/latest"
+_GITHUB_TAGS_API = "https://api.github.com/repos/Plasma-Deckery/deckery/tags"
 
 
 # ── State ─────────────────────────────────────────────────────────────────────
@@ -65,15 +65,35 @@ def _local_version() -> str:
         return "unknown"
 
 
+def _parse_version(v: str) -> tuple:
+    """Parse a version string like '0.1.5' into a comparable tuple (0, 1, 5).
+    Returns (0,) for anything that can't be parsed."""
+    try:
+        return tuple(int(x) for x in v.split("."))
+    except (ValueError, AttributeError):
+        return (0,)
+
+
 def _fetch_latest_tag() -> str:
-    """Fetches the latest release tag from GitHub. Raises on any error."""
+    """Fetches the highest semver tag from GitHub. Raises on any error.
+    Uses the /tags API so no GitHub Release needs to be published —
+    pushing a tag is sufficient to make a new version discoverable."""
     req = urllib.request.Request(
-        _GITHUB_API,
+        _GITHUB_TAGS_API,
         headers={"User-Agent": "deckery-tray"},
     )
     with urllib.request.urlopen(req, timeout=10) as r:
-        data = json.loads(r.read())
-    return data["tag_name"].lstrip("v")
+        tags = json.loads(r.read())
+    versions = []
+    for t in tags:
+        name = t["name"].lstrip("v")
+        parsed = _parse_version(name)
+        if parsed != (0,):
+            versions.append((parsed, name))
+    if not versions:
+        raise ValueError("no version tags found")
+    versions.sort(reverse=True)
+    return versions[0][1]
 
 
 # ── Updater ───────────────────────────────────────────────────────────────────
@@ -156,7 +176,7 @@ class Updater:
             latest = _fetch_latest_tag()
             local  = _local_version()
             self._latest = latest
-            if local == "unknown" or latest == local:
+            if local == "unknown" or _parse_version(local) >= _parse_version(latest):
                 self._set_state(UpdateState.UP_TO_DATE)
             else:
                 self._set_state(UpdateState.UPDATE_AVAILABLE)
