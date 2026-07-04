@@ -36,6 +36,12 @@ The heart of Deckery — the input remapper. Reads raw evdev events directly fro
 | `x11rb::connect()` panic on Wayland after suspend | [#58](https://github.com/cyber-sushi/makima/pull/58) | Caused the worker thread to die silently; service appeared active but processed no events |
 | Evdev fd reconnect on device read error | — | When the evdev stream returns an I/O error (e.g. USB hotplug), makima now reinitialises automatically instead of silently stopping |
 
+## Sleep / resume behaviour
+
+The Steam Deck's evdev fd freezes silently on suspend — makima receives no error and cannot self-recover. A companion service, `makima-resume-watcher.service`, watches for the `PrepareForSleep(false)` D-Bus signal from `org.freedesktop.login1` and restarts makima 2 seconds after every resume.
+
+The watcher is bound to `makima.service` (`BindsTo=`, `WantedBy=`): it starts and stops with makima and restarts automatically if the underlying `dbus-monitor` process exits for any reason.
+
 ## Relationship to upstream
 
 Bug fixes are submitted to upstream as PRs. Features specific to the Deckery architecture (state export, IPC, trackpad emulation) are maintained here; an upstream proposal may follow once the design stabilises.
