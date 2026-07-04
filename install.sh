@@ -242,7 +242,7 @@ echo "╔═══════════════════════�
 echo "║          Setup complete!             ║"
 echo "╚══════════════════════════════════════╝"
 echo ""
-echo "  Try it: hold L1 on your Steam Deck — the HUD overlay should appear."
+echo "  Try it: press L3 (left stick click) — the HUD overlay should appear."
 echo ""
 echo "  Your config: $DECKERY_DIR/configs/Steam Deck.toml"
 echo "  Docs:        https://plasma-deckery.github.io/deckery/"

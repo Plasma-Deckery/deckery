@@ -186,7 +186,7 @@ class DeckeryTray:
         box.pack_start(lbl, True,  True,  0)
         box.show_all()
         item.add(box)
-        # No signal → clicking is a visual no-op
+        self._items[f"status_{name}"]     = item
         self._items[f"status_{name}_img"] = img
         self._items[f"status_{name}_lbl"] = lbl
         return item
@@ -210,6 +210,9 @@ class DeckeryTray:
         # ── Service status ────────────────────────────────────────────────
         for name in SERVICES:
             m.append(self._status_item(name))
+        self._items["status_deckery-hud"].connect(
+            "activate", lambda _: _hud_dbus("Toggle")
+        )
         m.append(Gtk.SeparatorMenuItem())
 
         # ── Makima controls (context-sensitive) ───────────────────────────
