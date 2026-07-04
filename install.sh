@@ -134,7 +134,7 @@ echo ""
 echo "── Installing Deckery Tray ──────────────────────────────────────────────"
 mkdir -p "$BIN_DIR"
 
-TRAY_PACKAGES="python python-gobject gtk3 libayatana-appindicator librsvg"
+TRAY_PACKAGES="python python-gobject python-cairo gtk3 libayatana-appindicator librsvg"
 distrobox enter deckery -- sudo pacman -S --needed --noconfirm $TRAY_PACKAGES
 echo "Installed: tray packages"
 
