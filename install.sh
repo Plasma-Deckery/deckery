@@ -76,7 +76,7 @@ _checkout_subrepo() {
         if [ -n "$RELEASE_TAG" ]; then
             echo "$name: checking out $RELEASE_TAG..."
             git -C "$dir" fetch --tags --force
-            if ! git -C "$dir" checkout "$RELEASE_TAG" 2>/dev/null; then
+            if ! git -C "$dir" checkout -f "$RELEASE_TAG" 2>/dev/null; then
                 echo ""
                 echo "✗ ERROR: Release tag '$RELEASE_TAG' not found in $name."
                 echo ""
