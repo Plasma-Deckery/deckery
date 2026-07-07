@@ -64,11 +64,28 @@ Click the red **Steam config: Fix and Lock** item — a terminal opens, copies t
 
 ### When Steam needs to update
 
-The `chattr +i` lock prevents Steam's update mechanism from doing its atomic file rename, which aborts the entire client update. Before updating Steam:
+!!! warning "Steam updates are blocked while the file is locked"
+    The `chattr +i` immutable flag prevents Steam's update mechanism from doing its atomic file rename, which **aborts the entire Steam client update**. You must unlock the file before Steam can update, and restore the lock afterward.
+
+**Via the tray (recommended):**
 
 1. Click **Unlock for Steam update** in the tray → terminal unlocks the file, tray turns yellow
-2. Open Steam → let it update (it will overwrite the config in the process)
+2. Open Steam → let it update (it will overwrite the config in the process), then close Steam
 3. Click the red **Steam config: Fix and Lock** item → terminal restores and re-locks the file, tray turns green
+
+**Manually (if the tray is unavailable):**
+
+```bash
+# 1. Unlock
+sudo chattr -i ~/.local/share/Steam/controller_base/desktop_neptune.vdf
+
+# 2. Open Steam, let it update, close Steam
+
+# 3. Restore and re-lock
+cp ~/.config/makima/desktop_neptune.vdf \
+   ~/.local/share/Steam/controller_base/desktop_neptune.vdf
+sudo chattr +i ~/.local/share/Steam/controller_base/desktop_neptune.vdf
+```
 
 !!! info "All terminal steps require your sudo password"
     `chattr +i/-i` requires root privileges. Each terminal walks you through the operation and shows a ✓ or ✗ result before closing.
