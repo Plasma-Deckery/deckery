@@ -94,13 +94,18 @@ Full technical background and plans for future automation in [deckery#11](https:
 
 ## Updates
 
-To update all components:
+The easiest way to update is the **Check for Updates** entry in the Deckery tray menu. It checks for a new release and opens a terminal that runs the full update automatically.
+
+To update manually:
 
 ```bash
-cd ~/.local/share/deckery/deckery && git pull && bash install.sh
+bash <(curl -sSL https://raw.githubusercontent.com/Plasma-Deckery/deckery/main/get.sh)
 ```
 
-Or use the **Search for Updates** entry in the Deckery tray menu.
+This fetches the latest release tag and re-runs the installer — the same steps the tray menu triggers.
+
+!!! warning "Do not use `git pull && install.sh` to update"
+    That would stay on the `main` branch rather than checking out the latest release tag. Always use `get.sh` for updates.
 
 ## Uninstall
 
