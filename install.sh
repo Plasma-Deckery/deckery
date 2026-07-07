@@ -197,9 +197,11 @@ echo ""
 # ── 7. Steam Input config (desktop_neptune.vdf) ──────────────────────────────
 #
 # The canonical copy lives in ~/.config/makima/ so the tray watcher can read it.
-# It is also written to Steam's config dir on install/update.
-# The tray watches for Steam overwriting it and restores automatically (deckery#11).
-# Legacy chattr +i locks are removed so Steam can update freely.
+# It is also written to Steam's config dir and locked with chattr +i.
+#
+# On reinstall/update: if the file is already identical AND locked, skip entirely
+# (no sudo prompt, no disruption). Only unlock → copy → relock when the content
+# actually changed or the lock is missing.
 
 echo "── Steam Input config ───────────────────────────────────────────────────"
 
@@ -216,15 +218,28 @@ if [ -f "$VDF_SRC" ]; then
         echo "Already up to date: ~/.config/makima/desktop_neptune.vdf"
     fi
 
-    # Remove legacy chattr +i lock if present
-    sudo chattr -i "$VDF_DST" 2>/dev/null || true
-
-    # Deploy to Steam's config dir
-    if ! cmp -s "$VDF_SRC" "$VDF_DST" 2>/dev/null; then
-        cp "$VDF_SRC" "$VDF_DST"
-        echo "Installed: desktop_neptune.vdf → Steam"
+    # Deploy to Steam's config dir.
+    # Fast path: file is already correct AND locked — nothing to do.
+    _vdf_locked() { lsattr "$VDF_DST" 2>/dev/null | awk '{print $1}' | grep -q 'i'; }
+    if cmp -s "$VDF_SRC" "$VDF_DST" 2>/dev/null && _vdf_locked; then
+        echo "Already locked and up to date: desktop_neptune.vdf → Steam"
     else
-        echo "Already up to date: desktop_neptune.vdf → Steam"
+        # Unlock so we can write (silently ignores if not locked)
+        sudo chattr -i "$VDF_DST" 2>/dev/null || true
+
+        if ! cmp -s "$VDF_SRC" "$VDF_DST" 2>/dev/null; then
+            cp "$VDF_SRC" "$VDF_DST"
+            echo "Installed: desktop_neptune.vdf → Steam"
+        else
+            echo "Already up to date: desktop_neptune.vdf → Steam"
+        fi
+
+        # Re-apply lock
+        if sudo chattr +i "$VDF_DST" 2>/dev/null; then
+            echo "Locked: desktop_neptune.vdf"
+        else
+            echo "Warning: could not lock desktop_neptune.vdf — lock it via the tray menu"
+        fi
     fi
 else
     echo "Skipped: desktop_neptune.vdf not found in repo"
