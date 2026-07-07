@@ -11,6 +11,7 @@ State machine:
 """
 
 import json
+import logging
 import os
 import subprocess
 import threading
@@ -18,6 +19,8 @@ import urllib.request
 from enum import Enum, auto
 
 from gi.repository import GLib
+
+log = logging.getLogger("updater")
 
 # ── Paths (derived from this file's location, install-path-agnostic) ──────────
 _TRAY_DIR    = os.path.dirname(os.path.abspath(__file__))
@@ -48,7 +51,7 @@ _SENSITIVE = {
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
-def _local_version() -> str:
+def local_version() -> str:
     """Returns the highest version tag in the repo (e.g. '0.1.2').
     Uses version sort so the result is always the numerically greatest tag,
     even when multiple tags point to the same commit.
@@ -137,7 +140,6 @@ class Updater:
 
     @property
     def label(self) -> str:
-        local = _local_version()
         match self._state:
             case UpdateState.IDLE:
                 return "Check for Updates"
@@ -164,27 +166,33 @@ class Updater:
     # ── Internal ──────────────────────────────────────────────────────────────
 
     def _set_state(self, state: UpdateState):
+        if state != self._state:
+            log.info("state: %s → %s", self._state.name, state.name)
         self._state = state
         GLib.idle_add(self._on_state_change)
 
     def _start_check(self):
+        log.info("starting update check")
         self._set_state(UpdateState.CHECKING)
         threading.Thread(target=self._check_thread, daemon=True).start()
 
     def _check_thread(self):
         try:
             latest = _fetch_latest_tag()
-            local  = _local_version()
+            local  = local_version()
             self._latest = latest
+            log.info("latest: %s  local: %s", latest, local)
             if local == "unknown" or _parse_version(local) >= _parse_version(latest):
                 self._set_state(UpdateState.UP_TO_DATE)
             else:
                 self._set_state(UpdateState.UPDATE_AVAILABLE)
-        except Exception:
+        except Exception as e:
+            log.warning("update check failed: %s", e)
             self._set_state(UpdateState.ERROR)
 
     def _run_update(self):
         """Open a terminal and run get.sh — fetches latest tag and re-runs install."""
+        log.info("launching update: %s", _GET_SH)
         subprocess.Popen([
             "distrobox-host-exec", "konsole", "--noclose",
             "-e", "bash", _GET_SH,

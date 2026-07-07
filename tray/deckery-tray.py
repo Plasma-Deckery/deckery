@@ -20,7 +20,8 @@ import sys
 import threading
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from updater import Updater
+from updater import Updater, UpdateState, local_version
+from steam_config_watcher import SteamConfigWatcher
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
 
@@ -37,9 +38,9 @@ _DOT_PAUSED   = os.path.join(_ICONS, "dot-paused.svg")
 _DOT_ERR      = os.path.join(_ICONS, "dot-err.svg")
 _DOT_INACTIVE = os.path.join(_ICONS, "dot-inactive.svg")
 
-_STATE_JSON    = "/tmp/makima-state.json"
-_MAKIMA_SOCK   = "/tmp/makima-control.sock"
-_CONFIG_DIR    = os.path.expanduser("~/.config/makima")
+_STATE_JSON         = "/tmp/makima-state.json"
+_MAKIMA_SOCK        = "/tmp/makima-control.sock"
+_CONFIG_DIR         = os.path.expanduser("~/.config/makima")
 _GITHUB_DISCUSSIONS = "https://github.com/Plasma-Deckery/deckery/discussions"
 
 # D-Bus address for deckery-hud
@@ -47,6 +48,14 @@ _HUD_BUS  = "de.plasma_deckery.hud"
 _HUD_PATH = "/de/plasma_deckery/hud"
 
 POLL_MS = 2000  # polling interval for service status (ms)
+
+# Maps _tray_state() result key → (icon_path, tooltip label)
+_TRAY_ICONS: dict[str, tuple[str, str]] = {
+    "ok":     (_ICON_OK,     "Deckery: running"),
+    "warn":   (_ICON_WARN,   "Deckery: needs attention"),
+    "err":    (_ICON_ERR,    "Deckery: error"),
+    "update": (_ICON_UPDATE, "Deckery: update available"),
+}
 
 # Services to monitor: key → systemd unit
 SERVICES = {
@@ -56,9 +65,62 @@ SERVICES = {
 
 # Human-readable display names for the menu
 DISPLAY = {
-    "makima":      "Makima",
+    "makima":      "Deckery",
     "deckery-hud": "HUD",
 }
+
+# ── Pure state-routing functions (no GTK — fully testable) ───────────────────
+
+def _tray_state(
+    statuses: dict[str, str],
+    paused: bool,
+    steam_state: str,
+    has_update: bool,
+) -> str:
+    """
+    Return the tray icon priority key from combined system state.
+    Result is one of: 'err', 'warn', 'update', 'ok'.
+    Priority (highest first): err > warn > update > ok.
+    No GTK dependency — call this in unit tests directly.
+    """
+    any_failed = any(s == "failed" for s in statuses.values())
+    any_down   = any(s != "active" for s in statuses.values())
+    steam_err  = steam_state == "overwritten"
+    steam_warn = steam_state in ("unlocked", "no_source")
+
+    if any_failed or steam_err:
+        return "err"
+    if any_down or paused or steam_warn:
+        return "warn"
+    if has_update:
+        return "update"
+    return "ok"
+
+
+def _steam_item_state(steam_state: str) -> tuple[str, bool]:
+    """
+    Return (dot_key, unlock_sensitive) for a given SteamConfigWatcher state.
+      dot_key:          'ok' | 'warn' | 'err' | 'grey'
+      unlock_sensitive: True only when the file is locked (user can unlock it)
+    No GTK dependency.
+    """
+    dot_key = {
+        "locked":      "ok",
+        "unlocked":    "warn",
+        "overwritten": "err",
+        "no_source":   "warn",
+    }.get(steam_state, "grey")
+    return dot_key, steam_state == "locked"
+
+
+def _steam_click_action(steam_state: str) -> str | None:
+    """
+    Return the terminal action to open when the steam status item is clicked.
+    Returns 'fix_and_lock', 'lock', or None (no-op).
+    No GTK dependency.
+    """
+    return {"overwritten": "fix_and_lock", "unlocked": "lock"}.get(steam_state)
+
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -123,7 +185,6 @@ def _open_url(url: str) -> None:
     subprocess.Popen(["xdg-open", url])
 
 
-
 def _hud_dbus(method: str) -> None:
     """Call a method on the deckery-hud D-Bus interface. Silently ignores errors."""
     try:
@@ -158,11 +219,12 @@ class DeckeryTray:
 
         self._menu             = Gtk.Menu()
         self._items            = {}
+        self._statuses: dict   = {}   # last known service statuses from poll
         self._paused           = False
-        self._osd_blocked      = False
         self._poll_running     = False
         self._state_timeout_id = None
-        self._updater          = Updater(on_state_change=self._refresh_update_item)
+        self._updater          = Updater(on_state_change=self._on_update_state_changed)
+        self._steam_watcher    = SteamConfigWatcher(on_state_change=self._on_steam_state_changed)
 
         self._build_menu()
         self._indicator.set_menu(self._menu)
@@ -176,8 +238,8 @@ class DeckeryTray:
     def _status_item(self, name: str) -> Gtk.MenuItem:
         """Create a service-status MenuItem with icon + label in an HBox.
         Uses explicit Box child so label updates via set_text() are reliable
-        (Gtk.ImageMenuItem.set_label() cannot update its internal AccelLabel
-        when the child is an HBox, not an AccelLabel)."""
+        (Gtk.ImageMenuItem.set_label() cannot update its AccelLabel when the
+        child is an HBox)."""
         item = Gtk.MenuItem()
         box  = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
         img  = Gtk.Image.new_from_pixbuf(self._pb["grey"])
@@ -200,27 +262,20 @@ class DeckeryTray:
         m = self._menu
 
         # ── Header ────────────────────────────────────────────────────────
-        from updater import _local_version
-        _v = _local_version()
+        _v = local_version()
         header = Gtk.MenuItem(label=f"Deckery v{_v}" if _v != "unknown" else "Deckery")
         header.set_sensitive(False)
         m.append(header)
         m.append(Gtk.SeparatorMenuItem())
 
-        # ── Service status ────────────────────────────────────────────────
-        for name in SERVICES:
-            m.append(self._status_item(name))
-        self._items["status_deckery-hud"].connect(
-            "activate", lambda _: _hud_dbus("Toggle")
-        )
-        m.append(Gtk.SeparatorMenuItem())
+        # ── Deckery (Makima) ──────────────────────────────────────────────
+        m.append(self._status_item("makima"))
 
-        # ── Makima controls (context-sensitive) ───────────────────────────
-        pause_item   = self._dynamic(_icon_item("Pause Makima",   "media-playback-pause"))
-        resume_item  = self._dynamic(_icon_item("Resume Makima",  "media-playback-start"))
-        restart_item = self._dynamic(_icon_item("Restart Makima", "view-refresh"))
-        start_item   = self._dynamic(_icon_item("Start Makima",   "system-run"))
-        stop_item    = self._dynamic(_icon_item("Stop Makima",    "media-playback-stop"))
+        pause_item   = self._dynamic(_icon_item("Pause Deckery",   "media-playback-pause"))
+        resume_item  = self._dynamic(_icon_item("Resume Deckery",  "media-playback-start"))
+        restart_item = self._dynamic(_icon_item("Restart Deckery", "view-refresh"))
+        start_item   = self._dynamic(_icon_item("Start Deckery",   "system-run"))
+        stop_item    = self._dynamic(_icon_item("Stop Deckery",    "media-playback-stop"))
 
         pause_item  .connect("activate", self._on_pause)
         resume_item .connect("activate", self._on_resume)
@@ -238,16 +293,31 @@ class DeckeryTray:
             m.append(item)
         m.append(Gtk.SeparatorMenuItem())
 
-        # ── HUD controls + OSD (same group) ───────────────────────────────
-        hud_item = _icon_item("Restart HUD", "view-refresh")
-        hud_item.connect("activate", lambda _: _service_ctrl("restart", "deckery-hud.service"))
-        m.append(hud_item)
+        # ── HUD ───────────────────────────────────────────────────────────
+        hud_status = self._status_item("deckery-hud")
+        hud_status.connect("activate", lambda _: _hud_dbus("Toggle"))
+        m.append(hud_status)
+
+        hud_restart = _icon_item("Restart HUD", "view-refresh")
+        hud_restart.connect("activate", lambda _: _service_ctrl("restart", "deckery-hud.service"))
+        m.append(hud_restart)
 
         osd_item = Gtk.CheckMenuItem(label="Onscreen Display")
         osd_item.set_active(True)
         osd_item.connect("toggled", self._on_osd_toggle)
         self._items["osd"] = osd_item
         m.append(osd_item)
+        m.append(Gtk.SeparatorMenuItem())
+
+        # ── Steam Config ──────────────────────────────────────────────────
+        steam_status = self._status_item("steam-config")
+        steam_status.connect("activate", self._on_steam_status_clicked)
+        m.append(steam_status)
+
+        unlock_item = _icon_item("Unlock for Steam update", "object-unlocked")
+        unlock_item.connect("activate", lambda _: self._steam_watcher.open_unlock_terminal())
+        self._items["steam-unlock"] = unlock_item
+        m.append(unlock_item)
         m.append(Gtk.SeparatorMenuItem())
 
         # ── Config / Updates ──────────────────────────────────────────────
@@ -316,9 +386,10 @@ class DeckeryTray:
 
     def _apply_poll(self, statuses: dict, paused: bool):
         self._poll_running = False
-        self._paused = paused
+        self._paused   = paused
+        self._statuses = statuses
 
-        # ── Update status icons + labels ──────────────────────────────────
+        # ── Update service status icons + labels ──────────────────────────
         for name, status in statuses.items():
             if name == "makima" and status == "active" and paused:
                 pb_key  = "warn"
@@ -337,6 +408,9 @@ class DeckeryTray:
                 self._items[f"status_{name}_img"].set_from_pixbuf(pb)
             self._items[f"status_{name}_lbl"].set_text(f"{DISPLAY.get(name, name)}: {display}")
 
+        # ── Update steam config item ──────────────────────────────────────
+        self._refresh_steam_item()
+
         # ── Makima control visibility ─────────────────────────────────────
         makima_active = statuses.get("makima", "unknown") == "active"
         self._items["pause"]  .set_visible(makima_active and not paused)
@@ -346,20 +420,22 @@ class DeckeryTray:
         self._items["stop"]   .set_visible(makima_active and not paused)
 
         # ── Tray icon ─────────────────────────────────────────────────────
-        from updater import UpdateState
-        any_failed  = any(s == "failed" for s in statuses.values())
-        any_down    = any(s not in ("active",) for s in statuses.values())
-        has_update  = self._updater.state == UpdateState.UPDATE_AVAILABLE
-        if any_failed:
-            self._indicator.set_icon_full(_ICON_ERR,    "Deckery: error")
-        elif any_down or paused:
-            self._indicator.set_icon_full(_ICON_WARN,   "Deckery: needs attention")
-        elif has_update:
-            self._indicator.set_icon_full(_ICON_UPDATE, "Deckery: update available")
-        else:
-            self._indicator.set_icon_full(_ICON_OK,     "Deckery: running")
+        self._refresh_tray_icon()
 
         return GLib.SOURCE_REMOVE
+
+    # ── Tray icon ─────────────────────────────────────────────────────────────
+
+    def _refresh_tray_icon(self) -> None:
+        """Update the tray icon based on all current states."""
+        key = _tray_state(
+            self._statuses,
+            self._paused,
+            self._steam_watcher.state,
+            self._updater.state == UpdateState.UPDATE_AVAILABLE,
+        )
+        icon, tooltip = _TRAY_ICONS[key]
+        self._indicator.set_icon_full(icon, tooltip)
 
     # ── Handlers ─────────────────────────────────────────────────────────────
 
@@ -372,23 +448,50 @@ class DeckeryTray:
         GLib.timeout_add(300, self._poll)
 
     def _on_osd_toggle(self, _item):
-        if self._osd_blocked:
-            return
         _hud_dbus("ToggleOsd")
 
     def _on_update_clicked(self, _item):
         self._updater.on_clicked()
 
-    def _refresh_update_item(self):
+    def _on_update_state_changed(self):
+        """Called by Updater when its state changes."""
         item = self._items.get("update")
         if item:
             item.set_label(self._updater.label)
             item.set_sensitive(self._updater.sensitive)
-        # Trigger a poll so the tray icon reflects the new update state
-        self._poll()
+        self._refresh_tray_icon()
         return GLib.SOURCE_REMOVE
 
+    def _on_steam_status_clicked(self, _item):
+        action = _steam_click_action(self._steam_watcher.state)
+        if action == "fix_and_lock":
+            self._steam_watcher.open_fix_and_lock_terminal()
+        elif action == "lock":
+            self._steam_watcher.open_lock_terminal()
+
+    def _on_steam_state_changed(self):
+        """Called by SteamConfigWatcher when its state changes."""
+        self._refresh_steam_item()
+        self._refresh_tray_icon()
+        return GLib.SOURCE_REMOVE
+
+    def _refresh_steam_item(self) -> None:
+        """Update the steam config status item in the menu."""
+        state = self._steam_watcher.state
+        dot_key, unlock_sensitive = _steam_item_state(state)
+        pb     = self._pb.get(dot_key)
+        img    = self._items.get("status_steam-config_img")
+        lbl    = self._items.get("status_steam-config_lbl")
+        unlock = self._items.get("steam-unlock")
+        if img and pb:
+            img.set_from_pixbuf(pb)
+        if lbl:
+            lbl.set_text(self._steam_watcher.label)
+        if unlock:
+            unlock.set_sensitive(unlock_sensitive)
+
     def _on_quit(self, _item):
+        self._steam_watcher.stop()
         _service_ctrl("stop", "makima.service")
         _service_ctrl("stop", "deckery-hud.service")
         Gtk.main_quit()
@@ -397,5 +500,10 @@ class DeckeryTray:
 # ── Entry point ───────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
+    import logging
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format="%(name)s: %(levelname)s: %(message)s",
+    )
     DeckeryTray()
     Gtk.main()

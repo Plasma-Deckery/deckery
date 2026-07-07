@@ -34,55 +34,78 @@ A few features from the original Steam layout are kept and adapted:
 - **Trackpad handling** — the trackpads continue to work as before
 - **On-screen keyboard** — moved to **Steam + X**
 
-The Deckery config file is located at:
+The installer places the config in two locations:
 
+- `~/.config/makima/desktop_neptune.vdf` — the canonical copy the tray reads from
+- `~/.local/share/Steam/controller_base/desktop_neptune.vdf` — Steam's active config
+
+### The Steam config tray item
+
+The Deckery tray monitors the config file continuously and shows its state in the menu under **Steam config**:
+
+| Indicator | State | Meaning |
+|---|---|---|
+| 🟢 | **locked** | Config is in place and protected — no action needed |
+| 🟡 | **unlocked** | Config is correct but unprotected — Steam will overwrite it on next start |
+| 🔴 | **Fix and Lock** | Steam has overwritten the config — click to restore and lock |
+| 🟡 | **source missing** | The canonical copy in `~/.config/makima/` is gone |
+
+### After a fresh install
+
+After running the installer the file is in place but not locked. The tray shows **unlocked** (yellow).
+
+Click the **Steam config: unlocked** item — a terminal opens, enters `sudo chattr +i`, and locks the file. The tray turns green.
+
+### When Steam overwrites the config
+
+Steam silently restores its defaults every time it starts. If it does, the tray turns **red**.
+
+Click the red **Steam config: Fix and Lock** item — a terminal opens, copies the canonical config back, locks it, and the tray returns to green.
+
+### When Steam needs to update
+
+!!! warning "Steam updates are blocked while the file is locked"
+    The `chattr +i` immutable flag prevents Steam's update mechanism from doing its atomic file rename, which **aborts the entire Steam client update**. You must unlock the file before Steam can update, and restore the lock afterward.
+
+**Via the tray (recommended):**
+
+1. Click **Unlock for Steam update** in the tray → terminal unlocks the file, tray turns yellow
+2. Open Steam → let it update (it will overwrite the config in the process), then close Steam
+3. Click the red **Steam config: Fix and Lock** item → terminal restores and re-locks the file, tray turns green
+
+**Manually (if the tray is unavailable):**
+
+```bash
+# 1. Unlock
+sudo chattr -i ~/.local/share/Steam/controller_base/desktop_neptune.vdf
+
+# 2. Open Steam, let it update, close Steam
+
+# 3. Restore and re-lock
+cp ~/.config/makima/desktop_neptune.vdf \
+   ~/.local/share/Steam/controller_base/desktop_neptune.vdf
+sudo chattr +i ~/.local/share/Steam/controller_base/desktop_neptune.vdf
 ```
-~/.local/share/deckery/deckery/configs/desktop_neptune.vdf
-```
 
-The installer copies this automatically on every run. To manually copy or restore it:
+!!! info "All terminal steps require your sudo password"
+    `chattr +i/-i` requires root privileges. Each terminal walks you through the operation and shows a ✓ or ✗ result before closing.
 
-!!! info "Manually apply the config"
-    ```bash
-    cp ~/.local/share/deckery/deckery/configs/desktop_neptune.vdf \
-       ~/.local/share/Steam/controller_base/desktop_neptune.vdf
-    ```
-
-!!! warning "Steam resets this config on every restart"
-    Steam silently overwrites `desktop_neptune.vdf` with its defaults every time it restarts or updates. To prevent this, lock the file after placing it:
-
-    ```bash
-    sudo chattr +i ~/.local/share/Steam/controller_base/desktop_neptune.vdf
-    ```
-
-This approach has an inconvenient drawback.
-
-!!! warning "Steam updates fail while the file is locked"
-    The `chattr +i` immutable flag prevents Steam's update mechanism from doing its atomic rename on the config file, which **aborts the entire Steam client update**.
-
-    Before installing a Steam update, unlock the file first — then restore and re-lock afterward:
-
-    ```bash
-    # Before the Steam update — unlock
-    sudo chattr -i ~/.local/share/Steam/controller_base/desktop_neptune.vdf
-
-    # After the Steam update — restore and re-lock
-    cp ~/.local/share/deckery/deckery/configs/desktop_neptune.vdf \
-       ~/.local/share/Steam/controller_base/desktop_neptune.vdf
-    sudo chattr +i ~/.local/share/Steam/controller_base/desktop_neptune.vdf
-    ```
-
-A permanent solution using a file watcher that automatically restores the config after Steam updates is planned in [deckery#11](https://github.com/Plasma-Deckery/deckery/issues/11).
+Full technical background and plans for future automation in [deckery#11](https://github.com/Plasma-Deckery/deckery/issues/11).
 
 ## Updates
 
-To update all components:
+The easiest way to update is the **Check for Updates** entry in the Deckery tray menu. It checks for a new release and opens a terminal that runs the full update automatically.
+
+To update manually:
 
 ```bash
-cd ~/.local/share/deckery/deckery && git pull && bash install.sh
+bash <(curl -sSL https://raw.githubusercontent.com/Plasma-Deckery/deckery/main/get.sh)
 ```
 
-Or use the **Search for Updates** entry in the Deckery tray menu.
+This fetches the latest release tag and re-runs the installer — the same steps the tray menu triggers.
+
+!!! warning "Do not use `git pull && install.sh` to update"
+    That would stay on the `main` branch rather than checking out the latest release tag. Always use `get.sh` for updates.
 
 ## Uninstall
 
