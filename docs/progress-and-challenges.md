@@ -6,7 +6,6 @@
 |---|---|
 | Buttons, D-Pad, back paddles, modifiers | ✅ Covered |
 | Per-app button layouts | ✅ Covered |
-| Trackpad gestures | ✅ MT devices emulated — gesture tool integration planned ([deckery#3](https://github.com/Plasma-Deckery/deckery/issues/3)) |
 | System tray (service status, control, updates) | ✅ Covered |
 | One-line installation script | ✅ Covered |
 
@@ -14,15 +13,20 @@
 
 | Area | Status |
 |---|---|
+| Trackpad gestures | 🔧 MT device emulation in progress ([feat/trackpad-mt-translation](https://github.com/Plasma-Deckery/makima-deckery/tree/feat/trackpad-mt-translation)) — gesture tool integration planned ([deckery#3](https://github.com/Plasma-Deckery/deckery/issues/3)) |
+| Pinch-zoom and two-pad gestures | 🔧 Both pads as a combined two-finger device — enables pinch-zoom, horizontal scroll, and two-axis pan ([deckery#7](https://github.com/Plasma-Deckery/deckery/issues/7)) |
 | Trackpad scrolling | ⚠️ Better experience via Steam Input — implementation planned ([deckery#4](https://github.com/Plasma-Deckery/deckery/issues/4)) |
 | Trackpad cursor movement | ⚠️ Better experience via Steam Input — implementation planned ([deckery#5](https://github.com/Plasma-Deckery/deckery/issues/5)) |
 | Lizard Mode suppression | 🔧 In progress — hidraw heartbeat implemented, configurable via `SUPPRESS_LIZARD_MODE` ([makima-deckery#11](https://github.com/Plasma-Deckery/makima-deckery/issues/11)) |
 | Haptic feedback on trackpads | 🔧 Kernel support available in Linux 6.18+ / Bazzite 6.19+ — planned ([makima-deckery#9](https://github.com/Plasma-Deckery/makima-deckery/issues/9)) |
+| Trackpad hardware settings | 🔧 Expose trackpad sensitivity, pressure thresholds, and haptic intensity via makima config — planned ([makima-deckery#13](https://github.com/Plasma-Deckery/makima-deckery/issues/13)) |
 | On-screen keyboard | ⚠️ Better experience via Steam |
 
 ## Open Challenges
 
 Known hard problems and planned work. Each item links to the relevant GitHub issue.
+
+The trackpad-related challenges below are coordinated in [Epic #16 — Steam-independent trackpad stack](https://github.com/Plasma-Deckery/deckery/issues/16).
 
 ### Lizard Mode suppression
 
@@ -46,7 +50,7 @@ The virtual MT devices expose the trackpads to libinput, but libinput applies ge
 
 ### Controller-native authentication input
 
-Two places require a password or PIN without a keyboard: the lock screen, and system authentication prompts (sudo, polkit). The lock screen needs a controller-native PIN entry UI (d-pad or face buttons to select digits, confirm with A). For sudo/polkit, the existing system prompt dialogs would need to be intercepted or replaced with a controller-friendly equivalent — so that privilege escalation flows work without reaching for a keyboard. See [deckery#6](https://github.com/Plasma-Deckery/deckery/issues/6).
+Two places require a password or PIN without a keyboard: the lock screen, and system authentication prompts (sudo, polkit). The lock screen needs a controller-native PIN entry UI (d-pad or face buttons to select digits, confirm with A). For sudo/polkit, the existing system prompt dialogs would need to be intercepted or replaced with a controller-friendly equivalent — so that privilege escalation flows work without reaching for a keyboard. See [Epic #17](https://github.com/Plasma-Deckery/deckery/issues/17) for the full staged implementation plan.
 
 ---
 
