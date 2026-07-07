@@ -196,22 +196,35 @@ echo ""
 
 # ── 7. Steam Input config (desktop_neptune.vdf) ──────────────────────────────
 #
-# Copies the Deckery-tuned desktop controller config into Steam's config dir.
-# Idempotent: skipped if the destination is already identical to the source.
-# Note: locking with chattr +i is a separate manual step until the file-watcher
-# solution is in place (see deckery#11).
+# The canonical copy lives in ~/.config/makima/ so the tray watcher can read it.
+# It is also written to Steam's config dir on install/update.
+# The tray watches for Steam overwriting it and restores automatically (deckery#11).
+# Legacy chattr +i locks are removed so Steam can update freely.
 
 echo "── Steam Input config ───────────────────────────────────────────────────"
 
 VDF_SRC="$DECKERY_DIR/configs/desktop_neptune.vdf"
+VDF_CFG="$CFG_DIR/desktop_neptune.vdf"
 VDF_DST="$HOME/.local/share/Steam/controller_base/desktop_neptune.vdf"
 
 if [ -f "$VDF_SRC" ]; then
+    # Canonical copy → config dir (source of truth for tray watcher)
+    if ! cmp -s "$VDF_SRC" "$VDF_CFG" 2>/dev/null; then
+        cp "$VDF_SRC" "$VDF_CFG"
+        echo "Installed: ~/.config/makima/desktop_neptune.vdf"
+    else
+        echo "Already up to date: ~/.config/makima/desktop_neptune.vdf"
+    fi
+
+    # Remove legacy chattr +i lock if present
+    sudo chattr -i "$VDF_DST" 2>/dev/null || true
+
+    # Deploy to Steam's config dir
     if ! cmp -s "$VDF_SRC" "$VDF_DST" 2>/dev/null; then
         cp "$VDF_SRC" "$VDF_DST"
-        echo "Installed: desktop_neptune.vdf"
+        echo "Installed: desktop_neptune.vdf → Steam"
     else
-        echo "Already up to date: desktop_neptune.vdf"
+        echo "Already up to date: desktop_neptune.vdf → Steam"
     fi
 else
     echo "Skipped: desktop_neptune.vdf not found in repo"

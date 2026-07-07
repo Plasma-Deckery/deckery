@@ -72,7 +72,7 @@ This approach has an inconvenient drawback.
     sudo chattr +i ~/.local/share/Steam/controller_base/desktop_neptune.vdf
     ```
 
-A permanent solution using a file watcher that automatically restores the config after Steam updates is planned in [deckery#11](https://github.com/Plasma-Deckery/deckery/issues/11).
+A fully automatic solution is tracked in [deckery#11](https://github.com/Plasma-Deckery/deckery/issues/11). The file watcher approach turned out to be non-trivial — see the issue for details.
 
 ## Updates
 
