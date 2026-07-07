@@ -57,6 +57,13 @@ _TRAY_ICONS: dict[str, tuple[str, str]] = {
     "update": (_ICON_UPDATE, "Deckery: update available"),
 }
 
+def _version_label(v: str) -> str:
+    """Format the tray header label for a given version string.
+    Returns 'Deckery vX.Y.Z' normally, or just 'Deckery' when the version
+    is unknown (e.g. repo has no tags yet)."""
+    return f"Deckery v{v}" if v != "unknown" else "Deckery"
+
+
 # Services to monitor: key → systemd unit
 SERVICES = {
     "makima":      "makima.service",
@@ -263,8 +270,9 @@ class DeckeryTray:
 
         # ── Header ────────────────────────────────────────────────────────
         _v = local_version()
-        header = Gtk.MenuItem(label=f"Deckery v{_v}" if _v != "unknown" else "Deckery")
+        header = Gtk.MenuItem(label=_version_label(_v))
         header.set_sensitive(False)
+        self._items["header"] = header
         m.append(header)
         m.append(Gtk.SeparatorMenuItem())
 
@@ -459,6 +467,11 @@ class DeckeryTray:
         if item:
             item.set_label(self._updater.label)
             item.set_sensitive(self._updater.sensitive)
+        # Refresh header label — local_version() may have changed after an update
+        header = self._items.get("header")
+        if header:
+            _v = local_version()
+            header.set_label(_version_label(_v))
         self._refresh_tray_icon()
         return GLib.SOURCE_REMOVE
 

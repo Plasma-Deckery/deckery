@@ -55,6 +55,29 @@ def tray_mod():
                 sys.modules[k] = v
 
 
+# ── _version_label ────────────────────────────────────────────────────────────
+
+class TestVersionLabel:
+    """
+    _version_label() formats the tray header string.
+    Used both on first build and whenever the updater state changes.
+    """
+
+    def test_normal_version(self, tray_mod):
+        assert tray_mod._version_label("0.1.8") == "Deckery v0.1.8"
+
+    def test_unknown_version(self, tray_mod):
+        # No tags in repo → show bare "Deckery" without version suffix.
+        assert tray_mod._version_label("unknown") == "Deckery"
+
+    def test_semver_with_patch(self, tray_mod):
+        assert tray_mod._version_label("1.2.34") == "Deckery v1.2.34"
+
+    def test_empty_string_treated_as_version(self, tray_mod):
+        # Edge case: empty string is not "unknown" → shows "Deckery v"
+        assert tray_mod._version_label("") == "Deckery v"
+
+
 # ── _tray_state ───────────────────────────────────────────────────────────────
 
 class TestTrayState:
