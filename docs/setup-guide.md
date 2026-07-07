@@ -34,45 +34,46 @@ A few features from the original Steam layout are kept and adapted:
 - **Trackpad handling** — the trackpads continue to work as before
 - **On-screen keyboard** — moved to **Steam + X**
 
-The Deckery config file is located at:
+The installer places the config in two locations:
 
-```
-~/.local/share/deckery/deckery/configs/desktop_neptune.vdf
-```
+- `~/.config/makima/desktop_neptune.vdf` — the canonical copy the tray reads from
+- `~/.local/share/Steam/controller_base/desktop_neptune.vdf` — Steam's active config
 
-The installer copies this automatically on every run. To manually copy or restore it:
+### The Steam config tray item
 
-!!! info "Manually apply the config"
-    ```bash
-    cp ~/.local/share/deckery/deckery/configs/desktop_neptune.vdf \
-       ~/.local/share/Steam/controller_base/desktop_neptune.vdf
-    ```
+The Deckery tray monitors the config file continuously and shows its state in the menu under **Steam config**:
 
-!!! warning "Steam resets this config on every restart"
-    Steam silently overwrites `desktop_neptune.vdf` with its defaults every time it restarts or updates. To prevent this, lock the file after placing it:
+| Indicator | State | Meaning |
+|---|---|---|
+| 🟢 | **locked** | Config is in place and protected — no action needed |
+| 🟡 | **unlocked** | Config is correct but unprotected — Steam will overwrite it on next start |
+| 🔴 | **Fix and Lock** | Steam has overwritten the config — click to restore and lock |
+| 🟡 | **source missing** | The canonical copy in `~/.config/makima/` is gone |
 
-    ```bash
-    sudo chattr +i ~/.local/share/Steam/controller_base/desktop_neptune.vdf
-    ```
+### After a fresh install
 
-This approach has an inconvenient drawback.
+After running the installer the file is in place but not locked. The tray shows **unlocked** (yellow).
 
-!!! warning "Steam updates fail while the file is locked"
-    The `chattr +i` immutable flag prevents Steam's update mechanism from doing its atomic rename on the config file, which **aborts the entire Steam client update**.
+Click the **Steam config: unlocked** item — a terminal opens, enters `sudo chattr +i`, and locks the file. The tray turns green.
 
-    Before installing a Steam update, unlock the file first — then restore and re-lock afterward:
+### When Steam overwrites the config
 
-    ```bash
-    # Before the Steam update — unlock
-    sudo chattr -i ~/.local/share/Steam/controller_base/desktop_neptune.vdf
+Steam silently restores its defaults every time it starts. If it does, the tray turns **red**.
 
-    # After the Steam update — restore and re-lock
-    cp ~/.local/share/deckery/deckery/configs/desktop_neptune.vdf \
-       ~/.local/share/Steam/controller_base/desktop_neptune.vdf
-    sudo chattr +i ~/.local/share/Steam/controller_base/desktop_neptune.vdf
-    ```
+Click the red **Steam config: Fix and Lock** item — a terminal opens, copies the canonical config back, locks it, and the tray returns to green.
 
-A fully automatic solution is tracked in [deckery#11](https://github.com/Plasma-Deckery/deckery/issues/11). The file watcher approach turned out to be non-trivial — see the issue for details.
+### When Steam needs to update
+
+The `chattr +i` lock prevents Steam's update mechanism from doing its atomic file rename, which aborts the entire client update. Before updating Steam:
+
+1. Click **Unlock for Steam update** in the tray → terminal unlocks the file, tray turns yellow
+2. Open Steam → let it update (it will overwrite the config in the process)
+3. Click the red **Steam config: Fix and Lock** item → terminal restores and re-locks the file, tray turns green
+
+!!! info "All terminal steps require your sudo password"
+    `chattr +i/-i` requires root privileges. Each terminal walks you through the operation and shows a ✓ or ✗ result before closing.
+
+Full technical background and plans for future automation in [deckery#11](https://github.com/Plasma-Deckery/deckery/issues/11).
 
 ## Updates
 
