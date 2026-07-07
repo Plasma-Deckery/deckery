@@ -52,17 +52,17 @@ _SENSITIVE = {
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 def local_version() -> str:
-    """Returns the highest version tag in the repo (e.g. '0.1.2').
-    Uses version sort so the result is always the numerically greatest tag,
-    even when multiple tags point to the same commit.
-    Returns 'unknown' if the repo has no tags or git is unavailable."""
+    """Returns the version tag of the currently checked-out commit (e.g. '0.1.8').
+    Uses git describe --exact-match so the result reflects what is actually
+    running, not just the highest tag present in the repo.
+    Returns 'unknown' if HEAD is not at a tagged commit or git is unavailable."""
     try:
         r = subprocess.run(
-            ["git", "-C", _DECKERY_DIR, "tag", "--sort=-version:refname"],
+            ["git", "-C", _DECKERY_DIR, "describe", "--tags", "--exact-match", "HEAD"],
             capture_output=True, text=True, timeout=5,
         )
         if r.returncode == 0 and r.stdout.strip():
-            return r.stdout.strip().splitlines()[0].lstrip("v")
+            return r.stdout.strip().lstrip("v")
         return "unknown"
     except Exception:
         return "unknown"
