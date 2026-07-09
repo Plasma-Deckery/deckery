@@ -1,32 +1,52 @@
 # Trackpad Emulation
 
 !!! warning "Beta feature — not on `main`"
-    Trackpad emulation lives on the `trackpad-config` branch of [makima-deckery](https://github.com/Plasma-Deckery/makima-deckery) and has not been merged to `main` yet. Config shape, device names, and behaviour described here can still change without notice. Don't rely on this for a production setup.
+    Trackpad emulation lives on the `trackpad-config` branch of [makima-deckery](https://github.com/Plasma-Deckery/makima-deckery) and has not been merged to `main` yet.
 
-The Steam Deck has two trackpads that can each track a single finger, but the OS can't read them individually — whatever Steam Input does with them under the hood is invisible to every other tool. What we can do instead is read both trackpads ourselves and emulate standard Linux trackpad devices from them. That means, for example, the right trackpad can act as a completely normal mouse.
+The Steam Deck has two trackpads that can each track a single finger, but the OS has no direct way to read them individually — whatever Steam Input does with the raw hardware is invisible to every other piece of software running on the system. Without Steam in the loop, that hardware is effectively unusable from the desktop.
 
-## Virtual devices
+Makima solves this by reading both trackpads itself, directly from the hardware, and turning them into standard Linux input devices. That means, for example, the right trackpad can act as a completely normal mouse. Once emulated, a trackpad registers with the system exactly like any other trackpad — the desktop environment sees an ordinary input device, configurable through the same touchpad settings panel as a laptop trackpad (pointer speed, tap-to-click, scrolling, and so on).
 
-The virtual devices are configured per pad. Here's the right trackpad acting as a mouse, with the left trackpad left off:
+## Virtual Trackpads
+
+Each pad is configured independently under `[trackpad.left]` / `[trackpad.right]`:
 
 ```toml
 [trackpad.right]
-mode = "mt-trackpad"   # right trackpad acts as a standard mouse/trackpad
+mode = "mt-trackpad"       # right trackpad acts as a standard mouse/trackpad
+click_pressure = 30000     # optional: firmware click-pressure threshold (raw u16, omit for firmware default)
+
+[trackpad.right.haptic]
+on_click    = { duration_us = 2000, interval_us = 0, count = 1, gain_db = 0 }   # fires on physical click
+on_movement = { duration_us = 2000, interval_us = 0, count = 1, gain_db = 0 }   # not wired up yet
 
 [trackpad.left]
-mode = "disabled"       # default — left trackpad stays off
+mode = "disabled"          # default — left trackpad stays off
 ```
 
-!!! note "Tap-to-click"
-    If you use the right (or left) trackpad as a mouse, disable "Tap to click" on the `Deckery Right/Left Trackpad` device in your desktop's touchpad settings if you don't want a light tap to register as a click.
+| Field | Default | Meaning |
+|---|---|---|
+| `mode` | `"disabled"` | See [Trackpad modes](#trackpad-modes) below. |
+| `click_pressure` | firmware default | Physical click threshold, as a raw firmware value. Optional. |
+| `haptic.on_click` | short, quiet tick | Haptic pulse fired on the rising edge of a physical click. |
+| `haptic.on_movement` | — | Reserved for a pulse fired during pointer movement. Parsed but not wired up yet. |
 
-## Combined trackpad
+Haptic pulses take four fields, each with its own default if omitted:
+
+| Field | Default | Meaning |
+|---|---|---|
+| `duration_us` | `2000` | Pulse length in microseconds. |
+| `interval_us` | `0` | Gap between repeated pulses, in microseconds. |
+| `count` | `1` | Number of pulses fired. |
+| `gain_db` | `0` | Pulse loudness/strength adjustment, in dB. |
+
+## Combined Trackpad
 
 What Deckery does that Steam Input can't: both trackpads combine into a single multi-touch surface, enabling real two-finger gestures — two-thumb scroll and pinch-to-zoom — across both pads at once. That gets you very smooth horizontal and vertical scrolling and very smooth zooming, e.g. for comfortably navigating a canvas — noticeably better than the scroll wheel emulation Steam offers.
 
 ```toml
 [trackpad.left]
-mode = "mt-trackpad"
+mode = "disabled"
 
 [trackpad.right]
 mode = "mt-trackpad"
@@ -35,28 +55,33 @@ mode = "mt-trackpad"
 combined_gesture_device = true   # combines both pads into one gesture surface
 ```
 
-Individual pads seamlessly resume their own device the instant one finger lifts out of a two-finger gesture — no gap, no re-touch-down needed.
-
 !!! note "Tap-to-click and the combined device"
     Touching down with one pad slightly before the other briefly routes through that pad's individual device before the combined gesture kicks in, and can register as a spurious click if "Tap to click" is enabled on the individual `Deckery Left/Right Trackpad` devices. Disable it there if you use quick two-hand gestures like pinch-zoom.
 
-## Haptic feedback
+### Haptic feedback
 
-Each click or gesture transition can fire a haptic pulse via the trackpad's actuators:
-
-| Field | Location | Fires on |
-|---|---|---|
-| `haptic.on_click` | `[trackpad.left]` / `[trackpad.right]` | Physical click on that pad (rising edge). Omit for a conservative built-in default. |
-| `haptic.on_gesture_start` | `[trackpad.gestures]` | Combined gesture session starting (both pads touched at once). Not wired up yet. |
-| `haptic.on_gesture_move` | `[trackpad.gestures]` | Combined gesture in progress. Not wired up yet. |
-| `haptic.on_gesture_end` | `[trackpad.gestures]` | Combined gesture session ending (either pad lifts). Not wired up yet. |
-
-Each pulse accepts `duration_us`, `interval_us`, `count`, and `gain_db`:
+Rather than click, the combined device fires on the gesture's lifecycle — start, ongoing movement, and end — since a click has no established meaning mid-gesture:
 
 ```toml
-[trackpad.right.haptic]
-on_click = { duration_us = 2000, count = 1 }
+[trackpad.gestures.haptic]
+on_gesture_start = { duration_us = 2000, interval_us = 0, count = 1, gain_db = 0 }   # both pads become touched at once
+on_gesture_move   = { duration_us = 1000, interval_us = 0, count = 1, gain_db = 0 }   # fires repeatedly during movement
+on_gesture_end    = { duration_us = 2000, interval_us = 0, count = 1, gain_db = 0 }   # either pad lifts, ending the session
 ```
+
+!!! note "Not wired up yet"
+    The config above parses today, but none of the three pulses fire yet — see [Trackpad Architecture](../../reference/trackpad-architecture.md) for why.
+
+## Trackpad modes
+
+Set per pad via `mode` in `[trackpad.left]` / `[trackpad.right]`:
+
+| Mode | Status | Description |
+|---|---|---|
+| `disabled` | ✅ Available (default) | Pad is off — no virtual device. Position is still tracked internally for the HUD. |
+| `mt-trackpad` | ✅ Available | Standard Linux multi-touch trackpad, as used throughout this page. Circular scrolling (swipe around the pad's edge to scroll) is planned as an option here. |
+| `trackball` | ⏳ Planned | Cursor moves as a trackball — relative motion with momentum, closer to Steam Input's trackball feel, instead of absolute position. |
+| `scroll` | ⏳ Planned | Pad dedicated to scrolling only. |
 
 See [Trackpad Architecture](../../reference/trackpad-architecture.md) under Development for how this is implemented internally.
 
