@@ -23,7 +23,7 @@ The heart of Deckery — the input remapper. Reads raw evdev events directly fro
 | Config inheritance | App overrides only declare what differs; base config is merged at runtime |
 | Binding attributes | `label`, `no_pause` per binding — see [Bindings](bindings.md) |
 | State export | `/tmp/makima-state.json` — see [State JSON](../../reference/state-json.md) |
-| Trackpad MT translation | Both pads emulated as standard system touchpad devices — see [Trackpad](trackpad.md) |
+| Trackpad MT translation *(beta, not on `main`)* | Both pads emulated as standard system touchpad devices — see [Trackpad](trackpad.md) |
 | Pause / Resume IPC | Runtime control via Unix socket — see [IPC](../../reference/ipc.md) |
 | Steam Deck keycodes | `BTN_GRIPL/R/L2/R2` for back paddles via patched `evdev` crate |
 | Unit test suite | 69 tests covering resolver, state export, analog helpers, and config parsing |
