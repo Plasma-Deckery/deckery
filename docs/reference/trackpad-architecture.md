@@ -124,6 +124,10 @@ Haptic parameters (`duration_us`, `interval_us`, `count`, `gain_db`) are identic
 
 Position is Y-corrected to libinput convention (hardware reports up as negative; the virtual device flips this). On the combined device, left/right pads are split into left/right halves of a shared X axis so a pinch gesture tracks correctly across both MT slots. libinput derives everything it needs — two-finger scroll/pan, pinch-zoom — purely from the two `ABS_MT_POSITION` slots; there is no separate gesture-type event makima produces.
 
+## Lizard Mode
+
+Full Steam independence requires suppressing the `hid-steam` kernel driver's built-in mouse/scroll fallback ("Lizard Mode"), which otherwise emits mouse/scroll events directly from the trackpads, bypassing makima entirely. Controlled via `SUPPRESS_LIZARD_MODE` — see [Configuration](../configuration.md) for the user-facing setting. Implementation-wise it shares the same raw hidraw file descriptor that `pad_hidraw.rs` uses for trackpad data: a heartbeat sends suppression feature reports every 4 s, and if makima crashes or exits, the fd closes and Lizard Mode re-activates automatically within ~8 s.
+
 ## libinput tuning
 
 When the virtual MT devices are registered, libinput applies its generic touchpad profile to them. Getting Steam Input-quality cursor feel (acceleration curve, trackball-style inertia) likely needs custom `libinput quirks` tuning for the Deckery devices specifically — not yet done. See [deckery#2](https://github.com/Plasma-Deckery/deckery/issues/2).

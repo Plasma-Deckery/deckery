@@ -3,60 +3,62 @@
 !!! warning "Beta feature — not on `main`"
     Trackpad emulation lives on the `trackpad-config` branch of [makima-deckery](https://github.com/Plasma-Deckery/makima-deckery) and has not been merged to `main` yet. Config shape, device names, and behaviour described here can still change without notice. Don't rely on this for a production setup.
 
-The Steam Deck trackpads are capable input surfaces, but Steam Input's default handling is invisible to gesture tools — they expect standard Linux multi-touch devices. Makima reads both trackpads directly and exposes them as virtual MT (multi-touch) devices, making them visible to tools like `libinput-gestures` or `fusuma`. This is the prerequisite for defining custom gestures per pad (swipe zones, tap areas, circular scroll, pinch-zoom) and for a combined two-finger gesture surface (pinch-zoom, two-finger scroll/pan) across both pads at once.
-
-For how this is implemented internally, see [Trackpad Architecture](../../reference/trackpad-architecture.md) under Development.
+The Steam Deck has two trackpads that can each track a single finger, but the OS can't read them individually — whatever Steam Input does with them under the hood is invisible to every other tool. What we can do instead is read both trackpads ourselves and emulate standard Linux trackpad devices from them. That means, for example, the right trackpad can act as a completely normal mouse.
 
 ## Virtual devices
 
-| Device name | Created when | Source |
-|---|---|---|
-| `Deckery Left Trackpad` | `[trackpad.left] mode = "mt-trackpad"` | Left pad |
-| `Deckery Right Trackpad` | `[trackpad.right] mode = "mt-trackpad"` | Right pad |
-| `Deckery Combined Trackpad` | `[trackpad] combined_gesture_device = true` | Both pads, active only while both are touching at once (e.g. pinch-zoom) |
+The virtual devices are configured per pad. Here's the right trackpad acting as a mouse, with the left trackpad left off:
 
-Individual pads seamlessly resume their own device the instant one finger lifts out of a two-finger gesture — no gap, no re-touch-down needed.
+```toml
+[trackpad.right]
+mode = "mt-trackpad"   # right trackpad acts as a standard mouse/trackpad
 
-Trackpad position, touch state, and press state are always tracked and exported to `state.json` regardless of the `mode` setting — the HUD can visualize trackpad input even when a pad is `"disabled"`.
+[trackpad.left]
+mode = "disabled"       # default — left trackpad stays off
+```
 
-## Configuration
+!!! note "Tap-to-click"
+    If you use the right (or left) trackpad as a mouse, disable "Tap to click" on the `Deckery Right/Left Trackpad` device in your desktop's touchpad settings if you don't want a light tap to register as a click.
+
+## Combined trackpad
+
+What Deckery does that Steam Input can't: both trackpads combine into a single multi-touch surface, enabling real two-finger gestures — two-thumb scroll and pinch-to-zoom — across both pads at once. That gets you very smooth horizontal and vertical scrolling and very smooth zooming, e.g. for comfortably navigating a canvas — noticeably better than the scroll wheel emulation Steam offers.
 
 ```toml
 [trackpad.left]
-mode = "mt-trackpad"        # creates "Deckery Left Trackpad"
-click_pressure = 30000      # optional: firmware click-pressure threshold (raw u16)
-
-[trackpad.left.haptic]
-on_click = { duration_us = 2000, count = 1 }   # haptic "click tick" on physical click
+mode = "mt-trackpad"
 
 [trackpad.right]
-mode = "mt-trackpad"        # creates "Deckery Right Trackpad"
+mode = "mt-trackpad"
 
 [trackpad]
-combined_gesture_device = true   # also creates "Deckery Combined Trackpad" for two-finger gestures
-
-[trackpad.gestures.haptic]
-on_gesture_start = { duration_us = 2000, count = 1 }   # not wired up yet — see Trackpad Architecture
+combined_gesture_device = true   # combines both pads into one gesture surface
 ```
 
-| Setting | Location | Meaning |
+Individual pads seamlessly resume their own device the instant one finger lifts out of a two-finger gesture — no gap, no re-touch-down needed.
+
+!!! note "Tap-to-click and the combined device"
+    Touching down with one pad slightly before the other briefly routes through that pad's individual device before the combined gesture kicks in, and can register as a spurious click if "Tap to click" is enabled on the individual `Deckery Left/Right Trackpad` devices. Disable it there if you use quick two-hand gestures like pinch-zoom.
+
+## Haptic feedback
+
+Each click or gesture transition can fire a haptic pulse via the trackpad's actuators:
+
+| Field | Location | Fires on |
 |---|---|---|
-| `mode` | `[trackpad.left]` / `[trackpad.right]` | `"disabled"` (default) — no virtual device, position still tracked · `"mt-trackpad"` — standard MT touchpad device |
-| `click_pressure` | `[trackpad.left]` / `[trackpad.right]` | Optional firmware click threshold. Omit for firmware default. |
-| `haptic.on_click` | `[trackpad.left]` / `[trackpad.right]` | Haptic pulse fired on physical click (rising edge). Omit for a conservative built-in default. |
-| `combined_gesture_device` | `[trackpad]` | `true` enables the combined two-finger gesture device. |
-| `haptic.on_gesture_start` / `on_gesture_move` / `on_gesture_end` | `[trackpad.gestures]` | Haptic pulses for the gesture lifecycle instead of click (a click mid-gesture has no established meaning). Config parses today; not yet wired to actual pulses. |
+| `haptic.on_click` | `[trackpad.left]` / `[trackpad.right]` | Physical click on that pad (rising edge). Omit for a conservative built-in default. |
+| `haptic.on_gesture_start` | `[trackpad.gestures]` | Combined gesture session starting (both pads touched at once). Not wired up yet. |
+| `haptic.on_gesture_move` | `[trackpad.gestures]` | Combined gesture in progress. Not wired up yet. |
+| `haptic.on_gesture_end` | `[trackpad.gestures]` | Combined gesture session ending (either pad lifts). Not wired up yet. |
 
-Each `haptic.*` pulse accepts `duration_us`, `interval_us`, `count`, and `gain_db`.
+Each pulse accepts `duration_us`, `interval_us`, `count`, and `gain_db`:
 
-The legacy `[settings] LPAD = "trackpad"` / `RPAD = "trackpad"` syntax is still accepted as a fallback for `mode = "mt-trackpad"`.
+```toml
+[trackpad.right.haptic]
+on_click = { duration_us = 2000, count = 1 }
+```
 
-!!! note "Tap-to-click interaction with the combined device"
-    If you enable `combined_gesture_device` and use quick two-hand gestures (e.g. pinch-zoom), disable "Tap to click" on the individual `Deckery Left/Right Trackpad` devices in your desktop's touchpad settings. Touching down with one pad slightly before the other briefly routes through that pad's individual channel before gesture mode activates, and can otherwise register as a spurious click.
-
-## Lizard Mode
-
-Full Steam independence requires suppressing the `hid-steam` kernel driver's built-in mouse/scroll fallback ("Lizard Mode"), which otherwise emits mouse/scroll events directly from the trackpads, bypassing makima entirely. See `SUPPRESS_LIZARD_MODE` in [Configuration](../../configuration.md).
+See [Trackpad Architecture](../../reference/trackpad-architecture.md) under Development for how this is implemented internally.
 
 ## Roadmap
 
