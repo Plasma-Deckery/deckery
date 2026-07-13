@@ -17,8 +17,9 @@ mode = "mt-trackpad"       # right trackpad acts as a standard mouse/trackpad
 click_pressure = 30000     # optional: firmware click-pressure threshold (raw u16, omit for firmware default)
 
 [trackpad.right.haptic]
-on_click    = { duration_us = 2000, interval_us = 0, count = 1, gain_db = 0 }   # fires on physical click
-on_movement = { duration_us = 2000, interval_us = 0, count = 1, gain_db = 0 }   # not wired up yet
+on_press    = { duration_us = 8000, interval_us = 8000, count = 3, gain_db = 0 }   # fires when the finger presses down
+on_release  = { duration_us = 8000, interval_us = 8000, count = 3, gain_db = 0 }   # fires when the finger lifts off the click
+on_movement = { duration_us = 8000, interval_us = 8000, count = 3, gain_db = 0 }   # not wired up yet
 
 [trackpad.left]
 mode = "disabled"          # default — left trackpad stays off
@@ -28,17 +29,20 @@ mode = "disabled"          # default — left trackpad stays off
 |---|---|---|
 | `mode` | `"disabled"` | See [Trackpad modes](#trackpad-modes) below. |
 | `click_pressure` | firmware default | Physical click threshold, as a raw firmware value. Optional. |
-| `haptic.on_click` | short, quiet tick | Haptic pulse fired on the rising edge of a physical click. |
+| `haptic.on_press` | 3-pulse burst | Haptic pulse fired on the press edge of a physical click. |
+| `haptic.on_release` | 3-pulse burst | Haptic pulse fired on the release edge of a physical click. |
 | `haptic.on_movement` | — | Reserved for a pulse fired during pointer movement. Parsed but not wired up yet. |
 
 Haptic pulses take four fields, each with its own default if omitted:
 
 | Field | Default | Meaning |
 |---|---|---|
-| `duration_us` | `2000` | Pulse length in microseconds. |
-| `interval_us` | `0` | Gap between repeated pulses, in microseconds. |
-| `count` | `1` | Number of pulses fired. |
+| `duration_us` | `8000` | Pulse length in microseconds. |
+| `interval_us` | `8000` | Gap between repeated pulses, in microseconds. |
+| `count` | `3` | Number of pulses fired. |
 | `gain_db` | `0` | Pulse loudness/strength adjustment, in dB. |
+
+The default is a three-pulse burst (8ms on / 8ms off), tuned on real hardware against the Lizard Mode click buzz as a reference feel. Both edges fire the same tuned burst by default — a physical click is really two separate feelable edges, not one event.
 
 ## Combined Trackpad
 

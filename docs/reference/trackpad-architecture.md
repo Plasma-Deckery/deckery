@@ -86,7 +86,7 @@ A handler consumes one channel's frame stream (`SinglePadFrame` for an individua
 | `mode` | Handler | Status |
 |---|---|---|
 | `"disabled"` | none | Default. No virtual device, no events forwarded. Position/touch/click still tracked into `state.json` by the router. |
-| `"mt-trackpad"` | `mt_trackpad.rs` | Implemented. Emits standard MT touchpad events (`Deckery Left/Right Trackpad`), plus a haptic click-tick on click rising edge. |
+| `"mt-trackpad"` | `mt_trackpad.rs` | Implemented. Emits standard MT touchpad events (`Deckery Left/Right Trackpad`), plus haptic click-ticks on both the press and release edges. |
 | `"trackball"` | `trackball.rs` | **Stub only.** Accepted as a config value without warning, but no handler is actually wired into the router's `tokio::join!` — behaves identically to `"disabled"` today. Only its (currently empty) config struct exists, as a home for the shape once real relative-mouse behaviour lands. |
 | `"scroll"` | `scroll_pad.rs` | **Stub only**, same status as `"trackball"` — module exists, nothing dispatches to it yet. |
 
@@ -105,7 +105,7 @@ This is why `mt_trackpad::MtTrackpadConfig` and `gesture_pad::GesturePadConfig` 
 
 The combined device isn't a distinct physical sensor — it has no `mode` or `click_pressure` of its own, so it doesn't get a `TrackpadSideConfig` like `left`/`right` do. Instead it's its own handler module with its own config shape, self-parsed from the raw `[trackpad.gestures]` table.
 
-A click during a two-finger gesture has no established touchpad semantics (unlike a single-finger tap/click on an individual pad) — so unlike `mt_trackpad`'s `on_click`, there is deliberately **no click-based haptic** on the gesture channel. The physical click bit is still forwarded to the virtual device's `BTN_LEFT` unconditionally (same as a real multi-touch pad would report it), just with no haptic tied to it.
+A click during a two-finger gesture has no established touchpad semantics (unlike a single-finger tap/click on an individual pad) — so unlike `mt_trackpad`'s `on_press`/`on_release`, there is deliberately **no click-based haptic** on the gesture channel. The physical click bit is still forwarded to the virtual device's `BTN_LEFT` unconditionally (same as a real multi-touch pad would report it), just with no haptic tied to it.
 
 What *is* meaningful for a gesture is its lifecycle — start, ongoing movement, end — so `GestureHapticConfig` is keyed on that instead (`on_gesture_start`/`on_gesture_move`/`on_gesture_end`).
 
@@ -115,7 +115,7 @@ What *is* meaningful for a gesture is its lifecycle — start, ongoing movement,
 
 Both `mt_trackpad` (individual pads) and `gesture_pad` (combined channel) share the same underlying pulse mechanism (`mt_trackpad::pulse`) and wire format (`pad_hidraw::HapticCommand` → HID feature report `0x8F`), but each owns its *own* policy for when to fire:
 
-- **`mt_trackpad`**: fires `on_click` on the rising edge of a physical click, per pad. Defaults to a short, quiet tick if unset.
+- **`mt_trackpad`**: fires two independent pulses per pad — `on_press` on the press edge and `on_release` on the release edge of a physical click. A click is really two separately feelable edges, not one event, so each gets its own configurable pulse. Both default to the same tuned three-pulse burst (8ms on / 8ms off, `duration_us=8000, interval_us=8000, count=3, gain_db=0`) if unset — validated on real Steam Deck hardware against the Lizard Mode click buzz as a reference feel. `gain_db` is deliberately left at `0` by default: on-hardware A/B testing showed no perceptible effect from raising it, so it isn't a real lever the way the timing fields are (tracked in [makima-deckery#20](https://github.com/Plasma-Deckery/makima-deckery/issues/20)).
 - **`gesture_pad`**: fires on gesture lifecycle events (start/move/end) instead of click — not wired up yet, see above.
 
 Haptic parameters (`duration_us`, `interval_us`, `count`, `gain_db`) are identical across both — same `HapticPulse` struct — only the trigger condition differs per handler.
