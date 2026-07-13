@@ -49,9 +49,11 @@ BTN_GRIPL2  = ["KEY_LEFTMETA"]   # L5 (bottom left) → Super/Win
 BTN_GRIPR   = ["KEY_LEFTALT"]    # R4 (top right)   → Alt
 BTN_GRIPR2  = ["KEY_LEFTCTRL"]   # R5 (bottom right) → Ctrl
 
-# --- L1+X/Y → Copy/Paste ---
-BTN_TL-BTN_NORTH = { keys = ["KEY_LEFTCTRL", "KEY_C"], label = "Copy" }   # L1+X
-BTN_TL-BTN_WEST  = { keys = ["KEY_LEFTCTRL", "KEY_V"], label = "Paste" }  # L1+Y
+# --- L1+X/Y → Copy/Paste  |  L1+B/A → Undo/Redo ---
+BTN_TL-BTN_NORTH = { keys = ["KEY_LEFTCTRL", "KEY_C"],                  label = "Copy" }   # L1+X
+BTN_TL-BTN_WEST  = { keys = ["KEY_LEFTCTRL", "KEY_V"],                  label = "Paste" }  # L1+Y
+BTN_TL-BTN_EAST  = { keys = ["KEY_LEFTCTRL", "KEY_Z"],                  label = "Undo" }   # L1+B
+BTN_TL-BTN_SOUTH = { keys = ["KEY_LEFTCTRL", "KEY_LEFTSHIFT", "KEY_Z"], label = "Redo" }   # L1+A
 
 
 # --- Voice control: L1 + R5 → OpenWhispr (Ctrl + PageDown) ---
@@ -112,7 +114,7 @@ GRAB_DEVICE = "false"  # Phase 1: parallel to Steam Input
 # "mouse"        → suppress only trackpad mouse/scroll (ID_SET_SETTINGS_VALUES)
 # "buttons,mouse"→ suppress both (recommended)
 # "false"        → disabled
-SUPPRESS_LIZARD_MODE = "buttons"
+SUPPRESS_LIZARD_MODE = "buttons,mouse"
 
 # Trackpad configuration
 # mode = "mt-trackpad" → virtual uinput MT device (libinput/gestures)

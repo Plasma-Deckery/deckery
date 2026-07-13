@@ -95,7 +95,7 @@
 	"group"
 	{
 		"id"		"1"
-		"mode"		"dpad"
+		"mode"		"none"
 		"name"		""
 		"description"		""
 		"inputs"
@@ -185,7 +185,7 @@
 	"group"
 	{
 		"id"		"2"
-		"mode"		"joystick_move"
+		"mode"		"none"
 		"name"		""
 		"description"		""
 		"inputs"
@@ -305,7 +305,7 @@
 	"group"
 	{
 		"id"		"6"
-		"mode"		"joystick_move"
+		"mode"		"none"
 		"name"		""
 		"description"		""
 		"inputs"
@@ -452,7 +452,7 @@
 	"group"
 	{
 		"id"		"10"
-		"mode"		"single_button"
+		"mode"		"none"
 		"name"		""
 		"description"		""
 		"inputs"
@@ -478,7 +478,7 @@
 	"group"
 	{
 		"id"		"11"
-		"mode"		"single_button"
+		"mode"		"none"
 		"name"		""
 		"description"		""
 		"inputs"
@@ -504,7 +504,7 @@
 	"group"
 	{
 		"id"		"12"
-		"mode"		"mouse_joystick"
+		"mode"		"none"
 		"name"		""
 		"description"		""
 		"inputs"
@@ -556,7 +556,7 @@
 	"group"
 	{
 		"id"		"15"
-		"mode"		"four_buttons"
+		"mode"		"none"
 		"name"		""
 		"description"		""
 		"inputs"
@@ -640,7 +640,7 @@
 	"group"
 	{
 		"id"		"18"
-		"mode"		"single_button"
+		"mode"		"none"
 		"name"		""
 		"description"		""
 		"inputs"
@@ -666,7 +666,7 @@
 	"group"
 	{
 		"id"		"19"
-		"mode"		"absolute_mouse"
+		"mode"		"none"
 		"name"		""
 		"description"		""
 		"inputs"
@@ -905,7 +905,7 @@
 	"group"
 	{
 		"id"		"26"
-		"mode"		"scrollwheel"
+		"mode"		"none"
 		"name"		""
 		"description"		""
 		"inputs"

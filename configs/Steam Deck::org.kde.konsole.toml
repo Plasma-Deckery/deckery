@@ -2,9 +2,13 @@
 # Alles andere wird aus "Steam Deck.toml" geerbt.
 
 [remap]
-BTN_EAST         = ["KEY_LEFTCTRL", "KEY_C"]                                                     # B → Ctrl+C statt Esc
-BTN_TL-BTN_NORTH = { keys = ["KEY_LEFTCTRL", "KEY_LEFTSHIFT", "KEY_C"], label = "Copy" }        # L1+X → Ctrl+Shift+C (terminal copy)
-BTN_TL-BTN_WEST  = { keys = ["KEY_LEFTCTRL", "KEY_LEFTSHIFT", "KEY_V"], label = "Paste" }  # L1+Y → Ctrl+Shift+V (terminal paste)
+BTN_EAST         = ["KEY_LEFTCTRL", "KEY_C"]                                                             # B → Ctrl+C statt Esc
+BTN_TL-BTN_NORTH = { keys = ["KEY_LEFTCTRL", "KEY_LEFTSHIFT", "KEY_C"], label = "Copy" }                # L1+X → Ctrl+Shift+C (terminal copy)
+BTN_TL-BTN_WEST  = { keys = ["KEY_LEFTCTRL", "KEY_LEFTSHIFT", "KEY_V"], label = "Paste" }              # L1+Y → Ctrl+Shift+V (terminal paste)
+
+# --- R1+A/B → Tab-Verwaltung (parallel zu Firefox) ---
+BTN_TR-BTN_SOUTH = { keys = ["KEY_LEFTCTRL", "KEY_LEFTSHIFT", "KEY_T"], label = "New Tab" }            # R1+A
+BTN_TR-BTN_EAST  = { keys = ["KEY_LEFTCTRL", "KEY_LEFTSHIFT", "KEY_W"], label = "Close Tab" }          # R1+B
 
 [settings]
 CUSTOM_MODIFIERS = "BTN_TL-BTN_MODE"
