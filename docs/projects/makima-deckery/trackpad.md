@@ -16,10 +16,14 @@ Each pad is configured independently under `[trackpad.left]` / `[trackpad.right]
 mode = "mt-trackpad"       # right trackpad acts as a standard mouse/trackpad
 click_pressure = 30000     # optional: firmware click-pressure threshold (raw u16, omit for firmware default)
 
+[trackpad.right.kde]
+pointer_acceleration         = 0.2      # cursor speed within the chosen profile (-1.0..+1.0)
+pointer_acceleration_profile = "flat"   # "flat" (1:1, recommended) or "adaptive" (KDE default)
+
 [trackpad.right.haptic]
 on_press    = { duration_us = 8000, interval_us = 8000, count = 3, gain_db = 0 }   # fires when the finger presses down
 on_release  = { duration_us = 8000, interval_us = 8000, count = 3, gain_db = 0 }   # fires when the finger lifts off the click
-on_movement = { duration_us = 8000, interval_us = 8000, count = 3, gain_db = 0 }   # not wired up yet
+# on_movement = { pixel_interval = 3000, duration_us = 4000, interval_us = 4000, count = 1, gain_db = 0 }
 
 [trackpad.left]
 mode = "disabled"          # default — left trackpad stays off
@@ -29,9 +33,13 @@ mode = "disabled"          # default — left trackpad stays off
 |---|---|---|
 | `mode` | `"disabled"` | See [Trackpad modes](#trackpad-modes) below. |
 | `click_pressure` | firmware default | Physical click threshold, as a raw firmware value. Optional. |
+| `kde.pointer_acceleration` | `0.2` | Cursor speed multiplier within the chosen profile. Range −1.0 (slowest) to +1.0 (fastest). |
+| `kde.pointer_acceleration_profile` | `"flat"` | `"flat"` for 1:1 movement (recommended — consistent and predictable on a small pad surface); `"adaptive"` for the libinput default (slows slow movements, amplifies fast ones). |
+| `kde.tap_to_click` | `false` | Whether a light tap registers as a click. Disabled by default — accidental taps occur when switching between gesture mode and cursor mode. |
+| `kde.disable_while_typing` | `false` | Suppresses trackpad input while the keyboard is active. Disabled by default — not useful in a gaming context. |
 | `haptic.on_press` | 3-pulse burst | Haptic pulse fired on the press edge of a physical click. |
 | `haptic.on_release` | 3-pulse burst | Haptic pulse fired on the release edge of a physical click. |
-| `haptic.on_movement` | — | Reserved for a pulse fired during pointer movement. Parsed but not wired up yet. |
+| `haptic.on_movement` | — (silent) | Pulse fired per `pixel_interval` raw units of cursor travel. `pixel_interval` defaults to 3000 (≈2mm). Silent by default — enable explicitly if you want a trackpad-click-wheel feel. |
 
 Haptic pulses take four fields, each with its own default if omitted:
 
@@ -57,10 +65,13 @@ mode = "mt-trackpad"
 
 [trackpad]
 combined_gesture_device = true   # combines both pads into one gesture surface
+
+[trackpad.gestures.kde]
+natural_scroll = true    # content follows the finger — standard for two-finger scrolling
+scroll_factor  = 0.5     # scrolls at half speed (raw pad range ±32767 makes the default too fast)
 ```
 
-!!! note "Tap-to-click and the combined device"
-    Touching down with one pad slightly before the other briefly routes through that pad's individual device before the combined gesture kicks in, and can register as a spurious click if "Tap to click" is enabled on the individual `Deckery Left/Right Trackpad` devices. Disable it there if you use quick two-hand gestures like pinch-zoom.
+The `[trackpad.gestures.kde]` block is optional — the values above are the defaults that apply even if the block is absent.
 
 ### Haptic feedback
 
@@ -69,12 +80,11 @@ Rather than click, the combined device fires on the gesture's lifecycle — star
 ```toml
 [trackpad.gestures.haptic]
 on_gesture_start = { duration_us = 2000, interval_us = 0, count = 1, gain_db = 0 }   # both pads become touched at once
-on_gesture_move   = { duration_us = 1000, interval_us = 0, count = 1, gain_db = 0 }   # fires repeatedly during movement
-on_gesture_end    = { duration_us = 2000, interval_us = 0, count = 1, gain_db = 0 }   # either pad lifts, ending the session
+on_gesture_move  = { pixel_interval = 3000, duration_us = 1000, interval_us = 0, count = 1, gain_db = 0 }   # per pixel_interval units of movement
+on_gesture_end   = { duration_us = 2000, interval_us = 0, count = 1, gain_db = 0 }   # either pad lifts, ending the session
 ```
 
-!!! note "Not wired up yet"
-    The config above parses today, but none of the three pulses fire yet — see [Trackpad Architecture](../../reference/trackpad-architecture.md) for why.
+All three are silent by default — gesture haptics have no established reference feel to fall back to, unlike a physical click edge.
 
 ## Trackpad modes
 
@@ -98,8 +108,9 @@ See [Trackpad Architecture](../../reference/trackpad-architecture.md) under Deve
 | ✅ | Combined two-pad gesture device — both pads together as two fingers for pinch-zoom and pan | [deckery#7](https://github.com/Plasma-Deckery/deckery/issues/7) |
 | ✅ | Haptic feedback — click-tick pulses, matching Steam's click-grid feel | [makima-deckery#9](https://github.com/Plasma-Deckery/makima-deckery/issues/9) |
 | ✅ | Hardware settings via TOML — click-pressure threshold, per-mode haptic config | [makima-deckery#13](https://github.com/Plasma-Deckery/makima-deckery/issues/13) |
-| ⏳ | Gesture-lifecycle haptics (`on_gesture_start`/`move`/`end`) — config parses, pulses not wired up yet | — |
+| ✅ | Movement haptics — `on_movement` pulse fires per distance traveled, not per time | [makima-deckery#22](https://github.com/Plasma-Deckery/makima-deckery/issues/22) |
+| ✅ | Gesture-lifecycle haptics — `on_gesture_start`/`on_gesture_move`/`on_gesture_end` | — |
+| ✅ | libinput defaults — `[trackpad.*.kde]` writes kcminputrc on startup (tap-to-click off, flat acceleration, scroll tuning) | [makima-deckery#25](https://github.com/Plasma-Deckery/makima-deckery/issues/25) |
 | ⏳ | Trackball / scroll pad modes | — |
-| ⏳ | libinput device profile — tune acceleration curves and trackball inertia for Steam Input-quality cursor feel | [deckery#5](https://github.com/Plasma-Deckery/deckery/issues/5) |
 | ⏳ | Gesture tool integration — discrete gesture zones trigger makima actions; continuous gestures go directly to the input stack | [deckery#3](https://github.com/Plasma-Deckery/deckery/issues/3) |
 | ⏳ | Merge `trackpad-config` branch to `main` | — |

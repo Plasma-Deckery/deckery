@@ -96,7 +96,7 @@ The combined gesture channel (`[trackpad.gestures]`, enabled via `combined_gestu
 
 Config for a trackpad side is split between Core (`config.rs`) and the handler that `mode` selects, and each side only ever knows its own half:
 
-- **Core owns `mode`** (which handler gets spawned) **and `click_pressure`** (a HID feature-report threshold that lives on the physical sensor itself — independent of whichever handler is active, since two handlers could never sensibly want different firmware thresholds at the same time), plus router-level settings like `combined_gesture_device`.
+- **Core owns `mode`** (which handler gets spawned), **`click_pressure`** (a HID feature-report threshold that lives on the physical sensor itself — independent of whichever handler is active, since two handlers could never sensibly want different firmware thresholds at the same time), **`kde`** (the `[trackpad.*.kde]` sub-table, consumed by `kde_input_defaults` before any device is created — see [KDE/libinput defaults](#kdelibinput-defaults) below), and router-level settings like `combined_gesture_device`.
 - **Everything else** in a `[trackpad.left]` / `[trackpad.right]` / `[trackpad.gestures]` table is handler-specific (haptics policy, movement algorithm, gesture semantics) and is handed to the handler as a raw, unparsed `toml::Value` — Core never learns or validates the shape. Each handler module defines its own `#[derive(Deserialize)]` struct and parses itself, falling back to defaults (with a logged warning) on any shape mismatch, so a typo in a handler-owned field can never crash makima or block input on the pad.
 
 This is why `mt_trackpad::MtTrackpadConfig` and `gesture_pad::GesturePadConfig` exist as self-contained structs living in their own handler files instead of centralized in `config.rs`.
@@ -128,6 +128,21 @@ Position is Y-corrected to libinput convention (hardware reports up as negative;
 
 Full Steam independence requires suppressing the `hid-steam` kernel driver's built-in mouse/scroll fallback ("Lizard Mode"), which otherwise emits mouse/scroll events directly from the trackpads, bypassing makima entirely. Controlled via `SUPPRESS_LIZARD_MODE` — see [Configuration](../configuration.md) for the user-facing setting. Implementation-wise it shares the same raw hidraw file descriptor that `pad_hidraw.rs` uses for trackpad data: a heartbeat sends suppression feature reports every 4 s, and if makima crashes or exits, the fd closes and Lizard Mode re-activates automatically within ~8 s.
 
-## libinput tuning
+## KDE/libinput defaults
 
-When the virtual MT devices are registered, libinput applies its generic touchpad profile to them. Getting Steam Input-quality cursor feel (acceleration curve, trackball-style inertia) likely needs custom `libinput quirks` tuning for the Deckery devices specifically — not yet done. See [deckery#2](https://github.com/Plasma-Deckery/deckery/issues/2).
+When a virtual MT device first appears, KWin reads `~/.config/kcminputrc` for a `[Libinput][vendor][product][name]` section and applies those settings. Without such a section, KDE defaults apply — which include tap-to-click enabled and adaptive acceleration, neither of which is right for a Steam Deck pad.
+
+`kde_input_defaults.rs` solves this by writing the relevant sections to `kcminputrc` **before** the uinput nodes are created, so KWin always finds them on first device discovery. It runs every time `device_session.rs` sets up a trackpad session (i.e. on every makima start and on every config-file reload that triggers a session restart), and always overwrites the Deckery sections — making the `[trackpad.*.kde]` TOML block the single source of truth rather than KWin's settings UI.
+
+All three virtual devices share the same stable uinput IDs (vendor `0x1234`, product `0x5678`, bus `BUS_VIRTUAL`), so KWin's per-device settings always key on the same identifiers across reboots.
+
+Default values written (all overridable via `[trackpad.*.kde]` / `[trackpad.gestures.kde]`):
+
+| Setting | Single pad default | Gesture pad default |
+|---|---|---|
+| `TapToClick` | `false` | `false` |
+| `DisableWhileTyping` | `false` | `false` |
+| `PointerAcceleration` | `0.200` | — |
+| `PointerAccelerationProfile` | `2` (flat) | `2` (flat) |
+| `NaturalScroll` | `false` | `true` |
+| `ScrollFactor` | — | `0.5` |
