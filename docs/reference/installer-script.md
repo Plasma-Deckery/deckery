@@ -18,7 +18,7 @@
 
 7. **Copy the Steam Input config** — copies `desktop_neptune.vdf` to Steam's controller config directory if it differs from what's already there.
 
-8. **Link the default makima config** — symlinks `configs/Steam Deck.toml` to `~/.config/makima/Steam Deck.toml`. App-specific configs are copied once and not overwritten on subsequent runs.
+8. **Update the default makima config** — symlinks `configs/Steam Deck.toml` to `~/.config/makima/Steam Deck.toml`. App-specific configs (e.g. `Steam Deck::org.kde.konsole.toml`) are copied from the repo on every run; the previous version is backed up as `.old` (e.g. `Steam Deck::org.kde.konsole.toml.old`) so your customisations are preserved and can be merged back manually.
 
 ## Service hierarchy
 

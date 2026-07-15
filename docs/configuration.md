@@ -29,10 +29,7 @@ When a window belonging to a specific application is focused, makima loads the m
 ~/.config/makima/Steam Deck::Dolphin.toml
 ```
 
-App-specific configs are **not** symlinked into the repo — they live directly in `~/.config/makima/` and are yours to create and edit freely. The installer copies any bundled app configs once and does not overwrite them on subsequent runs.
-
-!!! note "Config management strategy is still evolving"
-    The current approach (symlink for the base config, plain copies for app-specific configs) is a pragmatic first step. Open questions include whether app-specific configs should also be symlinks, and whether the entire `~/.config/makima/` folder should point into the repo. A cleaner solution — possibly symlinking the whole config directory — is being considered but not yet implemented.
+App-specific configs are **not** symlinked into the repo — they live directly in `~/.config/makima/` and are yours to create and edit freely. The installer updates bundled app configs on every run: before writing the new version, it backs up your existing file as `.old` (e.g. `Steam Deck::org.kde.konsole.toml.old`). Your customisations are preserved in `.old` and can be merged back manually after an update.
 
 ## Config format
 
