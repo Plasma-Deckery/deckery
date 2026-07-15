@@ -125,25 +125,23 @@ mkdir -p "$CFG_DIR"
 
 BASE_SRC="$DECKERY_DIR/configs/Steam Deck.toml"
 BASE_DST="$CFG_DIR/Steam Deck.toml"
-if [ ! -e "$BASE_DST" ]; then
-    ln -sf "$BASE_SRC" "$BASE_DST"
-    echo "Linked: Steam Deck.toml"
-elif [ -L "$BASE_DST" ]; then
-    echo "Already linked: Steam Deck.toml"
-else
-    echo "Skipped: Steam Deck.toml (already exists as regular file — not overwriting)"
+if [ -e "$BASE_DST" ] || [ -L "$BASE_DST" ]; then
+    mv -f "$BASE_DST" "$BASE_DST.old"
+    echo "Backed up: Steam Deck.toml → Steam Deck.toml.old"
 fi
+ln -sf "$BASE_SRC" "$BASE_DST"
+echo "Linked: Steam Deck.toml"
 
 for src in "$DECKERY_DIR/configs/Steam Deck::"*.toml; do
     [ -e "$src" ] || continue
     name="$(basename "$src")"
     dst="$CFG_DIR/$name"
-    if [ ! -e "$dst" ]; then
-        cp "$src" "$dst"
-        echo "Installed: $name"
-    else
-        echo "Already present: $name (not overwriting)"
+    if [ -e "$dst" ]; then
+        mv -f "$dst" "$dst.old"
+        echo "Backed up: $name → $name.old"
     fi
+    cp "$src" "$dst"
+    echo "Installed: $name"
 done
 
 echo ""
@@ -260,6 +258,13 @@ APPS_DIR="$HOME/.local/share/applications"
 mkdir -p "$APPS_DIR"
 cp -f "$DECKERY_DIR/deckery.desktop" "$APPS_DIR/deckery.desktop"
 echo "Installed: $APPS_DIR/deckery.desktop"
+
+DESKTOP_DIR="$HOME/Desktop"
+if [ -d "$DESKTOP_DIR" ]; then
+    cp -f "$DECKERY_DIR/deckery.desktop" "$DESKTOP_DIR/deckery.desktop"
+    chmod +x "$DESKTOP_DIR/deckery.desktop"
+    echo "Installed: ~/Desktop/deckery.desktop"
+fi
 
 gtk-update-icon-cache -f -t "$HOME/.local/share/icons/hicolor" 2>/dev/null || true
 echo ""
