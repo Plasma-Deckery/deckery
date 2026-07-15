@@ -38,9 +38,9 @@ The heart of Deckery — the input remapper. Reads raw evdev events directly fro
 
 ## Sleep / resume behaviour
 
-The Steam Deck's evdev fd freezes silently on suspend — makima receives no error and cannot self-recover. A companion service, `makima-resume-watcher.service`, watches for the `PrepareForSleep(false)` D-Bus signal from `org.freedesktop.login1` and restarts makima 2 seconds after every resume.
+The Steam Deck's evdev fd freezes silently on suspend — makima receives no error and cannot self-recover. Makima subscribes to the `PrepareForSleep(false)` D-Bus signal from `org.freedesktop.login1` in-process (`src/resume_watcher.rs`) and reinitialises the evdev/hidraw reader on resume without restarting the process. Crucially, the virtual uinput devices (the `Deckery *` trackpad nodes that libinput tracks) are kept alive across the reinit — only the physical-device reader is re-attached. This avoids the several-second dead zone that libinput would otherwise need to rediscover a freshly recreated uinput device.
 
-The watcher is bound to `makima.service` (`BindsTo=`, `WantedBy=`): it starts and stops with makima and restarts automatically if the underlying `dbus-monitor` process exits for any reason.
+The former external `makima-resume-watcher.service` companion unit (bash script + `dbus-monitor` + blind `sleep 2` + `systemctl restart`) has been removed. `install.sh` disables and deletes any previously installed copy automatically.
 
 ## Relationship to upstream
 

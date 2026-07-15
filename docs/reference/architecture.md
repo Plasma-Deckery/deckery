@@ -5,7 +5,6 @@
 ```
 deckery-tray.service              ← starts on login, manages the stack
     ├── makima.service             (PartOf tray — stops/restarts with it)
-    │       └── makima-resume-watcher.service  (BindsTo makima — starts/stops with it)
     └── deckery-hud.service        (PartOf tray — stops/restarts with it)
 ```
 
