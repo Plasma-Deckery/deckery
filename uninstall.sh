@@ -56,7 +56,7 @@ echo ""
 # ── 3. Remove binaries and scripts ───────────────────────────────────────────
 
 echo "── Removing binaries ────────────────────────────────────────────────────"
-for bin in makima deckery-tray deckery-hud deckery-hud-toggle makima-resume-watcher; do
+for bin in makima makima-deckery deckery-tray deckery-hud deckery-hud-toggle makima-resume-watcher; do
     rm -f "$BIN_DIR/$bin" && echo "Removed: $BIN_DIR/$bin" || true
 done
 echo ""
