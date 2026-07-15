@@ -1,7 +1,7 @@
 # Trackpad Emulation
 
-!!! warning "Beta feature — not on `main`"
-    Trackpad emulation lives on the `trackpad-config` branch of [makima-deckery](https://github.com/Plasma-Deckery/makima-deckery) and has not been merged to `main` yet.
+!!! info "On `main`, not yet in a release"
+    Trackpad emulation has been merged to `main` on [makima-deckery](https://github.com/Plasma-Deckery/makima-deckery) but has not appeared in a tagged release yet. Build from source or use the Deckery install script to get it.
 
 The Steam Deck has two trackpads that can each track a single finger, but the OS has no direct way to read them individually — whatever Steam Input does with the raw hardware is invisible to every other piece of software running on the system. Without Steam in the loop, that hardware is effectively unusable from the desktop.
 
@@ -111,6 +111,26 @@ See [Trackpad Architecture](../../reference/trackpad-architecture.md) under Deve
 | ✅ | Movement haptics — `on_movement` pulse fires per distance traveled, not per time | [makima-deckery#22](https://github.com/Plasma-Deckery/makima-deckery/issues/22) |
 | ✅ | Gesture-lifecycle haptics — `on_gesture_start`/`on_gesture_move`/`on_gesture_end` | — |
 | ✅ | libinput defaults — `[trackpad.*.kde]` writes kcminputrc on startup (tap-to-click off, flat acceleration, scroll tuning) | [makima-deckery#25](https://github.com/Plasma-Deckery/makima-deckery/issues/25) |
-| ⏳ | Trackball / scroll pad modes | — |
+| ⏳ | Trackball mode — experimental, see below | — |
 | ⏳ | Gesture tool integration — discrete gesture zones trigger makima actions; continuous gestures go directly to the input stack | [deckery#3](https://github.com/Plasma-Deckery/deckery/issues/3) |
-| ⏳ | Merge `trackpad-config` branch to `main` | — |
+| ✅ | Merge `trackpad-config` branch to `main` | — |
+
+## Trackball Mode (experimental)
+
+!!! warning "Feature branch, uncertain future"
+    Trackball mode is implemented on the `trackpad-config` branch of makima-deckery and is not part of a release. The implementation is incomplete and it is not yet clear whether this mode will be developed further or is needed at all.
+
+Setting `mode = "trackball"` turns a pad into a relative mouse device with exponential momentum decay — the cursor continues moving after the finger lifts and gradually decelerates, similar to a physical trackball.
+
+```toml
+[trackpad.right]
+mode = "trackball"
+
+[trackpad.right.handler_config]
+speed_scale        = 0.02   # raw-unit → pixel scale factor
+deceleration       = 0.95   # per-tick velocity multiplier during coast (0 = instant stop, 1 = no friction)
+min_velocity_px_s  = 10.0   # stop coasting below this speed (px/s)
+tick_ms            = 16     # coast update interval in ms (~60 Hz)
+```
+
+The haptic config is the same as `mt-trackpad` (`on_press`, `on_release`, `on_movement`).
