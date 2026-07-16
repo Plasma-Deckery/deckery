@@ -5,7 +5,7 @@ BindsTo=plasma-core.target
 
 [Service]
 Type=simple
-ExecCondition=%h/.local/bin/deckery-kde-guard
+ExecCondition=/bin/bash -c 'systemctl --user is-active plasma-plasmashell.service'
 ExecStartPre=/usr/bin/podman start deckery
 ExecStart=%h/.local/bin/deckery-tray
 Restart=on-failure
