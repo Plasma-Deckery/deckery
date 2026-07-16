@@ -45,6 +45,7 @@ _STATE_JSON         = "/tmp/makima-state.json"
 _MAKIMA_SOCK        = "/tmp/makima-control.sock"
 _CONFIG_DIR         = os.path.expanduser("~/.config/makima")
 _GITHUB_DISCUSSIONS = "https://github.com/Plasma-Deckery/deckery/discussions"
+_KOFI_URL           = "https://ko-fi.com/phischdev"
 
 # D-Bus address for deckery-hud
 _HUD_BUS  = "de.plasma_deckery.hud"
@@ -315,10 +316,13 @@ class DeckeryTray:
         m.append(Gtk.SeparatorMenuItem())
 
         # ── Community links ───────────────────────────────────────────────
-        bug_item  = _icon_item("Report a Bug",      "tools-report-bug")
-        feat_item = _icon_item("Propose a Feature", "starred")
+        kofi_item = _icon_item("Support Development ☕", "face-smile")
+        bug_item  = _icon_item("Report a Bug",            "tools-report-bug")
+        feat_item = _icon_item("Propose a Feature",       "starred")
+        kofi_item.connect("activate", lambda _: _open_url(_KOFI_URL))
         bug_item .connect("activate", lambda _: _open_url(_GITHUB_DISCUSSIONS))
         feat_item.connect("activate", lambda _: _open_url(_GITHUB_DISCUSSIONS))
+        m.append(kofi_item)
         m.append(bug_item)
         m.append(feat_item)
         m.append(Gtk.SeparatorMenuItem())
