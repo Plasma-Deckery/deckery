@@ -47,7 +47,9 @@ The tray also owns the systemd service hierarchy: `makima.service` and `deckery-
 
 ### [Steam Deck Dotfiles](steamdeck-dotfiles/index.md)
 
-An opinionated KDE desktop setup — scripts, panels, KWin configuration, and system settings tuned specifically for the Steam Deck's screen size and input methods. Managed via chezmoi. Proper documentation missing for now.
+An opinionated KDE Plasma desktop tuned for the Steam Deck's screen size and controller input — display scaling, window tiling, focus behaviour, power settings, and voice input, all documented and mostly scriptable. A useful starting point even if you only want to adopt one or two settings.
+
+→ [Browse the repo](https://github.com/Plasma-Deckery/steamdeck-dotfiles) · [Full documentation](steamdeck-dotfiles/index.md)
 
 ---
 
