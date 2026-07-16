@@ -1,11 +1,11 @@
 [Unit]
 Description=Deckery system tray — service monitor and control
-After=graphical-session.target
-PartOf=graphical-session.target
-Wants=makima.service deckery-hud.service
+After=plasma-core.target
+BindsTo=plasma-core.target
 
 [Service]
 Type=simple
+ExecCondition=%h/.local/bin/deckery-kde-guard
 ExecStartPre=/usr/bin/podman start deckery
 ExecStart=%h/.local/bin/deckery-tray
 Restart=on-failure
@@ -14,4 +14,4 @@ Environment=XDG_SESSION_TYPE=wayland
 Environment=XDG_CURRENT_DESKTOP=KDE
 
 [Install]
-WantedBy=graphical-session.target
+WantedBy=plasma-core.target
