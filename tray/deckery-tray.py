@@ -312,9 +312,6 @@ class DeckeryTray:
         self._items["update"] = upd_item
         m.append(upd_item)
 
-        wizard_item = _icon_item("Setup Wizard…", "application-x-addon")
-        wizard_item.connect("activate", self._on_open_wizard)
-        m.append(wizard_item)
         m.append(Gtk.SeparatorMenuItem())
 
         # ── Community links ───────────────────────────────────────────────
@@ -519,10 +516,6 @@ class DeckeryTray:
             img.set_from_pixbuf(pb)
         if lbl:
             lbl.set_text("Steam Input: disabled" if configured else "Steam Input: still active — click to disable")
-
-    def _on_open_wizard(self, _item):
-        onboarding = os.path.join(os.path.dirname(os.path.abspath(__file__)), "onboarding.py")
-        subprocess.Popen(["python3", onboarding])
 
     def _on_quit(self, _item):
         _service_ctrl("stop", "makima.service")
