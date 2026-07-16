@@ -58,7 +58,9 @@ The control panel for the Deckery stack — a system tray applet that shows live
 ---
 
 ### [steamdeck-dotfiles](https://github.com/Plasma-Deckery/steamdeck-dotfiles)
-An opinionated KDE desktop setup tuned for the Steam Deck's screen size and input methods.
+An opinionated KDE Plasma desktop tuned for the Steam Deck's screen size and controller input. Includes display scaling, dynamic window tiling, Steam keyboard focus fix, flat pointer acceleration, and power management — all documented and mostly scriptable for adoption in parts.
+
+→ [Documentation](https://plasma-deckery.github.io/deckery/projects/steamdeck-dotfiles/)
 
 ---
 
@@ -76,9 +78,9 @@ Beyond its own services, Deckery pulls in and patches a set of existing KDE and 
 curl -sSL https://raw.githubusercontent.com/Plasma-Deckery/deckery/main/get.sh | bash
 ```
 
-> **Reading the full installation guide is required** — the installer alone is not enough. Steam needs to be configured for coexistence with Deckery after installation.
->
-> → [Setup Guide](https://plasma-deckery.github.io/deckery/setup-guide/) · [Steam Input configuration](https://plasma-deckery.github.io/deckery/setup-guide/#2-configure-steam-input-for-coexistence)
+The installer sets everything up and walks you through the Steam Input configuration interactively. Reading the setup guide is recommended.
+
+→ [Setup Guide](https://plasma-deckery.github.io/deckery/setup-guide/)
 
 ---
 
