@@ -255,24 +255,28 @@ fi
 
 echo "── Steam Input ──────────────────────────────────────────────────────────"
 echo ""
-echo "  Deckery replaces Steam Input on the Desktop. You can disable Steam"
-echo "  Input now, or later via the tray icon (yellow indicator)."
-echo ""
-if [ -t 0 ]; then
-    read -p "  Disable Steam Input now? [Y/n] " _steam_ans
-    _steam_ans=${_steam_ans:-Y}
-    if [[ "$_steam_ans" =~ ^[Yy]$ ]]; then
-        if distrobox enter deckery -- python3 "$DECKERY_DIR/tray/steam_bridge.py"; then
-            echo "  ✓ Steam Input disabled."
+if distrobox enter deckery -- python3 "$DECKERY_DIR/tray/steam_bridge.py" --check 2>/dev/null; then
+    echo "  OK: Steam Input already disabled — nothing to do."
+else
+    echo "  Deckery replaces Steam Input on the Desktop. You can disable Steam"
+    echo "  Input now, or later via the tray icon (yellow indicator)."
+    echo ""
+    if [ -t 0 ]; then
+        read -p "  Disable Steam Input now? [Y/n] " _steam_ans
+        _steam_ans=${_steam_ans:-Y}
+        if [[ "$_steam_ans" =~ ^[Yy]$ ]]; then
+            if distrobox enter deckery -- python3 "$DECKERY_DIR/tray/steam_bridge.py"; then
+                echo "  ✓ Steam Input disabled."
+            else
+                echo "  ✗ Could not apply — Steam may not be installed or never launched."
+                echo "    You can apply it later via the tray icon."
+            fi
         else
-            echo "  ✗ Could not apply — Steam may not be installed or never launched."
-            echo "    You can apply it later via the tray icon."
+            echo "  Skipped. Apply later via the tray icon."
         fi
     else
-        echo "  Skipped. Apply later via the tray icon."
+        echo "  (non-interactive install — apply later via the tray icon)"
     fi
-else
-    echo "  (non-interactive install — apply later via the tray icon)"
 fi
 echo ""
 

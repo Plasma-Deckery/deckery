@@ -182,7 +182,7 @@ class Updater:
             local  = local_version()
             self._latest = latest
             log.info("latest: %s  local: %s", latest, local)
-            if local == "unknown" or _parse_version(local) >= _parse_version(latest):
+            if local != "unknown" and _parse_version(local) >= _parse_version(latest):
                 self._set_state(UpdateState.UP_TO_DATE)
             else:
                 self._set_state(UpdateState.UPDATE_AVAILABLE)

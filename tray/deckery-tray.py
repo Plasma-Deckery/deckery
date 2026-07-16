@@ -64,7 +64,7 @@ def _version_label(v: str) -> str:
     """Format the tray header label for a given version string.
     Returns 'Deckery vX.Y.Z' normally, or just 'Deckery' when the version
     is unknown (e.g. repo has no tags yet)."""
-    return f"Deckery v{v}" if v != "unknown" else "Deckery"
+    return f"Deckery v{v}" if v != "unknown" else "Deckery (dev)"
 
 
 # Services to monitor: key → systemd unit

@@ -145,4 +145,6 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(message)s")
     if len(sys.argv) > 1 and sys.argv[1] == "--remove":
         sys.exit(0 if remove() else 1)
+    if len(sys.argv) > 1 and sys.argv[1] == "--check":
+        sys.exit(0 if is_configured() else 1)
     sys.exit(0 if apply() else 1)
