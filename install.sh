@@ -4,12 +4,8 @@
 # Clones all required repos, sets up the distrobox container,
 # builds and installs all services. Re-running is safe (idempotent).
 #
-# Usage (first install):
-#   git clone https://github.com/Plasma-Deckery/deckery.git ~/Programming/deckery
-#   bash ~/Programming/deckery/install.sh
-#
-# Usage (update):
-#   cd ~/Programming/deckery && git pull && bash install.sh
+# Usage (first install / update — always use get.sh for release pinning):
+#   bash <(curl -sSL https://raw.githubusercontent.com/Plasma-Deckery/deckery/main/get.sh)
 
 set -e
 
@@ -175,15 +171,6 @@ echo "Linked: $BIN_DIR/deckery-tray → $TRAY_LAUNCH"
 mkdir -p "$SYSTEMD_DIR"
 ln -sf "$DECKERY_DIR/systemd/deckery-tray.service" "$SYSTEMD_DIR/deckery-tray.service"
 echo "Linked: deckery-tray.service"
-
-DROPIN_DIR="$SYSTEMD_DIR/makima.service.d"
-mkdir -p "$DROPIN_DIR"
-cat > "$DROPIN_DIR/deckery.conf" <<'EOF'
-[Unit]
-PartOf=deckery-tray.service
-After=deckery-tray.service
-EOF
-echo "Installed: makima drop-in (PartOf deckery-tray)"
 
 systemctl --user daemon-reload
 systemctl --user enable deckery-tray.service

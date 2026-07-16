@@ -48,8 +48,6 @@ echo "── Removing service files ──────────────�
 for svc in makima.service makima-resume-watcher.service deckery-tray.service deckery-hud.service; do
     rm -f "$SYSTEMD_DIR/$svc" && echo "Removed: $SYSTEMD_DIR/$svc" || true
 done
-rm -f "$SYSTEMD_DIR/makima.service.d/deckery.conf" && echo "Removed: makima drop-in" || true
-rmdir "$SYSTEMD_DIR/makima.service.d" 2>/dev/null || true
 systemctl --user daemon-reload
 echo ""
 
