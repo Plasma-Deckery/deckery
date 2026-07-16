@@ -192,55 +192,19 @@ systemctl --user restart deckery-tray.service \
     || echo "Service: could not restart deckery-tray (check: systemctl --user status deckery-tray)"
 echo ""
 
-# ── 7. Steam Input config (desktop_neptune.vdf) ──────────────────────────────
+# ── 7. Legacy Steam Input config cleanup ─────────────────────────────────────
 #
-# The canonical copy lives in ~/.config/makima/ so the tray watcher can read it.
-# It is also written to Steam's config dir and locked with chattr +i.
-#
-# On reinstall/update: if the file is already identical AND locked, skip entirely
-# (no sudo prompt, no disruption). Only unlock → copy → relock when the content
-# actually changed or the lock is missing.
+# Previous versions copied desktop_neptune.vdf to ~/.config/makima/ as a
+# canonical reference for the tray watcher. This file is no longer needed.
 
 echo "── Steam Input config ───────────────────────────────────────────────────"
 
-VDF_SRC="$DECKERY_DIR/configs/desktop_neptune.vdf"
-VDF_CFG="$CFG_DIR/desktop_neptune.vdf"
-VDF_DST="$HOME/.local/share/Steam/controller_base/desktop_neptune.vdf"
-
-if [ -f "$VDF_SRC" ]; then
-    # Canonical copy → config dir (source of truth for tray watcher)
-    if ! cmp -s "$VDF_SRC" "$VDF_CFG" 2>/dev/null; then
-        cp "$VDF_SRC" "$VDF_CFG"
-        echo "Installed: ~/.config/makima/desktop_neptune.vdf"
-    else
-        echo "Already up to date: ~/.config/makima/desktop_neptune.vdf"
-    fi
-
-    # Deploy to Steam's config dir.
-    # Fast path: file is already correct AND locked — nothing to do.
-    _vdf_locked() { lsattr "$VDF_DST" 2>/dev/null | awk '{print $1}' | grep -q 'i'; }
-    if cmp -s "$VDF_SRC" "$VDF_DST" 2>/dev/null && _vdf_locked; then
-        echo "Already locked and up to date: desktop_neptune.vdf → Steam"
-    else
-        # Unlock so we can write (silently ignores if not locked)
-        sudo chattr -i "$VDF_DST" 2>/dev/null || true
-
-        if ! cmp -s "$VDF_SRC" "$VDF_DST" 2>/dev/null; then
-            cp "$VDF_SRC" "$VDF_DST"
-            echo "Installed: desktop_neptune.vdf → Steam"
-        else
-            echo "Already up to date: desktop_neptune.vdf → Steam"
-        fi
-
-        # Re-apply lock
-        if sudo chattr +i "$VDF_DST" 2>/dev/null; then
-            echo "Locked: desktop_neptune.vdf"
-        else
-            echo "Warning: could not lock desktop_neptune.vdf — lock it via the tray menu"
-        fi
-    fi
+_LEGACY_CFG="$HOME/.config/makima/desktop_neptune.vdf"
+if [ -f "$_LEGACY_CFG" ]; then
+    rm "$_LEGACY_CFG"
+    echo "Removed legacy file: ~/.config/makima/desktop_neptune.vdf"
 else
-    echo "Skipped: desktop_neptune.vdf not found in repo"
+    echo "OK: no legacy Steam config file found"
 fi
 
 echo ""
@@ -270,6 +234,60 @@ gtk-update-icon-cache -f -t "$HOME/.local/share/icons/hicolor" 2>/dev/null || tr
 echo ""
 
 # ── 9. Done ───────────────────────────────────────────────────────────────────
+
+# ── Migration: remove legacy chattr +i lock if present ───────────────────────
+
+_LEGACY_VDF="$HOME/.local/share/Steam/controller_base/desktop_neptune.vdf"
+if lsattr "$_LEGACY_VDF" 2>/dev/null | awk '{print $1}' | grep -q 'i'; then
+    echo "── Legacy lock detected ─────────────────────────────────────────────────"
+    echo ""
+    echo "  desktop_neptune.vdf is still locked with chattr +i from a previous"
+    echo "  Deckery version. This is no longer needed — Steam Input is now"
+    echo "  disabled via Steam's own config mechanism instead."
+    echo ""
+    if [ -t 0 ]; then
+        read -p "  Remove the legacy lock now? [Y/n] " _ans
+        _ans=${_ans:-Y}
+        if [[ "$_ans" =~ ^[Yy]$ ]]; then
+            if sudo chattr -i "$_LEGACY_VDF"; then
+                echo "  ✓ Legacy lock removed."
+            else
+                echo "  ✗ Could not remove lock — run manually: sudo chattr -i $_LEGACY_VDF"
+            fi
+        fi
+    else
+        echo "  ⚠ Non-interactive install — remove manually: sudo chattr -i $_LEGACY_VDF"
+    fi
+    echo ""
+fi
+
+# ── Optional: disable Steam Input now ────────────────────────────────────────
+#
+# The tray will show a yellow indicator and let the user disable Steam Input
+# at any time. Here we offer to do it immediately during install.
+
+echo "── Steam Input ──────────────────────────────────────────────────────────"
+echo ""
+echo "  Deckery replaces Steam Input on the Desktop. You can disable Steam"
+echo "  Input now, or later via the tray icon (yellow indicator)."
+echo ""
+if [ -t 0 ]; then
+    read -p "  Disable Steam Input now? [Y/n] " _steam_ans
+    _steam_ans=${_steam_ans:-Y}
+    if [[ "$_steam_ans" =~ ^[Yy]$ ]]; then
+        if distrobox enter deckery -- python3 "$DECKERY_DIR/tray/steam_bridge.py"; then
+            echo "  ✓ Steam Input disabled."
+        else
+            echo "  ✗ Could not apply — Steam may not be installed or never launched."
+            echo "    You can apply it later via the tray icon."
+        fi
+    else
+        echo "  Skipped. Apply later via the tray icon."
+    fi
+else
+    echo "  (non-interactive install — apply later via the tray icon)"
+fi
+echo ""
 
 echo "╔══════════════════════════════════════╗"
 echo "║          Setup complete!             ║"

@@ -13,15 +13,18 @@ gi.require_version('AyatanaAppIndicator3', '0.1')
 from gi.repository import Gtk, GdkPixbuf, AyatanaAppIndicator3, GLib, Gio
 
 import json
+import logging
 import os
 import socket
 import subprocess
 import sys
 import threading
 
+log = logging.getLogger(__name__)
+
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from updater import Updater, UpdateState, local_version
-from steam_config_watcher import SteamConfigWatcher
+import steam_bridge
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
 
@@ -81,7 +84,7 @@ DISPLAY = {
 def _tray_state(
     statuses: dict[str, str],
     paused: bool,
-    steam_state: str,
+    steam_configured: bool,
     has_update: bool,
 ) -> str:
     """
@@ -92,41 +95,14 @@ def _tray_state(
     """
     any_failed = any(s == "failed" for s in statuses.values())
     any_down   = any(s != "active" for s in statuses.values())
-    steam_err  = steam_state == "overwritten"
-    steam_warn = steam_state in ("unlocked", "no_source")
 
-    if any_failed or steam_err:
+    if any_failed:
         return "err"
-    if any_down or paused or steam_warn:
+    if any_down or paused or not steam_configured:
         return "warn"
     if has_update:
         return "update"
     return "ok"
-
-
-def _steam_item_state(steam_state: str) -> tuple[str, bool]:
-    """
-    Return (dot_key, unlock_sensitive) for a given SteamConfigWatcher state.
-      dot_key:          'ok' | 'warn' | 'err' | 'grey'
-      unlock_sensitive: True only when the file is locked (user can unlock it)
-    No GTK dependency.
-    """
-    dot_key = {
-        "locked":      "ok",
-        "unlocked":    "warn",
-        "overwritten": "err",
-        "no_source":   "warn",
-    }.get(steam_state, "grey")
-    return dot_key, steam_state == "locked"
-
-
-def _steam_click_action(steam_state: str) -> str | None:
-    """
-    Return the terminal action to open when the steam status item is clicked.
-    Returns 'fix_and_lock', 'lock', or None (no-op).
-    No GTK dependency.
-    """
-    return {"overwritten": "fix_and_lock", "unlocked": "lock"}.get(steam_state)
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -230,8 +206,9 @@ class DeckeryTray:
         self._paused           = False
         self._poll_running     = False
         self._state_timeout_id = None
-        self._updater          = Updater(on_state_change=self._on_update_state_changed)
-        self._steam_watcher    = SteamConfigWatcher(on_state_change=self._on_steam_state_changed)
+        self._updater           = Updater(on_state_change=self._on_update_state_changed)
+        self._steam_configured  = steam_bridge.is_configured()
+        self._steam_applying    = False
 
         self._build_menu()
         self._indicator.set_menu(self._menu)
@@ -322,10 +299,6 @@ class DeckeryTray:
         steam_status.connect("activate", self._on_steam_status_clicked)
         m.append(steam_status)
 
-        unlock_item = _icon_item("Unlock for Steam update", "object-unlocked")
-        unlock_item.connect("activate", lambda _: self._steam_watcher.open_unlock_terminal())
-        self._items["steam-unlock"] = unlock_item
-        m.append(unlock_item)
         m.append(Gtk.SeparatorMenuItem())
 
         # ── Config / Updates ──────────────────────────────────────────────
@@ -338,6 +311,10 @@ class DeckeryTray:
         upd_item.connect("activate", self._on_update_clicked)
         self._items["update"] = upd_item
         m.append(upd_item)
+
+        wizard_item = _icon_item("Setup Wizard…", "application-x-addon")
+        wizard_item.connect("activate", self._on_open_wizard)
+        m.append(wizard_item)
         m.append(Gtk.SeparatorMenuItem())
 
         # ── Community links ───────────────────────────────────────────────
@@ -388,14 +365,16 @@ class DeckeryTray:
         return GLib.SOURCE_CONTINUE
 
     def _poll_thread(self):
-        statuses = {name: _service_status(unit) for name, unit in SERVICES.items()}
-        paused   = _makima_paused()
-        GLib.idle_add(self._apply_poll, statuses, paused)
+        statuses         = {name: _service_status(unit) for name, unit in SERVICES.items()}
+        paused           = _makima_paused()
+        steam_configured = steam_bridge.is_configured()
+        GLib.idle_add(self._apply_poll, statuses, paused, steam_configured)
 
-    def _apply_poll(self, statuses: dict, paused: bool):
-        self._poll_running = False
-        self._paused   = paused
-        self._statuses = statuses
+    def _apply_poll(self, statuses: dict, paused: bool, steam_configured: bool):
+        self._poll_running      = False
+        self._paused            = paused
+        self._statuses          = statuses
+        self._steam_configured  = steam_configured
 
         # ── Update service status icons + labels ──────────────────────────
         for name, status in statuses.items():
@@ -439,7 +418,7 @@ class DeckeryTray:
         key = _tray_state(
             self._statuses,
             self._paused,
-            self._steam_watcher.state,
+            self._steam_configured,
             self._updater.state == UpdateState.UPDATE_AVAILABLE,
         )
         icon, tooltip = _TRAY_ICONS[key]
@@ -476,35 +455,76 @@ class DeckeryTray:
         return GLib.SOURCE_REMOVE
 
     def _on_steam_status_clicked(self, _item):
-        action = _steam_click_action(self._steam_watcher.state)
-        if action == "fix_and_lock":
-            self._steam_watcher.open_fix_and_lock_terminal()
-        elif action == "lock":
-            self._steam_watcher.open_lock_terminal()
+        if not self._steam_configured and not self._steam_applying:
+            self._steam_applying = True
+            threading.Thread(target=self._apply_steam_bridge, daemon=True).start()
 
-    def _on_steam_state_changed(self):
-        """Called by SteamConfigWatcher when its state changes."""
+    def _apply_steam_bridge(self):
+        ok = steam_bridge.apply()
+        if ok:
+            self._open_steam_restart_terminal()
+            GLib.idle_add(self._on_steam_applied)
+        else:
+            self._steam_applying = False
+
+    def _open_steam_restart_terminal(self):
+        script = "\n".join([
+            "echo ''",
+            "echo '  ╔══════════════════════════════════════╗'",
+            "echo '  ║     DECKERY — Steam Input Config     ║'",
+            "echo '  ╚══════════════════════════════════════╝'",
+            "echo ''",
+            "echo '  Steam Input bindings for the Desktop have been disabled.'",
+            "echo '  Deckery now handles all input on the Desktop instead.'",
+            "echo ''",
+            "if pgrep -x steam > /dev/null; then",
+            "    echo '  Steam is currently running. It should be restarted for'",
+            "    echo '  this change to take effect.'",
+            "    echo ''",
+            "    read -p '  Restart Steam now? [Y/n] ' ans",
+            "    ans=${ans:-Y}",
+            "    if [[ \"$ans\" =~ ^[Yy]$ ]]; then",
+            "        steam -shutdown",
+            "        while pgrep -x steam > /dev/null; do",
+            "            echo '  Waiting for Steam to close...'",
+            "            sleep 2",
+            "        done",
+            "        echo '  Starting Steam...'",
+            "        setsid steam &>/dev/null &",
+            "        disown",
+            "    fi",
+            "    echo ''",
+            "fi",
+            "read -p '  Press Enter to close...'",
+        ])
+        subprocess.Popen([
+            "distrobox-host-exec", "konsole",
+            "-e", "bash", "-c", script,
+        ])
+
+    def _on_steam_applied(self):
+        self._steam_configured = True
+        self._steam_applying   = False
         self._refresh_steam_item()
         self._refresh_tray_icon()
         return GLib.SOURCE_REMOVE
 
     def _refresh_steam_item(self) -> None:
         """Update the steam config status item in the menu."""
-        state = self._steam_watcher.state
-        dot_key, unlock_sensitive = _steam_item_state(state)
-        pb     = self._pb.get(dot_key)
-        img    = self._items.get("status_steam-config_img")
-        lbl    = self._items.get("status_steam-config_lbl")
-        unlock = self._items.get("steam-unlock")
+        configured = self._steam_configured
+        pb  = self._pb.get("ok" if configured else "warn")
+        img = self._items.get("status_steam-config_img")
+        lbl = self._items.get("status_steam-config_lbl")
         if img and pb:
             img.set_from_pixbuf(pb)
         if lbl:
-            lbl.set_text(self._steam_watcher.label)
-        if unlock:
-            unlock.set_sensitive(unlock_sensitive)
+            lbl.set_text("Steam Input: disabled" if configured else "Steam Input: still active — click to disable")
+
+    def _on_open_wizard(self, _item):
+        onboarding = os.path.join(os.path.dirname(os.path.abspath(__file__)), "onboarding.py")
+        subprocess.Popen(["python3", onboarding])
 
     def _on_quit(self, _item):
-        self._steam_watcher.stop()
         _service_ctrl("stop", "makima.service")
         _service_ctrl("stop", "deckery-hud.service")
         Gtk.main_quit()

@@ -59,8 +59,9 @@ BTN_TL-BTN_SOUTH = { keys = ["KEY_LEFTCTRL", "KEY_LEFTSHIFT", "KEY_Z"], label = 
 # --- Voice control: L1 + R5 → OpenWhispr (Ctrl + PageDown) ---
 BTN_TL-BTN_GRIPR2 = { keys = ["KEY_LEFTCTRL", "KEY_PAGEDOWN"], label = "Text to Speech (Ctrl+PgDn)" }
 
-# --- Steam layer: Steam+X → OSK (Steam Input handles it, makima blocks Backspace) ---
-BTN_MODE-BTN_NORTH = { keys = [], label = "(Steam OSK)" }  # Steam+X: makima does nothing, Steam Input opens OSK
+# --- Steam layer: Steam+X → Keyboard, Steam+B → Handheld Daemon (Steam Input handles both) ---
+BTN_MODE-BTN_NORTH = { keys = [], label = "(Steam Keyboard)" }     # Steam+X: makima does nothing, Steam Input opens OSK
+BTN_MODE-BTN_EAST  = { keys = [], label = "(Handheld Daemon)" }    # Steam+B: makima does nothing, handheld daemon handles it
 
 # --- L1 + Start (three stripes) → Window Menu ---
 BTN_TL-BTN_START = { keys = ["KEY_LEFTALT", "KEY_F3"], label = "Window Menu" }
