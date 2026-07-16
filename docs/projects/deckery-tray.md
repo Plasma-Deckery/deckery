@@ -22,10 +22,13 @@ Built with GTK3 + AyatanaAppIndicator3. Runs inside the `deckery` distrobox cont
 **Service hierarchy:**
 
 ```
-deckery-tray.service  ← owns the distrobox container, starts on login
-    ├── makima.service       (PartOf tray — stops/restarts with it)
-    └── deckery-hud.service  (PartOf tray — stops/restarts with it)
+plasma-core.target  ← KDE-only, not active in Gamescope/Gaming Mode
+    └── deckery-tray.service  ← owns the distrobox container, starts on login
+            ├── makima.service       (BindsTo tray — cannot run without it)
+            └── deckery-hud.service  (BindsTo tray — cannot run without it)
 ```
+
+`deckery-tray.service` is bound to `plasma-core.target` (a KDE-specific systemd target that is not active in Gamescope/Gaming Mode). An `ExecCondition` guard additionally confirms that `plasma-plasmashell.service` is running before the tray starts — if the check fails, the service is skipped cleanly without triggering a restart loop. This means Deckery does not start in Gaming Mode and does not interfere with Gamescope.
 
 `deckery-tray.service` runs `podman start deckery` before launching the tray, ensuring the container's main `conmon` process always lands in the tray's cgroup. This makes the tray the true owner of the container — stopping the tray stops everything cleanly.
 

@@ -25,9 +25,10 @@
 Deckery-tray manages the entire stack:
 
 ```
-deckery-tray.service   ← starts on login, owns the distrobox container
-    ├── makima.service         (PartOf tray — stops and restarts with it)
-    └── deckery-hud.service    (PartOf tray — stops and restarts with it)
+plasma-core.target     ← KDE-only, not active in Gamescope/Gaming Mode
+    └── deckery-tray.service   ← starts on login, owns the distrobox container
+            ├── makima.service         (BindsTo tray — cannot run without it)
+            └── deckery-hud.service    (BindsTo tray — cannot run without it)
 ```
 
 Starting the tray starts everything. Stopping it stops everything cleanly.

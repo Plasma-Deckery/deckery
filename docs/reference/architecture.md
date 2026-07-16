@@ -3,10 +3,13 @@
 ## Service hierarchy
 
 ```
-deckery-tray.service              ← starts on login, manages the stack
-    ├── makima.service             (PartOf tray — stops/restarts with it)
-    └── deckery-hud.service        (PartOf tray — stops/restarts with it)
+plasma-core.target                ← KDE-only, not active in Gamescope/Gaming Mode
+    └── deckery-tray.service      ← starts on login, manages the stack
+            ├── makima.service         (BindsTo tray — cannot run without it)
+            └── deckery-hud.service    (BindsTo tray — cannot run without it)
 ```
+
+`deckery-tray.service` uses `BindsTo=plasma-core.target` and an `ExecCondition` guard that confirms `plasma-plasmashell.service` is active before starting. In Gaming Mode (Gamescope), `plasma-core.target` is not active and the guard check fails — Deckery does not start and does not interfere with Gamescope.
 
 ## Data flow
 
