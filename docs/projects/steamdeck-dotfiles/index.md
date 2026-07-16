@@ -56,10 +56,25 @@ qdbus6 org.kde.KWin /KWin reconfigure
 
 ## Focus stealing prevention
 
-KWin's focus stealing prevention is set to Medium. Without this, the Steam on-screen keyboard grabs focus away from the app you're typing into — so keystrokes land in the keyboard window rather than the input field. Medium prevents this while still allowing legitimate focus changes.
+The Steam on-screen keyboard steals focus away from whatever you were typing into — keystrokes end up in the keyboard window instead of the input field. Two layers prevent this:
+
+**1. KWin global setting — Medium focus stealing prevention**
 
 ```bash
 kwriteconfig6 --file kwinrc --group Windows --key FocusStealing 1
+qdbus6 org.kde.KWin /KWin reconfigure
+```
+
+This reduces how aggressively KWin lets windows steal focus, but it's not enough on its own for the Steam keyboard.
+
+**2. Custom KWin script — `steam-keyboard-focus-fix`**
+
+A small KWin script tracks the last active non-keyboard window. When the Steam keyboard appears (detected by `resourceClass = "steam"`, `resourceName = "steamwebhelper"`, `skipTaskbar = true`, window type Utility), focus is immediately returned to the previous window. This ensures keystrokes always land in the right place.
+
+The script lives in `~/.local/share/kwin/scripts/steam-keyboard-focus-fix/` and must be enabled explicitly:
+
+```bash
+kwriteconfig6 --file kwinrc --group Plugins --key steam-keyboard-focus-fixEnabled true
 qdbus6 org.kde.KWin /KWin reconfigure
 ```
 
@@ -108,7 +123,7 @@ Most of this setup can be applied automatically. The table below is a reference 
 |---|---|---|
 | Display scale (1.1) | Write `kwinoutputconfig.json` | ⚠️ Hardware-specific (eDP-1 EDID hash) |
 | Focus follows mouse | `kwriteconfig6` + `reconfigure` | ✅ Trivial |
-| Focus stealing prevention | `kwriteconfig6` + `reconfigure` | ✅ Trivial |
+| Focus stealing prevention | `kwriteconfig6` (global setting) + custom KWin script | ✅ Easy |
 | Pointer acceleration (flat) | `kwriteconfig6` to `kcminputrc` | ✅ Trivial |
 | Power management | `kwriteconfig6` to `powerdevilrc` | ✅ Trivial |
 | KWin effects (dim, hide cursor, blur…) | `kwriteconfig6` to `kwinrc` + `reconfigure` | ✅ Easy |
