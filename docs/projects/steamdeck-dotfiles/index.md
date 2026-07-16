@@ -6,6 +6,12 @@ An opinionated KDE Plasma desktop setup tuned for the Steam Deck's screen size a
 
 The goal is a desktop that works well with a controller and no keyboard — clean, fast to navigate, and organised so you always know where things are.
 
+## Display scaling
+
+The Steam Deck's internal display runs at 800×1280 at 90 Hz. At 1:1 scale, UI elements are too small for comfortable use at arm's length. The display is set to **scale 1.1** in `kwinoutputconfig.json` — a small nudge that makes text and touch targets noticeably more comfortable without blurring the image the way integer scaling would.
+
+The display is also rotated 270° (landscape from a portrait panel) and automatic brightness is enabled with a custom curve.
+
 ## Layout
 
 The panel layout is built around the Steam Deck's portrait-friendly screen:
@@ -28,6 +34,8 @@ Within each activity, each virtual desktop holds at most one or two applications
 ## Window tiling
 
 [Kröhnkite](../krohnkite.md) provides dynamic window tiling — windows automatically arrange to fill the available space without manual resizing. [maximized-window-gaps](../maximized-window-gaps.md) adds configurable gaps around tiled windows so the layout breathes a little on the small screen.
+
+Window gaps are set to **7px between tiles** (KWin `screenGap*`) and **40px outer margin** (maximized-window-gaps) — giving the layout room to breathe on the small display.
 
 Both are KWin scripts, installable with a single `kpackagetool6` call — making them straightforward to automate.
 
@@ -55,6 +63,33 @@ kwriteconfig6 --file kwinrc --group Windows --key FocusStealing 1
 qdbus6 org.kde.KWin /KWin reconfigure
 ```
 
+## Pointer acceleration
+
+Global pointer acceleration is set to **flat (no acceleration)** — the cursor moves at a fixed speed proportional to physical movement. This feels more predictable on a trackpad than the default adaptive profile.
+
+The Steam Controller itself uses adaptive acceleration with a **scroll factor of 2×** for the right stick scroll.
+
+## Power management
+
+On battery:
+
+- Display dims after **60 seconds** of inactivity
+- Display turns off after **60 seconds**
+- System auto-suspends after **5 minutes**
+- Power button suspends (not shuts down)
+
+On AC: no auto-suspend, display locks before turning off.
+
+## Visual effects
+
+A small set of KWin effects that improve usability without distracting:
+
+- **Dim inactive** — unfocused windows are slightly dimmed (strength 10), including panels. Makes it immediately clear which window has focus.
+- **Hide cursor** — cursor hides after 5 seconds of inactivity. Keeps the display clean when using the controller without touching the trackpad.
+- **Translucency** — windows are 90% opaque while being moved or resized. Helps with spatial orientation on the small screen.
+- **Wobbly windows** — subtle wobble on move (stiffness 18, move factor 16). Lightweight visual feedback.
+- **Blur** — background blur at strength 10 behind translucent surfaces.
+
 ## Window rules
 
 A single KWin rule keeps Firefox Picture-in-Picture windows always on top across all activities and desktops. Without this, PiP windows disappear behind other windows whenever focus changes — on a small screen that means they're effectively lost.
@@ -71,8 +106,13 @@ Most of this setup can be applied automatically. The table below is a reference 
 
 | Setting | How to apply | Difficulty |
 |---|---|---|
+| Display scale (1.1) | Write `kwinoutputconfig.json` | ⚠️ Hardware-specific (eDP-1 EDID hash) |
 | Focus follows mouse | `kwriteconfig6` + `reconfigure` | ✅ Trivial |
 | Focus stealing prevention | `kwriteconfig6` + `reconfigure` | ✅ Trivial |
+| Pointer acceleration (flat) | `kwriteconfig6` to `kcminputrc` | ✅ Trivial |
+| Power management | `kwriteconfig6` to `powerdevilrc` | ✅ Trivial |
+| KWin effects (dim, hide cursor, blur…) | `kwriteconfig6` to `kwinrc` + `reconfigure` | ✅ Easy |
+| Window gaps | `kwriteconfig6` to `kwinrc` + `reconfigure` | ✅ Easy |
 | Kröhnkite / Kyanite / maximized-window-gaps | `kpackagetool6 -t KWin/Script -i` | ✅ Easy |
 | RNNoise PipeWire filter | Copy config file, restart PipeWire | ✅ Easy |
 | Firefox PiP window rule | Write to `kwinrulesrc` (merge-safe) | ⚠️ Careful |
