@@ -120,6 +120,29 @@ def apply() -> bool:
     return ok
 
 
+def remove() -> bool:
+    """
+    Remove the 413080 entry from all configset files, restoring Steam's default.
+    Returns True if all writes succeeded (or there was nothing to remove).
+    """
+    paths = _find_configset_paths()
+    if not paths:
+        return True
+    ok = True
+    for path in paths:
+        text = _read(path)
+        if not text or not _BLOCK_RE.search(text):
+            continue
+        new_text = _BLOCK_RE.sub("", text)
+        if not _write(path, new_text):
+            ok = False
+        else:
+            log.info("steam_bridge: removed Desktop config entry from %s", path)
+    return ok
+
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(message)s")
+    if len(sys.argv) > 1 and sys.argv[1] == "--remove":
+        sys.exit(0 if remove() else 1)
     sys.exit(0 if apply() else 1)

@@ -12,7 +12,6 @@ The dotfiles are managed with [chezmoi](https://www.chezmoi.io/), which tracks c
 | `dot_config/private_kwinrulesrc` | Per-window rules |
 | `dot_config/pipewire/filter-chain.conf.d/source-rnnoise.conf` | RNNoise voice filter |
 | `dot_config/makima/symlink_Steam Deck.toml` | Symlink to the makima base config |
-| `dot_local/share/Steam/controller_base/executable_desktop_neptune.vdf` | Steam Input desktop config |
 | `dot_config/autostart/` | Autostart entries (Kando, OpenWhispr) |
 | `Brewfile` / `flatpaks.txt` | Package manifests |
 

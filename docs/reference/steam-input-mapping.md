@@ -1,6 +1,14 @@
 # Steam Input Desktop Config — Mapping Referenz
 
-Quelle: `desktop_neptune.vdf` (Steam Deck Desktop Config, Default Preset)
+## How Deckery handles Steam Input
+
+Deckery disables ALL Steam Desktop Input by using Steam's own **Local Selection** mechanism. It writes a single entry into `configset_controller_neptune.vdf` (App ID 413080 — Steam's universal internal ID for the Desktop controller config) that points Steam's Desktop controller profile to its built-in `empty.vdf`, which contains no bindings at all. No sudo is required and Steam updates work normally.
+
+The result is that Steam applies zero button mappings in desktop mode. Makima takes over full input handling instead.
+
+## Reference: Steam's default Desktop layout
+
+The tables below document what Steam's **default** Desktop controller layout (`desktop_neptune.vdf`) contains. None of these mappings are active when Deckery is configured — they are preserved here for reference only.
 
 ## Aktive Gruppen (Default Preset)
 

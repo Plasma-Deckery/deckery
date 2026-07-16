@@ -13,6 +13,7 @@ System tray applet that monitors and controls the full Deckery stack from a sing
 - **Restart / Start / Stop** — controls makima and deckery-hud via systemd user units
 - **Updates** — "Search for Updates" entry pulls all repos and re-runs the installer
 - **Config folder** — opens `~/.config/makima/` in the file manager for quick access
+- **Steam Input** — shows whether Steam's Desktop Input is disabled (green) or still active (yellow); clicking the yellow indicator opens a terminal that writes the configset entry and optionally restarts Steam
 - **Tooltip** — always shows "Deckery" on hover for quick identification
 
 ## Architecture
@@ -39,6 +40,7 @@ plasma-core.target  ← KDE-only, not active in Gamescope/Gaming Mode
 | `systemctl --user is-active` | Running state of makima and deckery-hud |
 | `/tmp/makima-state.json` | Pause state of makima (field `paused`) |
 | `/tmp/makima-control.sock` | Sending pause / resume commands |
+| `configset_controller_neptune.vdf` | Steam Input configured state (polled every 2 s) |
 
 Status updates run on a background thread to keep the GTK main loop responsive. A `Gio.FileMonitor` on `makima-state.json` triggers an immediate debounced refresh (120 ms window) whenever the file changes — pause state changes appear in the menu within milliseconds.
 

@@ -27,70 +27,22 @@ After setup, **Deckery** appears in your application launcher. Opening it starts
 
 ## 2. Configure Steam Input for coexistence
 
-Steam has its own default button mapping for desktop mode. Deckery needs to take control of most inputs — but this mapping cannot be fully disabled from within Steam. Instead, Deckery overwrites Steam's config file with a minimal layout, so the two don't conflict.
+Steam has its own default button mapping for desktop mode. Deckery disables it entirely using Steam's own **Local Selection** mechanism: it writes a single entry into `configset_controller_neptune.vdf` that points Steam's Desktop controller profile to its built-in `empty.vdf`, which contains no bindings at all. No sudo is required, and Steam updates work normally.
 
-A few features from the original Steam layout are kept and adapted:
+### The Steam Input tray item
 
-- **Trackpad handling** — the trackpads continue to work as before
-- **On-screen keyboard** — moved to **Steam + X**
-
-The installer places the config in two locations:
-
-- `~/.config/makima/desktop_neptune.vdf` — the canonical copy the tray reads from
-- `~/.local/share/Steam/controller_base/desktop_neptune.vdf` — Steam's active config
-
-### The Steam config tray item
-
-The Deckery tray monitors the config file continuously and shows its state in the menu under **Steam config**:
+The Deckery tray polls the configset file every 2 seconds and shows the current state in the menu under **Steam Input**:
 
 | Indicator | State | Meaning |
 |---|---|---|
-| 🟢 | **locked** | Config is in place and protected — no action needed |
-| 🟡 | **unlocked** | Config is correct but unprotected — Steam will overwrite it on next start |
-| 🔴 | **Fix and Lock** | Steam has overwritten the config — click to restore and lock |
-| 🟡 | **source missing** | The canonical copy in `~/.config/makima/` is gone |
+| Green | **Steam Input: disabled** | The configset entry is in place — no action needed |
+| Yellow | **Steam Input: still active** | The entry is missing — click to disable |
 
-### After a fresh install
+Clicking the yellow item opens a Konsole terminal that writes the configset entry and optionally restarts Steam to apply it immediately.
 
-After running the installer the file is in place but not locked. The tray shows **unlocked** (yellow).
+### During install
 
-Click the **Steam config: unlocked** item — a terminal opens, enters `sudo chattr +i`, and locks the file. The tray turns green.
-
-### When Steam overwrites the config
-
-Steam silently restores its defaults every time it starts. If it does, the tray turns **red**.
-
-Click the red **Steam config: Fix and Lock** item — a terminal opens, copies the canonical config back, locks it, and the tray returns to green.
-
-### When Steam needs to update
-
-!!! warning "Steam updates are blocked while the file is locked"
-    The `chattr +i` immutable flag prevents Steam's update mechanism from doing its atomic file rename, which **aborts the entire Steam client update**. You must unlock the file before Steam can update, and restore the lock afterward.
-
-**Via the tray (recommended):**
-
-1. Click **Unlock for Steam update** in the tray → terminal unlocks the file, tray turns yellow
-2. Open Steam → let it update (it will overwrite the config in the process), then close Steam
-3. Click the red **Steam config: Fix and Lock** item → terminal restores and re-locks the file, tray turns green
-
-**Manually (if the tray is unavailable):**
-
-```bash
-# 1. Unlock
-sudo chattr -i ~/.local/share/Steam/controller_base/desktop_neptune.vdf
-
-# 2. Open Steam, let it update, close Steam
-
-# 3. Restore and re-lock
-cp ~/.config/makima/desktop_neptune.vdf \
-   ~/.local/share/Steam/controller_base/desktop_neptune.vdf
-sudo chattr +i ~/.local/share/Steam/controller_base/desktop_neptune.vdf
-```
-
-!!! info "All terminal steps require your sudo password"
-    `chattr +i/-i` requires root privileges. Each terminal walks you through the operation and shows a ✓ or ✗ result before closing.
-
-Full technical background and plans for future automation in [deckery#11](https://github.com/Plasma-Deckery/deckery/issues/11).
+The installer asks whether you want to disable Steam Input now. If you choose yes, it writes the configset entry immediately. If you skip it (or run in non-interactive mode), you can do it at any time by clicking the yellow tray item.
 
 ## Updates
 
@@ -133,6 +85,5 @@ bash ~/.local/share/deckery/deckery/uninstall.sh --yes
 
 - The cloned repos in `~/.local/share/deckery/` (your configs live there)
 - App-specific config files in `~/.config/makima/`
-- `desktop_neptune.vdf` (Steam Input config)
 
 To also remove the repos and all custom configs, delete `~/.local/share/deckery/` manually after uninstalling.

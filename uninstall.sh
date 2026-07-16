@@ -11,7 +11,7 @@
 # What this does NOT remove:
 #   - The cloned repos in ~/.local/share/deckery/ (your configs live there)
 #   - App-specific config files in ~/.config/makima/
-#   - desktop_neptune.vdf (Steam Input config)
+#   - Steam Input configset entry (413080 block removed from configset_controller_neptune.vdf)
 #
 # Pass --yes to skip the confirmation prompt.
 
@@ -61,7 +61,18 @@ for bin in makima makima-deckery deckery-tray deckery-hud deckery-hud-toggle mak
 done
 echo ""
 
-# ── 4. Remove distrobox container ────────────────────────────────────────────
+# ── 4. Restore Steam Input config ────────────────────────────────────────────
+
+echo "── Restoring Steam Input config ─────────────────────────────────────────"
+DECKERY_DIR="$(cd "$(dirname "$0")" && pwd)"
+if python3 "$DECKERY_DIR/tray/steam_bridge.py" --remove 2>/dev/null; then
+    echo "Removed: Steam Desktop controller config entry"
+else
+    echo "Skipped: Steam Input config not found or already removed"
+fi
+echo ""
+
+# ── 5. Remove distrobox container ────────────────────────────────────────────
 
 echo "── Removing distrobox container ─────────────────────────────────────────"
 if distrobox list 2>/dev/null | grep -q "| deckery "; then
@@ -72,7 +83,7 @@ else
 fi
 echo ""
 
-# ── 5. Remove icon and desktop launcher ──────────────────────────────────────
+# ── 6. Remove icon and desktop launcher ──────────────────────────────────────
 
 echo "── Removing app launcher ────────────────────────────────────────────────"
 rm -f "$ICON_DIR/deckery.svg"       && echo "Removed: deckery.svg" || true
@@ -80,7 +91,7 @@ rm -f "$APPS_DIR/deckery.desktop"   && echo "Removed: deckery.desktop" || true
 gtk-update-icon-cache -f -t "$HOME/.local/share/icons/hicolor" 2>/dev/null || true
 echo ""
 
-# ── 6. Remove config symlink ─────────────────────────────────────────────────
+# ── 7. Remove config symlink ─────────────────────────────────────────────────
 
 echo "── Removing config symlink ──────────────────────────────────────────────"
 if [ -L "$CFG_DIR/Steam Deck.toml" ]; then
