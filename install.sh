@@ -142,19 +142,11 @@ done
 
 echo ""
 
-# ── 4. Build and install Makima ───────────────────────────────────────────────
-
-echo "── Building Makima ──────────────────────────────────────────────────────"
-bash "$MAKIMA_DIR/install.sh"
-echo ""
-
-# ── 5. Install Deckery HUD ────────────────────────────────────────────────────
-
-echo "── Installing Deckery HUD ───────────────────────────────────────────────"
-bash "$HUD_DIR/install.sh"
-echo ""
-
-# ── 6. Install Deckery Tray ───────────────────────────────────────────────────
+# ── 4. Install Deckery Tray ───────────────────────────────────────────────────
+#
+# Tray is installed first because makima.service and deckery-hud.service both
+# declare BindsTo=deckery-tray.service. The unit must exist before either
+# service is started, otherwise systemd refuses to start them on reinstall.
 
 echo "── Installing Deckery Tray ──────────────────────────────────────────────"
 mkdir -p "$BIN_DIR"
@@ -177,6 +169,18 @@ systemctl --user enable deckery-tray.service
 systemctl --user restart deckery-tray.service \
     && echo "Service: deckery-tray restarted" \
     || echo "Service: could not restart deckery-tray (check: systemctl --user status deckery-tray)"
+echo ""
+
+# ── 5. Build and install Makima ───────────────────────────────────────────────
+
+echo "── Building Makima ──────────────────────────────────────────────────────"
+bash "$MAKIMA_DIR/install.sh"
+echo ""
+
+# ── 6. Install Deckery HUD ────────────────────────────────────────────────────
+
+echo "── Installing Deckery HUD ───────────────────────────────────────────────"
+bash "$HUD_DIR/install.sh"
 echo ""
 
 # ── 7. Legacy Steam Input config cleanup ─────────────────────────────────────
