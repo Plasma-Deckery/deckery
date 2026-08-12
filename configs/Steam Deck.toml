@@ -1,5 +1,4 @@
 # Deckery — Steam Deck Default Config
-# Phase 1: GRAB_DEVICE = "false" → makima and Steam Input run in parallel.
 #
 # Steam Deck button reference:
 #   BTN_SOUTH   = A        BTN_NORTH   = X  (kernel: BTN_X = BTN_NORTH = 307)
@@ -8,8 +7,9 @@
 #   ABS_Z       = L2 (analog trigger)
 #   ABS_RZ      = R2 (analog trigger)
 #   BTN_THUMBL  = L3       BTN_THUMBR  = R3
-#   BTN_SELECT  = Select   BTN_START   = Start
+#   BTN_SELECT  = Select   BTN_START   = Start (☰)
 #   BTN_MODE    = Steam Button
+#   BTN_BASE    = QAM (···)
 
 [remap]
 # --- Mouse clicks (triggers as buttons) ---
@@ -91,15 +91,7 @@ BTN_TL-BTN_TR-BTN_WEST  = { run = ["qdbus org.kde.kglobalaccel /component/kwin o
 BTN_TL-BTN_TR-BTN_EAST  = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Window Close'"],         label = "Close Window" }       # L1+R1+B
 
 [settings]
-# Left stick → disabled (Kando uses axis values directly via Gamepad API)
 CUSTOM_MODIFIERS = "BTN_TL-BTN_TR-BTN_MODE"   # Layer-modifier buttons (L1, R1, Steam)
-
-LSTICK = "disabled"
-
-# Left trackpad → disabled (state still exported to state.json)
-LPAD = "disabled"
-
-# Right and left trackpad → configured via [trackpad] section below
 
 # Right stick → mouse (makima takes over, Steam group 25 inactive)
 RSTICK = "cursor"
@@ -107,15 +99,6 @@ RSTICK_SENSITIVITY = "4"   # Polling interval in ms (4 = 250Hz)
 RSTICK_DEADZONE = "15"     # Deadzone against stick drift (value * 200 = raw threshold)
 
 16_BIT_AXIS = "true"   # Steam Deck uses 16-bit axis values like Xbox
-GRAB_DEVICE = "false"  # Phase 1: parallel to Steam Input
-
-# Lizard Mode suppression — prevents the hid-steam kernel driver from
-# emulating the trackpads as mouse/scroll when Steam is not running.
-# "buttons"      → suppress only keyboard mappings (ID_CLEAR_DIGITAL_MAPPINGS)
-# "mouse"        → suppress only trackpad mouse/scroll (ID_SET_SETTINGS_VALUES)
-# "buttons,mouse"→ suppress both (recommended)
-# "false"        → disabled
-SUPPRESS_LIZARD_MODE = "buttons,mouse"
 
 # Trackpad configuration
 # mode = "mt-trackpad" → virtual uinput MT device (libinput/gestures)

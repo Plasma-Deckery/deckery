@@ -8,6 +8,8 @@ Makima-deckery exposes a Unix socket at `/tmp/makima-control.sock` for runtime c
 |---|---|
 | `pause` | Suspend all remapping — input is still read and state is still exported, but no output events are emitted and no commands are executed |
 | `resume` | Resume normal remapping |
+| `gaming_mode enable` | Enable Gaming Mode — suppresses all remaps, passes raw input to the OS |
+| `gaming_mode disable` | Disable Gaming Mode — returns to normal remapping |
 | `analog-state-export on` | Write analog axis values (sticks, trackpads) into `state.json` on every change |
 | `analog-state-export off` | Stop writing analog values (default — reduces write frequency) |
 
@@ -16,6 +18,8 @@ Makima-deckery exposes a Unix socket at `/tmp/makima-control.sock` for runtime c
 ```bash
 echo "pause"                    | socat - UNIX-CONNECT:/tmp/makima-control.sock
 echo "resume"                   | socat - UNIX-CONNECT:/tmp/makima-control.sock
+echo "gaming_mode enable"       | socat - UNIX-CONNECT:/tmp/makima-control.sock
+echo "gaming_mode disable"      | socat - UNIX-CONNECT:/tmp/makima-control.sock
 echo "analog-state-export on"   | socat - UNIX-CONNECT:/tmp/makima-control.sock
 echo "analog-state-export off"  | socat - UNIX-CONNECT:/tmp/makima-control.sock
 ```

@@ -16,8 +16,7 @@ d = json.load(open('/tmp/makima-state.json'))
 t = datetime.datetime.now().strftime('%H:%M:%S.%f')[:-3]
 lp = d['trackpads']['lpad']; rp = d['trackpads']['rpad']
 ls = d['sticks']['lstick'];   rs = d['sticks']['rstick']
-l2 = d['triggers']['l2'];     r2 = d['triggers']['r2']
-print(f\"{t}  lpad({lp['x']:+.3f},{lp['y']:+.3f}{'T' if lp['touching'] else ' '}{'P' if lp['pressed'] else ' '})  rpad({rp['x']:+.3f},{rp['y']:+.3f}{'T' if rp['touching'] else ' '}{'P' if rp['pressed'] else ' '})  lstick({ls['x']:+.3f},{ls['y']:+.3f}{'*' if ls['active'] else ' '})  rstick({rs['x']:+.3f},{rs['y']:+.3f}{'*' if rs['active'] else ' '})  L2={l2['value']:.3f}{'P' if l2['pressed'] else ' '}  R2={r2['value']:.3f}{'P' if r2['pressed'] else ' '}\")
+print(f\"{t}  lpad({lp['x']:+.3f},{lp['y']:+.3f}{'T' if lp['touching'] else ' '}{'P' if lp['pressed'] else ' '})  rpad({rp['x']:+.3f},{rp['y']:+.3f}{'T' if rp['touching'] else ' '}{'P' if rp['pressed'] else ' '})  lstick({ls['x']:+.3f},{ls['y']:+.3f}{'*' if ls['active'] else ' '})  rstick({rs['x']:+.3f},{rs['y']:+.3f}{'*' if rs['active'] else ' '}\")
 " 2>/dev/null
 done
 ```
@@ -29,35 +28,70 @@ done
 ```json
 {
   "context": {
-    "config_stack": ["Steam Deck"],
+    "active_app": "org.mozilla.firefox",
+    "config_stack": ["Steam Deck", "org.mozilla.firefox"],
     "layout": 0,
     "paused": false,
+    "gaming_mode": false,
     "held_modifiers": ["BTN_TL"],
-    "active_buttons": ["BTN_TL", "BTN_SOUTH"]
+    "active_buttons": ["BTN_TL", "BTN_SOUTH"],
+    "active_outputs": [
+      { "key": "KEY_LEFTCTRL", "silent": false }
+    ],
+    "available_modifiers": ["BTN_MODE"],
+    "analog_state_export": false
   },
   "bindings": {
-    "BTN_SOUTH": { "action": ["KEY_ENTER"], "origin": "Steam Deck" },
-    "BTN_TL-BTN_GRIPR2": { "action": ["KEY_LEFTCTRL", "KEY_PAGEDOWN"], "origin": "Steam Deck" }
+    "BTN_SOUTH": {
+      "action": ["KEY_ENTER"],
+      "kind": "remap",
+      "label": null,
+      "origin": "Steam Deck",
+      "silent": false
+    },
+    "BTN_TL-BTN_GRIPR2": {
+      "action": ["KEY_LEFTCTRL", "KEY_PAGEDOWN"],
+      "kind": "remap",
+      "label": "Next Tab",
+      "origin": "Steam Deck",
+      "silent": false
+    },
+    "BTN_THUMBL": {
+      "action": ["deckery-hud-toggle"],
+      "kind": "command",
+      "label": "Toggle HUD",
+      "origin": "Steam Deck",
+      "no_pause": true
+    }
   },
   "modifier_active": {
-    "BTN_GRIPR2": { "action": ["KEY_LEFTCTRL", "KEY_PAGEDOWN"], "origin": "Steam Deck" }
+    "BTN_GRIPR2": {
+      "action": ["KEY_LEFTCTRL", "KEY_PAGEDOWN"],
+      "kind": "remap",
+      "label": "Next Tab",
+      "origin": "Steam Deck"
+    }
   },
-  "last_event": {
-    "input": "BTN_SOUTH",
-    "action": ["KEY_ENTER"],
-    "kind": "remap",
-    "value": 1
+  "gaming_mode_trigger": {
+    "key": "BTN_BASE",
+    "label": "Toggle Gaming Mode"
+  },
+  "last_action": {
+    "type": "keys",
+    "value": ["KEY_ENTER"],
+    "label": null,
+    "ts": 1234567890.123
   },
   "trackpads": {
     "lpad": {
-      "mode": "trackpad",
+      "mode": "mt-trackpad",
       "x": 0.170,
       "y": 0.039,
       "touching": true,
       "pressed": false
     },
     "rpad": {
-      "mode": "trackpad",
+      "mode": "mt-trackpad",
       "x": 0.0,
       "y": 0.0,
       "touching": false,
@@ -79,6 +113,10 @@ done
       "deadzone": 0.092,
       "active": false
     }
+  },
+  "imu": {
+    "x": 0.512,
+    "y": 0.489
   }
 }
 ```
@@ -91,11 +129,16 @@ done
 
 | Field | Type | Meaning |
 |---|---|---|
-| `config_stack` | `[string]` | Active config name(s). Currently always one entry. |
-| `layout` | `number` | Active layout index (0–3). For future multi-layout support. |
+| `active_app` | `string` | Active app class, e.g. `"org.mozilla.firefox"`. `"default"` when no app-specific config is loaded. |
+| `config_stack` | `[string]` | Active config name(s). One entry = base config only; two entries = base + app override. |
+| `layout` | `number` | Active layout index (0–3). For multi-layout configs. |
 | `paused` | `bool` | Makima is paused — no output is emitted. Set when HUD opens. |
+| `gaming_mode` | `bool` | Gaming Mode is active — all remaps suppressed, raw input passed through. |
 | `held_modifiers` | `[string]` | Modifier buttons currently physically held (e.g. `["BTN_TL"]`). Empty when no modifier is held. **Use this to switch between normal and modifier view.** |
 | `active_buttons` | `[string]` | All buttons currently physically held, including non-modifiers. **Use this to highlight buttons on the gamepad layout.** |
+| `active_outputs` | `[{key, silent}]` | System-level output keys currently being held, resolved from `active_buttons` + current modifiers. Each entry: `{ "key": "KEY_LEFTCTRL", "silent": false }`. |
+| `available_modifiers` | `[string]` | Modifier buttons that, if pressed next, would unlock additional combo bindings. Use to hint which modifiers are worth showing in the HUD. |
+| `analog_state_export` | `bool` | Whether analog data (sticks, trackpads) is currently being written into this file. |
 
 ---
 
@@ -107,25 +150,26 @@ Key format:
 - `"BTN_SOUTH"` — plain binding, no modifier
 - `"BTN_TL-BTN_GRIPR2"` — combo: BTN_TL held, BTN_GRIPR2 pressed
 
-Value:
-```json
-{ "action": ["KEY_ENTER"], "origin": "Steam Deck" }
-```
+Value fields:
 
-- `action`: list of output keys that get emitted
-- `origin`: config name this binding comes from
+| Field | Type | Meaning |
+|---|---|---|
+| `action` | `[string]` | Output keys (remap) or shell commands (command) |
+| `kind` | `string` | `"remap"` / `"command"` / `"movement"` |
+| `label` | `string\|null` | Human-readable binding name, or `null` if not configured |
+| `origin` | `string` | Config file this binding comes from |
+| `silent` | `bool` | If `true`, this binding is intentionally hidden from the HUD display |
+| `no_pause` | `bool` | (command only) Fires even when makima is paused |
 
-**This map is static while the config doesn't change.** Reload it when `context.config_stack` changes.
+**This map is static while the config doesn't change.** Reload it when `context.config_stack` or `context.layout` changes.
 
 ---
 
 ### `modifier_active`
 
-Subset of `bindings` — only the combos reachable with the currently held modifiers.
+Subset of `bindings` — only the combos reachable with the currently held modifiers, keyed by trigger button name only (modifier prefix stripped).
 
-Key format: just the trigger button name (modifier prefix stripped), e.g. `"BTN_GRIPR2"`.
-
-Value: same shape as `bindings`.
+Example: if `BTN_TL` is held, `modifier_active` contains all `BTN_TL-*` entries, keyed as `"BTN_GRIPR2"` etc.
 
 Empty `{}` when no modifier is held.
 
@@ -133,18 +177,31 @@ Empty `{}` when no modifier is held.
 
 ---
 
-### `last_event`
+### `gaming_mode_trigger`
 
-The most recently processed input event and what makima actually emitted.
+The configured Gaming Mode toggle button. `null` if the trigger is disabled (`trigger = { key = "disabled" }` in config).
 
 | Field | Type | Meaning |
 |---|---|---|
-| `input` | `string` | Button that was pressed/released, e.g. `"BTN_SOUTH"` |
-| `action` | `[string]` | Output keys that were emitted, e.g. `["KEY_ENTER"]` |
-| `kind` | `string` | `"remap"` / `"command"` / `"passthrough"` |
-| `value` | `number` | `1` = press, `0` = release |
+| `key` | `string` | Button name, e.g. `"BTN_BASE"` |
+| `label` | `string` | Always `"Toggle Gaming Mode"` |
 
-`null` until the first button is pressed after makima starts.
+Use this to label the QAM / three-dot button in the HUD without hardcoding the key name.
+
+See [Gaming Mode](../projects/makima-deckery/gaming-mode.md) for the full Gaming Mode reference.
+
+---
+
+### `last_action`
+
+The most recently processed discrete user action. `null` until the first button is pressed.
+
+| Field | Type | Meaning |
+|---|---|---|
+| `type` | `string` | `"keys"` / `"command"` / `"movement"` |
+| `value` | any | Output keys array, command string array, or movement description |
+| `label` | `string\|null` | Binding label if configured, otherwise `null` |
+| `ts` | `float` | Unix timestamp (seconds since epoch, millisecond precision) |
 
 ---
 
@@ -156,13 +213,11 @@ All position values are normalized to **−1.0 … +1.0**, rounded to 3 decimal 
 
 | Field | Type | Meaning |
 |---|---|---|
-| `mode` | `string` | `"trackpad"` or `"disabled"` — value of `LPAD`/`RPAD` config setting |
+| `mode` | `string` | `"mt-trackpad"`, `"disabled"` — value of `[trackpad.left/right] mode` |
 | `x` | `float` | Horizontal position −1.0…+1.0. `0.0` when not touching. |
-| `y` | `float` | Vertical position −1.0…+1.0. `0.0` when not touching. Positive = up (hardware convention). |
+| `y` | `float` | Vertical position −1.0…+1.0. `0.0` when not touching. Positive = up. |
 | `touching` | `bool` | `true` when finger is on the pad. |
 | `pressed` | `bool` | `true` when the pad is physically clicked. |
-
-Updated on every trackpad position change and on every click event.
 
 ---
 
@@ -170,26 +225,26 @@ Updated on every trackpad position change and on every click event.
 
 Always present. Both `lstick` and `rstick` are always included regardless of mode.
 
-All position values are normalized to **−1.0 … +1.0**, rounded to 3 decimal places.
-The deadzone is expressed in the same normalized space — draw it directly as a circle radius.
-
 | Field | Type | Meaning |
 |---|---|---|
 | `mode` | `string` | `"disabled"` / `"cursor"` / `"scroll"` / `"bind"` |
 | `x` | `float` | Horizontal position −1.0…+1.0. |
 | `y` | `float` | Vertical position −1.0…+1.0. |
-| `deadzone` | `float` | Configured deadzone threshold in normalized space (0.0…1.0). Use as circle radius in the UI. |
-| `active` | `bool` | `true` when either axis exceeds the deadzone. Ready-to-use — no threshold math needed. |
+| `deadzone` | `float` | Configured deadzone in normalized space (0.0…1.0). Use as circle radius. |
+| `active` | `bool` | `true` when either axis exceeds the deadzone. |
 
 ---
 
-## Analog value notes
+### `imu`
 
-- All analog values (trackpads, sticks) use normalized floats, never raw hardware integers.
-- Rounded to **3 decimal places** — values only change when the rounded result differs from the previous write. The frontend receives no sub-threshold noise.
-- **Sticks**: `x`/`y` always reflect raw hardware position, regardless of `mode`. Even a `"disabled"` stick reports its physical position (useful for showing drift).
-- **Trackpads**: `x`/`y` always reflect raw hardware position, regardless of `mode`. Position is reported even when mode is not `"trackpad"`.
-- **Triggers (L2/R2)**: no analog axis on Steam Deck — use `active_buttons` for `BTN_TL2`/`BTN_TR2`.
+Gyroscope/accelerometer axes, normalized to 0.0…1.0.
+
+| Field | Type | Meaning |
+|---|---|---|
+| `x` | `float` | ABS_HAT2X axis normalized |
+| `y` | `float` | ABS_HAT2Y axis normalized |
+
+Only populated when `analog_state_export` is active.
 
 ---
 
@@ -204,14 +259,29 @@ else:
     display = bindings            ← all bindings
 ```
 
+### Gaming Mode state
+
+```
+if context.gaming_mode:
+    show_badge("Gaming Mode")
+    // bindings are suppressed — raw input goes to game
+```
+
+### QAM / trigger button label
+
+```
+if gaming_mode_trigger != null:
+    label(gaming_mode_trigger.key, gaming_mode_trigger.label)
+```
+
 ### Button highlighting
 
 ```
 for each button in layout:
     if button in active_buttons:
         highlight(button, "held")
-    elif last_event.input == button and last_event.value == 1:
-        highlight(button, "just_pressed")   ← optional, fades out
+    elif last_action.value contains mapped_key(button) and recent:
+        highlight(button, "just_pressed")
     else:
         unhighlight(button)
 ```
@@ -222,13 +292,6 @@ for each button in layout:
 // Draw deadzone circle with radius = stick.deadzone
 // Place dot at (stick.x, stick.y)
 // Tint ring or dot when stick.active == true
-```
-
-### Modifier indicator
-
-```
-if held_modifiers contains "BTN_TL":
-    show_modifier_indicator("L1")
 ```
 
 ### Paused state
@@ -245,34 +308,15 @@ if context.paused:
 - On every button press and release
 - On modifier state change (`held_modifiers` changes)
 - On config switch (active window changes)
-- On pause/resume via IPC socket
+- On pause/resume or Gaming Mode change via IPC socket
 - On trackpad position change (when finger is on pad), rate-limited to ~60 Hz
-- On trackpad touch/release (bypasses rate limit — always immediate)
+- On trackpad touch/release — always immediate
 - On trackpad click (press/release)
 - On stick movement, rate-limited to ~60 Hz
 
-**Analog writes are skipped entirely if no rounded value has changed** — the frontend will not receive spurious identical updates.
+**Analog writes are skipped entirely if no rounded value has changed.**
 
 The file is **not** polled — only updated on events. Use inotify, not a timer.
-
----
-
-## IPC — Pause / Resume
-
-To pause makima output (e.g. when HUD opens):
-
-```bash
-echo "pause" | socat - UNIX-CONNECT:/tmp/makima-control.sock
-```
-
-To resume:
-
-```bash
-echo "resume" | socat - UNIX-CONNECT:/tmp/makima-control.sock
-```
-
-The socket may not exist if makima is not running — handle gracefully (socat fails silently).
-`context.paused` reflects the current state after each command.
 
 ---
 
@@ -286,13 +330,14 @@ The socket may not exist if makima is not running — handle gracefully (socat f
 | `BTN_WEST` | Y |
 | `BTN_TL` | L1 |
 | `BTN_TR` | R1 |
-| `BTN_TL2` | L2 (digital only — no analog axis on Steam Deck) |
-| `BTN_TR2` | R2 (digital only — no analog axis on Steam Deck) |
+| `BTN_TL2` | L2 (digital only) |
+| `BTN_TR2` | R2 (digital only) |
 | `BTN_THUMBL` | L3 (left stick click) |
 | `BTN_THUMBR` | R3 (right stick click) |
 | `BTN_SELECT` | Select / View |
 | `BTN_START` | Start / Menu |
 | `BTN_MODE` | Steam button |
+| `BTN_BASE` | QAM / three-dot button |
 | `BTN_GRIPL` | L5 (upper left back paddle) |
 | `BTN_GRIPL2` | L4 (lower left back paddle) |
 | `BTN_GRIPR` | R5 (upper right back paddle) |

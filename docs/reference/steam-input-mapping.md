@@ -6,6 +6,8 @@ Deckery disables ALL Steam Desktop Input by using Steam's own **Local Selection*
 
 The result is that Steam applies zero button mappings in desktop mode. Makima takes over full input handling instead.
 
+When a Steam game is launched, makima automatically detects it via the Steam process tree (`reaper → steam` ancestor chain) and switches to **Gaming Mode** — passing all input through raw so the game receives the controller directly. See [Gaming Mode](../projects/makima-deckery/gaming-mode.md) for details.
+
 ## Reference: Steam's default Desktop layout
 
 The tables below document what Steam's **default** Desktop controller layout (`desktop_neptune.vdf`) contains. None of these mappings are active when Deckery is configured — they are preserved here for reference only.

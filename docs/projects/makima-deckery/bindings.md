@@ -33,6 +33,7 @@ BTN_THUMBL = { run = ["deckery-hud-toggle"], no_pause = true, label = "Toggle HU
 | `run` | array | command | The command to execute (replaces the bare array) |
 | `label` | string | both | Human-readable name exported to the HUD and OSD |
 | `no_pause` | bool | command | Execute even when makima is paused (e.g. HUD open) |
+| `while_gaming` | bool | both | Not suppressed in Gaming Mode — active during normal use and also in Gaming Mode. Default: false. |
 
 ## Labels in the HUD
 
@@ -53,3 +54,14 @@ The HUD toggle binding itself must always use `no_pause = true`, otherwise press
 [commands]
 BTN_THUMBL = { run = ["deckery-hud-toggle"], no_pause = true, label = "Toggle HUD" }
 ```
+
+## `while_gaming`
+
+By default, all bindings are suppressed while Gaming Mode is active. Bindings tagged `while_gaming = true` are exempt — they continue to fire in Gaming Mode just as they do in normal desktop use. This is useful for bindings like the HUD toggle that need to work regardless of whether a game is running.
+
+```toml
+[commands]
+BTN_THUMBL = { run = ["deckery-hud-toggle"], no_pause = true, while_gaming = true, label = "Toggle HUD" }
+```
+
+See [Gaming Mode](gaming-mode.md) for more.

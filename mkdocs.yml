@@ -54,6 +54,7 @@ nav:
         - projects/makima-deckery/index.md
         - App Config: projects/makima-deckery/app-config.md
         - Bindings: projects/makima-deckery/bindings.md
+        - Gaming Mode: projects/makima-deckery/gaming-mode.md
         - Trackpad: projects/makima-deckery/trackpad.md
       - Deckery Tray: projects/deckery-tray.md
       - Steam Deck Dotfiles:
@@ -72,5 +73,7 @@ nav:
     - Installer Script: reference/installer-script.md
     - Updates: reference/updates.md
     - IPC: reference/ipc.md
+    - Gaming Mode: reference/gaming-mode.md
+    - Haptic Feedback: reference/haptic-feedback.md
     - State JSON: reference/state-json.md
     - Steam Input Mapping: reference/steam-input-mapping.md

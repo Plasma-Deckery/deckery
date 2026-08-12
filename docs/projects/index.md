@@ -21,7 +21,7 @@ The input remapper. Two goals:
 1. **Steam independence** — read raw evdev events directly, apply the config, emit keyboard/mouse events without Steam in the loop. No need to run Steam in the background to use the desktop efficiently.
 2. **Richer control** — context-aware button layouts, per-app configs, touch and scroll gestures, and automations that go beyond what Steam Input allows.
 
-On every input event, makima writes a fully-resolved state snapshot to `/tmp/makima-state.json` for the HUD. When `LPAD/RPAD = "trackpad"` is set, it additionally exposes the trackpads as standard uinput MT devices, making them available to libinput and gesture tools. Both trackpads are also combined into a third virtual multi-touch device for gesture recognition.
+On every input event, makima writes a fully-resolved state snapshot to `/tmp/makima-state.json` for the HUD. The trackpads are exposed as standard uinput MT devices for libinput and gesture tools, and combined into a third virtual multi-touch device for two-finger gesture recognition.
 
 ---
 

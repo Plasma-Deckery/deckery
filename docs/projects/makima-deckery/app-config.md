@@ -27,7 +27,6 @@ BTN_TL-BTN_DPAD_UP    = ["KEY_LEFTCTRL", "KEY_R"]     # L1+↑ → Reload
 
 [settings]
 CUSTOM_MODIFIERS = "BTN_TL-BTN_MODE"
-GRAB_DEVICE = "false"
 ```
 
 Only the bindings listed here are overridden. All other buttons continue to use the base config.
@@ -45,4 +44,3 @@ This replaces the previous approach of spawning a `kdotool` subprocess on every 
 | `no_pause = true` | Binding fires even when makima is paused (e.g. HUD is open) |
 | `no_off = true` | Binding fires even in Off mode (implies `no_pause`) |
 | `CUSTOM_MODIFIERS` | Defines which buttons act as modifier keys in this config |
-| `GRAB_DEVICE` | Whether makima grabs exclusive access to the input device |
