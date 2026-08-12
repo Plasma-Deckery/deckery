@@ -96,7 +96,7 @@ def _tray_state(
     """
     Return the tray icon priority key from combined system state.
     Result is one of: 'err', 'warn', 'update', 'gaming', 'ok'.
-    Priority (highest first): err > warn > update > gaming > ok.
+    Priority (highest first): err > gaming > warn > update > ok.
     No GTK dependency — call this in unit tests directly.
     """
     any_failed = any(s == "failed" for s in statuses.values())
@@ -104,12 +104,12 @@ def _tray_state(
 
     if any_failed:
         return "err"
+    if gaming_mode:
+        return "gaming"
     if any_down or paused or not steam_configured:
         return "warn"
     if has_update:
         return "update"
-    if gaming_mode:
-        return "gaming"
     return "ok"
 
 
