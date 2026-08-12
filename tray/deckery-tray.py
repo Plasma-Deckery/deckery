@@ -19,6 +19,7 @@ import socket
 import subprocess
 import sys
 import threading
+from typing import NamedTuple
 
 log = logging.getLogger(__name__)
 
@@ -34,12 +35,14 @@ _ICON_OK     = os.path.join(_ICONS, "tray-ok.svg")      # dark bg + white D-pad
 _ICON_WARN   = os.path.join(_ICONS, "tray-warn.svg")    # orange bg + white D-pad
 _ICON_ERR    = os.path.join(_ICONS, "tray-err.svg")     # red bg   + white D-pad
 _ICON_UPDATE = os.path.join(_ICONS, "tray-update.svg")  # dark bg + cyan badge
+_ICON_GAMING = os.path.join(_ICONS, "tray-gaming.svg")  # amber bg + white gamepad
 
 # Small dot SVGs for the menu status column (12 px, no D-pad shape)
 _DOT_OK       = os.path.join(_ICONS, "dot-ok.svg")
 _DOT_PAUSED   = os.path.join(_ICONS, "dot-paused.svg")
 _DOT_ERR      = os.path.join(_ICONS, "dot-err.svg")
 _DOT_INACTIVE = os.path.join(_ICONS, "dot-inactive.svg")
+_DOT_GAMING   = os.path.join(_ICONS, "dot-gaming.svg")
 
 _STATE_JSON         = "/tmp/makima-state.json"
 _MAKIMA_SOCK        = "/tmp/makima-control.sock"
@@ -56,6 +59,7 @@ POLL_MS = 2000  # polling interval for service status (ms)
 # Maps _tray_state() result key → (icon_path, tooltip label)
 _TRAY_ICONS: dict[str, tuple[str, str]] = {
     "ok":     (_ICON_OK,     "Deckery: running"),
+    "gaming": (_ICON_GAMING, "Deckery: gaming mode"),
     "warn":   (_ICON_WARN,   "Deckery: needs attention"),
     "err":    (_ICON_ERR,    "Deckery: error"),
     "update": (_ICON_UPDATE, "Deckery: update available"),
@@ -87,11 +91,12 @@ def _tray_state(
     paused: bool,
     steam_configured: bool,
     has_update: bool,
+    gaming_mode: bool = False,
 ) -> str:
     """
     Return the tray icon priority key from combined system state.
-    Result is one of: 'err', 'warn', 'update', 'ok'.
-    Priority (highest first): err > warn > update > ok.
+    Result is one of: 'err', 'warn', 'update', 'gaming', 'ok'.
+    Priority (highest first): err > warn > update > gaming > ok.
     No GTK dependency — call this in unit tests directly.
     """
     any_failed = any(s == "failed" for s in statuses.values())
@@ -103,6 +108,8 @@ def _tray_state(
         return "warn"
     if has_update:
         return "update"
+    if gaming_mode:
+        return "gaming"
     return "ok"
 
 
@@ -148,13 +155,23 @@ def _service_status(unit: str) -> str:
         return "unknown"
 
 
-def _makima_paused() -> bool:
+class MakimaState(NamedTuple):
+    paused:      bool
+    gaming_mode: bool
+
+def _makima_state() -> MakimaState:
     try:
         with open(_STATE_JSON) as f:
-            state = json.load(f)
-        return bool(state.get("context", {}).get("paused", False))
+            ctx = json.load(f).get("context", {})
+        return MakimaState(
+            paused      = bool(ctx.get("paused",      False)),
+            gaming_mode = bool(ctx.get("gaming_mode", False)),
+        )
+    except FileNotFoundError:
+        return MakimaState(paused=False, gaming_mode=False)
     except Exception:
-        return False
+        log.warning("Failed to read %s", _STATE_JSON, exc_info=True)
+        return MakimaState(paused=False, gaming_mode=False)
 
 
 def _service_ctrl(action: str, unit: str) -> None:
@@ -187,10 +204,11 @@ class DeckeryTray:
     def __init__(self):
         # ── Status dot pixbufs for menu (12 px circles, no D-pad shape) ──
         self._pb = {
-            "ok":   _load_pb(_DOT_OK,       12),
-            "warn": _load_pb(_DOT_PAUSED,   12),
-            "err":  _load_pb(_DOT_ERR,      12),
-            "grey": _load_pb(_DOT_INACTIVE, 12),
+            "ok":     _load_pb(_DOT_OK,       12),
+            "gaming": _load_pb(_DOT_GAMING,   16),
+            "warn":   _load_pb(_DOT_PAUSED,   12),
+            "err":    _load_pb(_DOT_ERR,      12),
+            "grey":   _load_pb(_DOT_INACTIVE, 12),
         }
 
         self._indicator = AyatanaAppIndicator3.Indicator.new(
@@ -205,6 +223,7 @@ class DeckeryTray:
         self._items            = {}
         self._statuses: dict   = {}   # last known service statuses from poll
         self._paused           = False
+        self._gaming_mode      = False
         self._poll_running     = False
         self._state_timeout_id = None
         self._updater           = Updater(on_state_change=self._on_update_state_changed)
@@ -257,25 +276,28 @@ class DeckeryTray:
         # ── Deckery (Makima) ──────────────────────────────────────────────
         m.append(self._status_item("makima"))
 
-        pause_item   = self._dynamic(_icon_item("Pause Deckery",   "media-playback-pause"))
-        resume_item  = self._dynamic(_icon_item("Resume Deckery",  "media-playback-start"))
-        restart_item = self._dynamic(_icon_item("Restart Deckery", "view-refresh"))
-        start_item   = self._dynamic(_icon_item("Start Deckery",   "system-run"))
-        stop_item    = self._dynamic(_icon_item("Stop Deckery",    "media-playback-stop"))
+        pause_item        = self._dynamic(_icon_item("Pause Deckery",        "media-playback-pause"))
+        resume_item       = self._dynamic(_icon_item("Resume Deckery",       "media-playback-start"))
+        restart_item      = self._dynamic(_icon_item("Restart Deckery",      "view-refresh"))
+        start_item        = self._dynamic(_icon_item("Start Deckery",        "system-run"))
+        stop_item         = self._dynamic(_icon_item("Stop Deckery",         "media-playback-stop"))
+        quit_gaming_item  = self._dynamic(_icon_item("Quit Gaming Mode",     "media-playback-stop"))
 
-        pause_item  .connect("activate", self._on_pause)
-        resume_item .connect("activate", self._on_resume)
-        restart_item.connect("activate", lambda _: _service_ctrl("restart", "makima.service"))
-        start_item  .connect("activate", lambda _: _service_ctrl("start",   "makima.service"))
-        stop_item   .connect("activate", lambda _: _service_ctrl("stop",    "makima.service"))
+        pause_item      .connect("activate", self._on_pause)
+        resume_item     .connect("activate", self._on_resume)
+        restart_item    .connect("activate", lambda _: _service_ctrl("restart", "makima.service"))
+        start_item      .connect("activate", lambda _: _service_ctrl("start",   "makima.service"))
+        stop_item       .connect("activate", lambda _: _service_ctrl("stop",    "makima.service"))
+        quit_gaming_item.connect("activate", self._on_quit_gaming)
 
-        self._items["pause"]   = pause_item
-        self._items["resume"]  = resume_item
-        self._items["restart"] = restart_item
-        self._items["start"]   = start_item
-        self._items["stop"]    = stop_item
+        self._items["pause"]       = pause_item
+        self._items["resume"]      = resume_item
+        self._items["restart"]     = restart_item
+        self._items["start"]       = start_item
+        self._items["stop"]        = stop_item
+        self._items["quit_gaming"] = quit_gaming_item
 
-        for item in (pause_item, resume_item, restart_item, start_item, stop_item):
+        for item in (pause_item, resume_item, restart_item, start_item, stop_item, quit_gaming_item):
             m.append(item)
         m.append(Gtk.SeparatorMenuItem())
 
@@ -367,19 +389,23 @@ class DeckeryTray:
 
     def _poll_thread(self):
         statuses         = {name: _service_status(unit) for name, unit in SERVICES.items()}
-        paused           = _makima_paused()
+        makima           = _makima_state()
         steam_configured = steam_bridge.is_configured()
-        GLib.idle_add(self._apply_poll, statuses, paused, steam_configured)
+        GLib.idle_add(self._apply_poll, statuses, makima, steam_configured)
 
-    def _apply_poll(self, statuses: dict, paused: bool, steam_configured: bool):
+    def _apply_poll(self, statuses: dict, makima: MakimaState, steam_configured: bool):
         self._poll_running      = False
-        self._paused            = paused
+        self._paused            = makima.paused
+        self._gaming_mode       = makima.gaming_mode
         self._statuses          = statuses
         self._steam_configured  = steam_configured
 
         # ── Update service status icons + labels ──────────────────────────
         for name, status in statuses.items():
-            if name == "makima" and status == "active" and paused:
+            if name == "makima" and status == "active" and makima.gaming_mode:
+                pb_key  = "gaming"
+                display = "Gaming Mode"
+            elif name == "makima" and status == "active" and makima.paused:
                 pb_key  = "warn"
                 display = "paused"
             elif status == "active":
@@ -391,9 +417,10 @@ class DeckeryTray:
             else:
                 pb_key  = "err"
                 display = status
+            img_widget = self._items[f"status_{name}_img"]
             pb = self._pb.get(pb_key)
             if pb:
-                self._items[f"status_{name}_img"].set_from_pixbuf(pb)
+                img_widget.set_from_pixbuf(pb)
             self._items[f"status_{name}_lbl"].set_text(f"{DISPLAY.get(name, name)}: {display}")
 
         # ── Update steam config item ──────────────────────────────────────
@@ -401,11 +428,13 @@ class DeckeryTray:
 
         # ── Makima control visibility ─────────────────────────────────────
         makima_active = statuses.get("makima", "unknown") == "active"
-        self._items["pause"]  .set_visible(makima_active and not paused)
-        self._items["resume"] .set_visible(makima_active and paused)
-        self._items["restart"].set_visible(makima_active and paused)
-        self._items["start"]  .set_visible(not makima_active)
-        self._items["stop"]   .set_visible(makima_active and not paused)
+        gaming        = makima.gaming_mode
+        self._items["pause"]      .set_visible(makima_active and not makima.paused and not gaming)
+        self._items["resume"]     .set_visible(makima_active and makima.paused)
+        self._items["restart"]    .set_visible(makima_active and makima.paused)
+        self._items["start"]      .set_visible(not makima_active)
+        self._items["stop"]       .set_visible(makima_active and not makima.paused and not gaming)
+        self._items["quit_gaming"].set_visible(makima_active and gaming)
 
         # ── Tray icon ─────────────────────────────────────────────────────
         self._refresh_tray_icon()
@@ -421,6 +450,7 @@ class DeckeryTray:
             self._paused,
             self._steam_configured,
             self._updater.state == UpdateState.UPDATE_AVAILABLE,
+            gaming_mode=self._gaming_mode,
         )
         icon, tooltip = _TRAY_ICONS[key]
         self._indicator.set_icon_full(icon, tooltip)
@@ -433,6 +463,10 @@ class DeckeryTray:
 
     def _on_resume(self, _item):
         _makima_ipc("resume")
+        GLib.timeout_add(300, self._poll)
+
+    def _on_quit_gaming(self, _item):
+        _makima_ipc("gaming_mode disable")
         GLib.timeout_add(300, self._poll)
 
     def _on_osd_toggle(self, _item):
