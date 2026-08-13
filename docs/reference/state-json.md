@@ -184,7 +184,7 @@ The configured Gaming Mode toggle button. `null` if the trigger is disabled (`tr
 | Field | Type | Meaning |
 |---|---|---|
 | `key` | `string` | Button name, e.g. `"BTN_BASE"` |
-| `label` | `string` | Always `"Toggle Gaming Mode"` |
+| `label` | `string` | Always `"Gaming Mode"` |
 
 Use this to label the QAM / three-dot button in the HUD without hardcoding the key name.
 
@@ -194,14 +194,17 @@ See [Gaming Mode](../projects/makima-deckery/gaming-mode.md) for the full Gaming
 
 ### `last_action`
 
-The most recently processed discrete user action. `null` until the first button is pressed.
+The most recently processed discrete user action. `null` until the first action occurs.
 
 | Field | Type | Meaning |
 |---|---|---|
 | `type` | `string` | `"keys"` / `"command"` / `"movement"` |
 | `value` | any | Output keys array, command string array, or movement description |
-| `label` | `string\|null` | Binding label if configured, otherwise `null` |
+| `label` | `string\|null` | Human-readable label. Set from binding `label =` config, or generated (e.g. `"Gaming Mode On"` / `"Gaming Mode Off"` for Gaming Mode changes). |
 | `ts` | `float` | Unix timestamp (seconds since epoch, millisecond precision) |
+| `silent` | `bool` | When `true`, the HUD suppresses the toast for this action. |
+
+Gaming Mode changes (double-click trigger, IPC commands, Steam auto-detection) always set `last_action` with `type: "command"` — even in pause/preview mode, so the HUD can show the action in its preview toast without actually toggling the mode.
 
 ---
 

@@ -12,7 +12,7 @@ trigger = { key = "BTN_BASE", ms = 400 }
 | `key` | `"BTN_BASE"` | Button to double-press. Any evdev key name. Set to `"disabled"` to turn off the trigger entirely. |
 | `ms` | `400` | Maximum time between the two presses in milliseconds. |
 
-The trigger is blocked while makima is paused (e.g. while the HUD is open).
+In pause/preview mode the double-click is still detected and writes `last_action` so the HUD preview can show the action — but Gaming Mode is not actually toggled and haptics do not fire.
 
 ## Auto-detection
 
