@@ -286,12 +286,22 @@ else
 fi
 echo ""
 
-echo "╔══════════════════════════════════════╗"
-echo "║          Setup complete!             ║"
-echo "╚══════════════════════════════════════╝"
-echo ""
-echo "  Try it: press L3 (left stick click) — the HUD overlay should appear."
-echo ""
-echo "  Your config: $DECKERY_DIR/configs/Steam Deck.toml"
-echo "  Docs:        https://plasma-deckery.github.io/deckery/"
-echo ""
+if [ "${DECKERY_ROLLBACK:-0}" = "1" ]; then
+    echo "╔══════════════════════════════════════╗"
+    echo "║           Update failed              ║"
+    echo "╚══════════════════════════════════════╝"
+    echo ""
+    echo "  The update could not be installed due to an error."
+    echo "  Deckery has been rolled back to ${DECKERY_RELEASE_TAG:-the previous version}."
+    echo ""
+else
+    echo "╔══════════════════════════════════════╗"
+    echo "║          Setup complete!             ║"
+    echo "╚══════════════════════════════════════╝"
+    echo ""
+    echo "  Try it: press L3 (left stick click) — the HUD overlay should appear."
+    echo ""
+    echo "  Your config: $DECKERY_DIR/configs/Steam Deck.toml"
+    echo "  Docs:        https://plasma-deckery.github.io/deckery/"
+    echo ""
+fi
