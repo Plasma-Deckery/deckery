@@ -18,7 +18,9 @@ PARENT_DIR="$(dirname "$DECKERY_DIR")"
 # git checkout the previous tag and re-run install.sh to restore the old state.
 # DECKERY_ROLLBACK=1 prevents infinite recursion if the rollback itself fails.
 
-_PREV_TAG="$(git -C "$DECKERY_DIR" describe --tags --exact-match HEAD 2>/dev/null || true)"
+# DECKERY_PREV_TAG is set by get.sh before checkout — use it when available,
+# fall back to git describe for direct invocations of install.sh.
+_PREV_TAG="${DECKERY_PREV_TAG:-$(git -C "$DECKERY_DIR" describe --tags --exact-match HEAD 2>/dev/null || true)}"
 
 _rollback() {
     local _exit=$?

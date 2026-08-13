@@ -13,6 +13,9 @@ if [ ! -d "$DECKERY_DIR" ]; then
     mkdir -p "$(dirname "$DECKERY_DIR")"
     git clone https://github.com/Plasma-Deckery/deckery.git "$DECKERY_DIR"
 else
+    # Capture current version BEFORE checkout so install.sh can roll back to it.
+    export DECKERY_PREV_TAG="$(git -C "$DECKERY_DIR" describe --tags --exact-match HEAD 2>/dev/null || true)"
+
     echo "deckery: fetching..."
     # --force so re-tagged releases overwrite stale local refs
     git -C "$DECKERY_DIR" fetch origin --tags --force
