@@ -126,7 +126,7 @@ Position is Y-corrected to libinput convention (hardware reports up as negative;
 
 ## Lizard Mode
 
-Full Steam independence requires suppressing the `hid-steam` kernel driver's built-in mouse/scroll fallback ("Lizard Mode"), which otherwise emits mouse/scroll events directly from the trackpads, bypassing makima entirely. Controlled via `SUPPRESS_LIZARD_MODE` — see [Configuration](../configuration.md) for the user-facing setting. Implementation-wise it shares the same raw hidraw file descriptor that `pad_hidraw.rs` uses for trackpad data: a heartbeat sends suppression feature reports every 4 s, and if makima crashes or exits, the fd closes and Lizard Mode re-activates automatically within ~8 s.
+Full Steam independence requires suppressing the `hid-steam` kernel driver's built-in mouse/scroll fallback ("Lizard Mode"), which otherwise emits mouse/scroll events directly from the trackpads, bypassing makima entirely. Controlled via `SUPPRESS_LIZARD_MODE` — see [Lizard Mode](lizard-mode.md) for the user-facing setting. Implementation-wise it shares the same raw hidraw file descriptor that `pad_hidraw.rs` uses for trackpad data: a heartbeat sends suppression feature reports every 4 s, and if makima crashes or exits, the fd closes and Lizard Mode re-activates automatically within ~8 s.
 
 ## KDE/libinput defaults
 
