@@ -12,34 +12,6 @@ set -e
 DECKERY_DIR="$(dirname "$(readlink -f "$0")")"
 PARENT_DIR="$(dirname "$DECKERY_DIR")"
 
-# ── Rollback on failure ───────────────────────────────────────────────────────
-#
-# Save the currently installed tag before touching anything. If any step fails,
-# git checkout the previous tag and re-run install.sh to restore the old state.
-# DECKERY_ROLLBACK=1 prevents infinite recursion if the rollback itself fails.
-
-# DECKERY_PREV_TAG is set by get.sh before checkout — use it when available,
-# fall back to git describe for direct invocations of install.sh.
-_PREV_TAG="${DECKERY_PREV_TAG:-$(git -C "$DECKERY_DIR" describe --tags --exact-match HEAD 2>/dev/null || true)}"
-
-_rollback() {
-    local _exit=$?
-    if [ "${DECKERY_ROLLBACK:-0}" = "1" ]; then
-        echo ""
-        echo "✗ Rollback also failed (exit $_exit) — manual intervention required."
-        exit "$_exit"
-    fi
-    if [ -z "$_PREV_TAG" ] || [ "$_PREV_TAG" = "${RELEASE_TAG:-}" ]; then
-        exit "$_exit"
-    fi
-    echo ""
-    echo "✗ Install failed (exit $_exit) — rolling back to $_PREV_TAG..."
-    echo ""
-    git -C "$DECKERY_DIR" checkout "$_PREV_TAG"
-    DECKERY_RELEASE_TAG="$_PREV_TAG" DECKERY_ROLLBACK=1 bash "$DECKERY_DIR/install.sh"
-}
-
-trap _rollback ERR
 
 MAKIMA_DIR="$PARENT_DIR/makima-deckery"
 HUD_DIR="$PARENT_DIR/deckery-hud"

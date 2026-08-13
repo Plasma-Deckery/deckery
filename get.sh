@@ -33,4 +33,18 @@ else
 fi
 
 export DECKERY_RELEASE_TAG="$LATEST_TAG"
+
+set +e
 bash "$DECKERY_DIR/install.sh"
+_EXIT=$?
+set -e
+
+if [ $_EXIT -ne 0 ] && [ -n "${DECKERY_PREV_TAG:-}" ] && [ "${DECKERY_ROLLBACK:-0}" != "1" ]; then
+    echo ""
+    echo "✗ Install failed — rolling back to $DECKERY_PREV_TAG..."
+    echo ""
+    git -C "$DECKERY_DIR" checkout --force "$DECKERY_PREV_TAG"
+    DECKERY_RELEASE_TAG="$DECKERY_PREV_TAG" DECKERY_ROLLBACK=1 bash "$DECKERY_DIR/install.sh"
+elif [ $_EXIT -ne 0 ]; then
+    exit $_EXIT
+fi
