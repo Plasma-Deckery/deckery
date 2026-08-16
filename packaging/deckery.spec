@@ -9,7 +9,7 @@ Summary:        Steam Deck input stack for KDE Plasma — meta-package
 # all component repos simultaneously.
 %global next_minor 0.4
 
-License:        MIT
+License:        GPL-3.0-only
 URL:            https://github.com/Plasma-Deckery/deckery
 
 BuildArch:      noarch
