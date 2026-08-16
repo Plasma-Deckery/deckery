@@ -12,6 +12,8 @@ Summary:        Steam Deck input stack for KDE Plasma — meta-package
 License:        GPL-3.0-only
 URL:            https://github.com/Plasma-Deckery/deckery
 
+Source0:        %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
+
 BuildArch:      noarch
 
 # Exact lower bound: components must be at least this release.
@@ -40,7 +42,7 @@ After install, enable and start the services:
   systemctl --user enable --now deckery-tray.service
 
 %prep
-# Nothing to prepare — meta-package only.
+%autosetup -n %{name}-%{version}
 
 %build
 # Nothing to build.
