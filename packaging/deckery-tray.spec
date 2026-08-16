@@ -53,9 +53,6 @@ install -pm644 tray/*.py %{buildroot}%{_prefix}/lib/deckery-tray/
 # Onboarding wizard (setup/ subpackage)
 install -dm755 %{buildroot}%{_prefix}/lib/deckery-tray/setup
 install -pm644 tray/setup/*.py %{buildroot}%{_prefix}/lib/deckery-tray/setup/
-# VDF template used by the Steam Input onboarding step
-install -pm644 tray/setup/desktop_neptune.vdf \
-    %{buildroot}%{_prefix}/lib/deckery-tray/setup/
 
 # Tray icons (SVG — used by the tray applet at runtime)
 install -dm755 %{buildroot}%{_prefix}/lib/deckery-tray/icons
@@ -73,6 +70,9 @@ install -pm644 "configs/Steam Deck.toml" \
 for f in configs/Steam\ Deck::*.toml; do
     [ -f "$f" ] && install -pm644 "$f" %{buildroot}%{_datadir}/deckery/configs/
 done
+# VDF template for Steam Input onboarding (lives in configs/, read via MAKIMA_CONFIGS path)
+install -pm644 configs/desktop_neptune.vdf \
+    %{buildroot}%{_datadir}/deckery/configs/
 
 # Desktop launcher
 install -Dm644 deckery.desktop \
