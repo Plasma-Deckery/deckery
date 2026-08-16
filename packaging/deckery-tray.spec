@@ -16,7 +16,7 @@ BuildRequires:  systemd-rpm-macros
 # Runtime dependencies — all available as Fedora RPMs.
 Requires:       python3
 # GObject Introspection bindings (gi.repository.Gtk, GdkPixbuf, GLib, Gio, Notify)
-Requires:       python3-gobject3
+Requires:       python3-gobject
 # GTK3 runtime + typelib (gi.repository.Gtk 3.0, GdkPixbuf 2.0)
 Requires:       gtk3
 # Ayatana AppIndicator for the system tray icon (gi.repository.AyatanaAppIndicator3)
