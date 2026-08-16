@@ -6,8 +6,9 @@ spec    ?= packaging/deckery-tray.spec
 .PHONY: srpm builddeps clean
 
 builddeps:
-	command -v dnf >/dev/null 2>&1 && ! command -v rpmbuild >/dev/null 2>&1 \
-	    && dnf -y install git rpm-build || true
+	if command -v dnf >/dev/null 2>&1; then \
+	    dnf -y install git rpm-build; \
+	fi
 
 srpm: builddeps
 	mkdir -p $(outdir)
