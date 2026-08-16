@@ -48,11 +48,32 @@ After install, enable and start the services:
 # Nothing to build.
 
 %install
-# Nothing to install — all files ship in the component packages.
+# App icon (for .desktop and KDE launcher)
+install -Dm644 tray/icons/tray-ok.svg \
+    %{buildroot}%{_datadir}/icons/hicolor/scalable/apps/deckery.svg
+
+# Desktop launcher
+install -Dm644 deckery.desktop \
+    %{buildroot}%{_datadir}/applications/deckery.desktop
+
+# Default configs — installed to system path; makima-deckery falls back here
+# if ~/.config/makima/ is empty or absent.
+install -dm755 %{buildroot}%{_datadir}/deckery/configs
+install -pm644 "configs/Steam Deck.toml" \
+    %{buildroot}%{_datadir}/deckery/configs/
+for f in configs/Steam\ Deck::*.toml; do
+    [ -f "$f" ] && install -pm644 "$f" %{buildroot}%{_datadir}/deckery/configs/
+done
+# VDF template for Steam Input onboarding (read via MAKIMA_CONFIGS path)
+install -pm644 configs/desktop_neptune.vdf \
+    %{buildroot}%{_datadir}/deckery/configs/
 
 %files
 %license LICENSE
 %doc README.md
+%{_datadir}/icons/hicolor/scalable/apps/deckery.svg
+%{_datadir}/applications/deckery.desktop
+%{_datadir}/deckery/
 
 %changelog
 * Sat Aug 16 2026 Philipp Schimmelfennig <philipp@plasma-deckery.dev> - 0.3.0-1

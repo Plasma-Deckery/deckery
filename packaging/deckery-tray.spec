@@ -58,26 +58,6 @@ install -pm644 tray/setup/*.py %{buildroot}%{_prefix}/lib/deckery-tray/setup/
 install -dm755 %{buildroot}%{_prefix}/lib/deckery-tray/icons
 install -pm644 tray/icons/*.svg %{buildroot}%{_prefix}/lib/deckery-tray/icons/
 
-# App icon (for .desktop and KDE launcher)
-install -Dm644 tray/icons/tray-ok.svg \
-    %{buildroot}%{_datadir}/icons/hicolor/scalable/apps/deckery.svg
-
-# Default configs — installed to system path; makima-deckery falls back here
-# if ~/.config/makima/ is empty or absent.
-install -dm755 %{buildroot}%{_datadir}/deckery/configs
-install -pm644 "configs/Steam Deck.toml" \
-    %{buildroot}%{_datadir}/deckery/configs/
-for f in configs/Steam\ Deck::*.toml; do
-    [ -f "$f" ] && install -pm644 "$f" %{buildroot}%{_datadir}/deckery/configs/
-done
-# VDF template for Steam Input onboarding (lives in configs/, read via MAKIMA_CONFIGS path)
-install -pm644 configs/desktop_neptune.vdf \
-    %{buildroot}%{_datadir}/deckery/configs/
-
-# Desktop launcher
-install -Dm644 deckery.desktop \
-    %{buildroot}%{_datadir}/applications/deckery.desktop
-
 # Systemd user service
 install -Dm644 packaging/deckery-tray.service \
     %{buildroot}%{_userunitdir}/deckery-tray.service
@@ -92,9 +72,6 @@ install -Dm644 packaging/deckery-tray.service \
 %license LICENSE
 %doc README.md
 %{_prefix}/lib/deckery-tray/
-%{_datadir}/icons/hicolor/scalable/apps/deckery.svg
-%{_datadir}/deckery/
-%{_datadir}/applications/deckery.desktop
 %{_userunitdir}/deckery-tray.service
 
 %changelog
