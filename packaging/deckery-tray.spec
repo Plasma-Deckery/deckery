@@ -47,16 +47,16 @@ Includes an onboarding wizard for first-run setup and a self-update checker.
 
 %install
 # Tray Python source
-install -dm755 %{buildroot}%{_prefix}/lib/deckery-tray
-install -pm644 tray/*.py %{buildroot}%{_prefix}/lib/deckery-tray/
+install -dm755 %{buildroot}%{_prefix}/lib/deckery/tray
+install -pm644 tray/*.py %{buildroot}%{_prefix}/lib/deckery/tray/
 
 # Onboarding wizard (setup/ subpackage)
-install -dm755 %{buildroot}%{_prefix}/lib/deckery-tray/setup
-install -pm644 tray/setup/*.py %{buildroot}%{_prefix}/lib/deckery-tray/setup/
+install -dm755 %{buildroot}%{_prefix}/lib/deckery/tray/setup
+install -pm644 tray/setup/*.py %{buildroot}%{_prefix}/lib/deckery/tray/setup/
 
 # Tray icons (SVG — used by the tray applet at runtime)
-install -dm755 %{buildroot}%{_prefix}/lib/deckery-tray/icons
-install -pm644 tray/icons/*.svg %{buildroot}%{_prefix}/lib/deckery-tray/icons/
+install -dm755 %{buildroot}%{_prefix}/lib/deckery/tray/icons
+install -pm644 tray/icons/*.svg %{buildroot}%{_prefix}/lib/deckery/tray/icons/
 
 # Systemd user service
 install -Dm644 packaging/deckery-tray.service \
@@ -71,7 +71,7 @@ install -Dm644 packaging/deckery-tray.service \
 %files
 %license LICENSE
 %doc README.md
-%{_prefix}/lib/deckery-tray/
+%{_prefix}/lib/deckery/tray/
 %{_userunitdir}/deckery-tray.service
 
 %changelog

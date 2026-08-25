@@ -28,9 +28,11 @@ from updater import Updater, UpdateState, local_version
 import steam_bridge
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
+#
+# Icons live in icons/ next to this script — works for both the dev install
+# (tray/deckery-tray.py) and the RPM install (/usr/lib/deckery-tray/deckery-tray.py).
 
-_DIR        = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-_ICONS      = os.path.join(_DIR, "tray", "icons")
+_ICONS      = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons")
 _ICON_OK     = os.path.join(_ICONS, "tray-ok.svg")      # dark bg + white D-pad
 _ICON_WARN   = os.path.join(_ICONS, "tray-warn.svg")    # orange bg + white D-pad
 _ICON_ERR    = os.path.join(_ICONS, "tray-err.svg")     # red bg   + white D-pad

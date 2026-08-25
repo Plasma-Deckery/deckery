@@ -6,12 +6,12 @@ BindsTo=plasma-core.target
 [Service]
 Type=simple
 ExecCondition=/bin/bash -c 'systemctl --user is-active plasma-plasmashell.service'
-ExecStart=/usr/bin/python3 /usr/lib/deckery-tray/deckery-tray.py
+ExecStart=/usr/bin/python3 /usr/lib/deckery/tray/deckery-tray.py
 Restart=on-failure
 RestartSec=3
 Environment=XDG_SESSION_TYPE=wayland
 Environment=XDG_CURRENT_DESKTOP=KDE
-Environment=PYTHONPATH=/usr/lib/deckery-tray
+Environment=PYTHONPATH=/usr/lib/deckery/tray
 
 [Install]
 WantedBy=plasma-core.target
