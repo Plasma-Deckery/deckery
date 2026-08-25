@@ -33,13 +33,16 @@ import steam_bridge
 # (tray/deckery-tray.py) and the RPM install (/usr/lib/deckery-tray/deckery-tray.py).
 
 _ICONS      = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons")
-_ICON_OK     = os.path.join(_ICONS, "tray-ok.svg")      # dark bg + white D-pad
-_ICON_WARN   = os.path.join(_ICONS, "tray-warn.svg")    # orange bg + white D-pad
-_ICON_ERR    = os.path.join(_ICONS, "tray-err.svg")     # red bg   + white D-pad
-_ICON_UPDATE = os.path.join(_ICONS, "tray-update.svg")  # dark bg + cyan badge
-_ICON_GAMING = os.path.join(_ICONS, "tray-gaming.svg")  # amber bg + white gamepad
 
-# Small dot SVGs for the menu status column (12 px, no D-pad shape)
+# Tray icon names (no path, no extension) — used with new_with_path() / set_icon_full().
+# AppIndicator looks these up relative to _ICONS via the icon theme path mechanism.
+_ICON_OK     = "tray-ok"      # dark bg + white D-pad
+_ICON_WARN   = "tray-warn"    # orange bg + white D-pad
+_ICON_ERR    = "tray-err"     # red bg   + white D-pad
+_ICON_UPDATE = "tray-update"  # dark bg + cyan badge
+_ICON_GAMING = "tray-gaming"  # amber bg + white gamepad
+
+# Small dot SVGs for the menu status column — loaded as GdkPixbuf (full path needed)
 _DOT_OK       = os.path.join(_ICONS, "dot-ok.svg")
 _DOT_PAUSED   = os.path.join(_ICONS, "dot-paused.svg")
 _DOT_ERR      = os.path.join(_ICONS, "dot-err.svg")
@@ -58,7 +61,8 @@ _HUD_PATH = "/de/plasma_deckery/hud"
 
 POLL_MS = 2000  # polling interval for service status (ms)
 
-# Maps _tray_state() result key → (icon_path, tooltip label)
+# Maps _tray_state() result key → (icon_name, tooltip label)
+# Icon names are looked up in _ICONS via the AppIndicator icon theme path.
 _TRAY_ICONS: dict[str, tuple[str, str]] = {
     "ok":     (_ICON_OK,     "Deckery: running"),
     "gaming": (_ICON_GAMING, "Deckery: gaming mode"),
@@ -213,10 +217,11 @@ class DeckeryTray:
             "grey":   _load_pb(_DOT_INACTIVE, 12),
         }
 
-        self._indicator = AyatanaAppIndicator3.Indicator.new(
+        self._indicator = AyatanaAppIndicator3.Indicator.new_with_path(
             "deckery-tray",
             _ICON_OK,
             AyatanaAppIndicator3.IndicatorCategory.APPLICATION_STATUS,
+            _ICONS,
         )
         self._indicator.set_status(AyatanaAppIndicator3.IndicatorStatus.ACTIVE)
         self._indicator.set_title("Deckery")
