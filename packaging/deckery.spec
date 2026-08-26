@@ -56,15 +56,15 @@ install -Dm644 tray/icons/tray-ok.svg \
 install -Dm644 deckery.desktop \
     %{buildroot}%{_datadir}/applications/deckery.desktop
 
-# Default configs — installed to system path; makima-deckery falls back here
-# if ~/.config/makima/ is empty or absent.
+# Default configs — installed to system path; deckery-tray seeds
+# ~/.config/deckery/ from here on first run.
 install -dm755 %{buildroot}%{_datadir}/deckery/configs
 install -pm644 "configs/Steam Deck.toml" \
     %{buildroot}%{_datadir}/deckery/configs/
 for f in configs/Steam\ Deck::*.toml; do
     [ -f "$f" ] && install -pm644 "$f" %{buildroot}%{_datadir}/deckery/configs/
 done
-# VDF template for Steam Input onboarding (read via MAKIMA_CONFIGS path)
+# VDF template for Steam Input onboarding (read via DECKERY_CONFIGS path)
 install -pm644 configs/desktop_neptune.vdf \
     %{buildroot}%{_datadir}/deckery/configs/
 

@@ -38,7 +38,7 @@ The menu provides:
 - **Live service status** — colour-coded dot and state label for each service
 - **Pause / Resume / Restart / Stop** controls for makima — context-sensitive, only the relevant action is shown
 - **Restart HUD** and **Onscreen Display toggle**
-- **Open config folder** — direct access to `~/.config/makima/`
+- **Open config folder** — direct access to `~/.config/deckery/`
 - **One-click updates** — checks GitHub on startup and hourly, installs by running `get.sh` in a terminal window
 
 The tray also owns the systemd service hierarchy: `makima.service` and `deckery-hud.service` are both declared `PartOf=deckery-tray.service`, so starting the tray starts everything and stopping it stops everything cleanly.

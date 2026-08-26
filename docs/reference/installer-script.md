@@ -16,9 +16,9 @@
 
 6. **Install the app icon and `.desktop` launcher** — copies the icon to the hicolor icon theme and installs a `.desktop` file so Deckery appears in the application launcher.
 
-7. **Remove the legacy Steam Input file** — deletes `~/.config/makima/desktop_neptune.vdf` if it is present from a previous install.
+7. **Remove the legacy Steam Input file** — deletes `~/.config/deckery/desktop_neptune.vdf` if it is present from a previous install.
 
-8. **Update the default makima config** — symlinks `configs/Steam Deck.toml` to `~/.config/makima/Steam Deck.toml`. App-specific configs (e.g. `Steam Deck::org.kde.konsole.toml`) are copied from the repo on every run; the previous version is backed up as `.old` (e.g. `Steam Deck::org.kde.konsole.toml.old`) so your customisations are preserved and can be merged back manually.
+8. **Update the default makima config** — symlinks `configs/Steam Deck.toml` to `~/.config/deckery/Steam Deck.toml`. App-specific configs (e.g. `Steam Deck::org.kde.konsole.toml`) are copied from the repo on every run; the previous version is backed up as `.old` (e.g. `Steam Deck::org.kde.konsole.toml.old`) so your customisations are preserved and can be merged back manually.
 
 After step 8, the script runs two interactive prompts (skipped in non-interactive mode):
 

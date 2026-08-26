@@ -79,11 +79,11 @@ bash ~/.local/share/deckery/deckery/uninstall.sh --yes
 - Installed binaries and symlinks in `~/.local/bin/`
 - The `deckery` distrobox container
 - The app icon and `.desktop` launcher
-- The `Steam Deck.toml` config symlink in `~/.config/makima/`
+- The `Steam Deck.toml` config symlink in `~/.config/deckery/`
 
 **What is kept:**
 
 - The cloned repos in `~/.local/share/deckery/` (your configs live there)
-- App-specific config files in `~/.config/makima/`
+- App-specific config files in `~/.config/deckery/`
 
 To also remove the repos and all custom configs, delete `~/.local/share/deckery/` manually after uninstalling.

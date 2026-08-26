@@ -1,6 +1,6 @@
 # App Config
 
-Config files live in `~/.config/makima/`. The base config `Steam Deck.toml` defines the default button layout. App-specific configs override only what differs — everything else is inherited from the base config at runtime.
+Config files live in `~/.config/deckery/`. The base config `Steam Deck.toml` defines the default button layout. App-specific configs override only what differs — everything else is inherited from the base config at runtime.
 
 See [Configuration](../../configuration.md) for the general config setup and file locations.
 

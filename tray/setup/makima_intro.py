@@ -1,6 +1,6 @@
 import subprocess
 from gi.repository import Gtk
-from .common import lbl, sp, action_btn, MAKIMA_CONFIGS
+from .common import lbl, sp, action_btn, DECKERY_CONFIGS
 
 
 _DOCS_URL = "https://plasma-deckery.github.io/deckery/"
@@ -93,7 +93,7 @@ def build():
 
     cfg_btn = action_btn("Open Config Folder")
     cfg_btn.connect("clicked", lambda _b: subprocess.Popen(
-        ["xdg-open", MAKIMA_CONFIGS]
+        ["xdg-open", DECKERY_CONFIGS]
     ))
 
     ref_btn = action_btn("Deckery Reference")

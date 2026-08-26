@@ -12,7 +12,7 @@ System tray applet that monitors and controls the full Deckery stack from a sing
 - **Pause / Resume** — sends `pause` / `resume` over the makima IPC socket without restarting the service
 - **Restart / Start / Stop** — controls makima and deckery-hud via systemd user units
 - **Updates** — "Search for Updates" entry pulls all repos and re-runs the installer
-- **Config folder** — opens `~/.config/makima/` in the file manager for quick access
+- **Config folder** — opens `~/.config/deckery/` in the file manager for quick access
 - **Steam Input** — shows whether Steam's Desktop Input is disabled (green) or still active (yellow); clicking the yellow indicator opens a terminal that writes the configset entry and optionally restarts Steam
 - **Tooltip** — always shows "Deckery" on hover for quick identification
 

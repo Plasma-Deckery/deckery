@@ -1,7 +1,7 @@
 import os
 import glob
 from gi.repository import Gtk
-from .common import lbl, sp, action_btn, MAKIMA_CONFIGS
+from .common import lbl, sp, action_btn, DECKERY_CONFIGS
 from .ipc import hud_toggle
 
 
@@ -15,7 +15,7 @@ def _app_name(filename: str) -> str:
 
 
 def _scan_apps():
-    pattern = os.path.join(MAKIMA_CONFIGS, "*::*.toml")
+    pattern = os.path.join(DECKERY_CONFIGS, "*::*.toml")
     return sorted(
         (p, _app_name(p)) for p in glob.glob(pattern)
     )
@@ -35,7 +35,7 @@ def build() -> Gtk.Widget:
 
     if not apps:
         box.pack_start(lbl(
-            "No per-app configs found in ~/.config/makima/",
+            "No per-app configs found in ~/.config/deckery/",
             "toggle-sublabel",
         ), False, False, 0)
     else:

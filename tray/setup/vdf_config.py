@@ -15,7 +15,7 @@ import subprocess
 
 import vdf as _vdf
 
-from .common import MAKIMA_CONFIGS
+from .common import DECKERY_CONFIGS
 
 
 # ---------------------------------------------------------------------------
@@ -24,7 +24,7 @@ from .common import MAKIMA_CONFIGS
 
 def find_vdf() -> str | None:
     """Return path to the desktop VDF (desktop_neptune.vdf or similar)."""
-    candidates = glob.glob(os.path.join(MAKIMA_CONFIGS, "desktop_*.vdf"))
+    candidates = glob.glob(os.path.join(DECKERY_CONFIGS, "desktop_*.vdf"))
     return candidates[0] if candidates else None
 
 

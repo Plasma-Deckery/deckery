@@ -1,6 +1,6 @@
 # Configuration
 
-Deckery's behaviour is controlled entirely through TOML config files that live in `~/.config/makima/`. These files tell makima which buttons do what, and can vary per application.
+Deckery's behaviour is controlled entirely through TOML config files that live in `~/.config/deckery/`. These files tell makima which buttons do what, and can vary per application.
 
 ## Config files
 
@@ -11,7 +11,7 @@ The main config file for the Steam Deck. It defines the default button layout th
 This file is symlinked from the deckery repo into place:
 
 ```
-~/.config/makima/Steam Deck.toml
+~/.config/deckery/Steam Deck.toml
     → ~/.local/share/deckery/deckery/configs/Steam Deck.toml
 ```
 
@@ -25,11 +25,11 @@ Because it's a symlink into a git repo, any edits you make here are version-cont
 When a window belonging to a specific application is focused, makima loads the matching app config on top of the base config. These files follow the naming pattern:
 
 ```
-~/.config/makima/Steam Deck::Firefox.toml
-~/.config/makima/Steam Deck::Dolphin.toml
+~/.config/deckery/Steam Deck::Firefox.toml
+~/.config/deckery/Steam Deck::Dolphin.toml
 ```
 
-App-specific configs are **not** symlinked into the repo — they live directly in `~/.config/makima/` and are yours to create and edit freely. The installer updates bundled app configs on every run: before writing the new version, it backs up your existing file as `.old` (e.g. `Steam Deck::org.kde.konsole.toml.old`). Your customisations are preserved in `.old` and can be merged back manually after an update.
+App-specific configs are **not** symlinked into the repo — they live directly in `~/.config/deckery/` and are yours to create and edit freely. The installer updates bundled app configs on every run: before writing the new version, it backs up your existing file as `.old` (e.g. `Steam Deck::org.kde.konsole.toml.old`). Your customisations are preserved in `.old` and can be merged back manually after an update.
 
 ## Config format
 
@@ -59,8 +59,8 @@ Refer to the [makima-deckery](https://github.com/Plasma-Deckery/makima-deckery) 
 
 | File | Location |
 |---|---|
-| Base config | `~/.config/makima/Steam Deck.toml` |
-| App-specific configs | `~/.config/makima/Steam Deck::*.toml` |
+| Base config | `~/.config/deckery/Steam Deck.toml` |
+| App-specific configs | `~/.config/deckery/Steam Deck::*.toml` |
 | Versioned source | `~/.local/share/deckery/deckery/configs/` |
 
 To open the config folder directly, use the **Open config folder** entry in the Deckery tray menu.

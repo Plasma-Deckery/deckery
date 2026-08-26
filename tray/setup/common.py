@@ -14,7 +14,7 @@ DIR         = os.path.dirname(_TRAY_DIR)                   # deckery/ root
 ICONS       = os.path.join(_TRAY_DIR, "icons")
 HUD_ASSETS  = os.path.join(os.path.dirname(DIR), "deckery-hud", "assets")
 SENTINEL      = os.path.expanduser("~/.config/deckery/.onboarding-done")
-MAKIMA_CONFIGS = os.path.expanduser("~/.config/makima")
+DECKERY_CONFIGS = os.path.expanduser("~/.config/deckery")
 
 # -- Colors -------------------------------------------------------------------
 

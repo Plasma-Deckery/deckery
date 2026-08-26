@@ -16,7 +16,7 @@ PARENT_DIR="$(dirname "$DECKERY_DIR")"
 MAKIMA_DIR="$PARENT_DIR/makima-deckery"
 HUD_DIR="$PARENT_DIR/deckery-hud"
 BIN_DIR="$HOME/.local/bin"
-CFG_DIR="$HOME/.config/makima"
+CFG_DIR="$HOME/.config/deckery"
 SYSTEMD_DIR="$HOME/.config/systemd/user"
 
 echo ""
@@ -119,6 +119,14 @@ echo ""
 # Done before any service is started so makima always boots with a full config.
 
 echo "── Config ───────────────────────────────────────────────────────────────"
+
+# Migrate from the old ~/.config/makima/ path if needed.
+_OLD_CFG="$HOME/.config/makima"
+if [ -d "$_OLD_CFG" ] && [ ! -d "$CFG_DIR" ]; then
+    mv "$_OLD_CFG" "$CFG_DIR"
+    echo "Migrated: ~/.config/makima → ~/.config/deckery"
+fi
+
 mkdir -p "$CFG_DIR"
 
 BASE_SRC="$DECKERY_DIR/configs/Steam Deck.toml"
@@ -187,15 +195,15 @@ echo ""
 
 # ── 7. Legacy Steam Input config cleanup ─────────────────────────────────────
 #
-# Previous versions copied desktop_neptune.vdf to ~/.config/makima/ as a
+# Previous versions copied desktop_neptune.vdf to the config dir as a
 # canonical reference for the tray watcher. This file is no longer needed.
 
 echo "── Steam Input config ───────────────────────────────────────────────────"
 
-_LEGACY_CFG="$HOME/.config/makima/desktop_neptune.vdf"
-if [ -f "$_LEGACY_CFG" ]; then
-    rm "$_LEGACY_CFG"
-    echo "Removed legacy file: ~/.config/makima/desktop_neptune.vdf"
+_LEGACY_VDF="$CFG_DIR/desktop_neptune.vdf"
+if [ -f "$_LEGACY_VDF" ]; then
+    rm "$_LEGACY_VDF"
+    echo "Removed legacy file: desktop_neptune.vdf"
 else
     echo "OK: no legacy Steam config file found"
 fi

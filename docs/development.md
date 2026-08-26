@@ -34,4 +34,4 @@ systemctl --user restart deckery-hud.service
 
 ## Config
 
-`~/.config/makima/` is never touched by a redeploy or service restart. Config changes take effect when makima reads the file — either on startup or via the IPC socket (`resume` command).
+`~/.config/deckery/` is never touched by a redeploy or service restart. Config changes take effect when makima reads the file — either on startup or via the IPC socket (`resume` command).

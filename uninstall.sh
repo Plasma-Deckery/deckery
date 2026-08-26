@@ -10,7 +10,7 @@
 #
 # What this does NOT remove:
 #   - The cloned repos in ~/.local/share/deckery/ (your configs live there)
-#   - App-specific config files in ~/.config/makima/
+#   - App-specific config files in ~/.config/deckery/
 #   - Steam Input configset entry (413080 block removed from configset_controller_neptune.vdf)
 #
 # Pass --yes to skip the confirmation prompt.
@@ -19,7 +19,8 @@ set -e
 
 BIN_DIR="$HOME/.local/bin"
 SYSTEMD_DIR="$HOME/.config/systemd/user"
-CFG_DIR="$HOME/.config/makima"
+CFG_DIR="$HOME/.config/deckery"
+CFG_DIR_LEGACY="$HOME/.config/makima"
 ICON_DIR="$HOME/.local/share/icons/hicolor/scalable/apps"
 APPS_DIR="$HOME/.local/share/applications"
 
@@ -90,13 +91,19 @@ gtk-update-icon-cache -f -t "$HOME/.local/share/icons/hicolor" 2>/dev/null || tr
 echo ""
 
 # ── 7. Remove config symlink ─────────────────────────────────────────────────
+#
+# Check both the current path (~/.config/deckery) and the legacy path
+# (~/.config/makima) so uninstall works on installs that were never migrated.
 
 echo "── Removing config symlink ──────────────────────────────────────────────"
-if [ -L "$CFG_DIR/Steam Deck.toml" ]; then
-    rm "$CFG_DIR/Steam Deck.toml" && echo "Removed: Steam Deck.toml symlink"
-else
-    echo "Skipped: Steam Deck.toml (not a symlink — keeping user file)"
-fi
+_removed_symlink=0
+for _dir in "$CFG_DIR" "$CFG_DIR_LEGACY"; do
+    if [ -L "$_dir/Steam Deck.toml" ]; then
+        rm "$_dir/Steam Deck.toml" && echo "Removed: $_dir/Steam Deck.toml symlink"
+        _removed_symlink=1
+    fi
+done
+[ "$_removed_symlink" -eq 0 ] && echo "Skipped: Steam Deck.toml (not a symlink — keeping user file)"
 echo ""
 
 # ── Done ──────────────────────────────────────────────────────────────────────
@@ -107,5 +114,5 @@ echo "╚═══════════════════════�
 echo ""
 echo "  Repos and custom configs kept in:"
 echo "  ~/.local/share/deckery/"
-echo "  ~/.config/makima/"
+echo "  ~/.config/deckery/"
 echo ""

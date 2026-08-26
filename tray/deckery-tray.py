@@ -21,7 +21,7 @@ import sys
 import threading
 from typing import NamedTuple
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("deckery-tray")
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from updater import Updater, UpdateState, local_version
@@ -51,7 +51,8 @@ _DOT_GAMING   = os.path.join(_ICONS, "dot-gaming.svg")
 
 _STATE_JSON         = "/tmp/makima-state.json"
 _MAKIMA_SOCK        = "/tmp/makima-control.sock"
-_CONFIG_DIR         = os.path.expanduser("~/.config/makima")
+_CONFIG_DIR         = os.path.expanduser("~/.config/deckery")
+_SYSTEM_CONFIGS     = "/usr/share/deckery/configs"
 _GITHUB_DISCUSSIONS = "https://github.com/Plasma-Deckery/deckery/discussions"
 _KOFI_URL           = "https://ko-fi.com/phischdev"
 
@@ -208,7 +209,25 @@ def _hud_dbus(method: str) -> None:
 # ── Tray App ──────────────────────────────────────────────────────────────────
 
 class DeckeryTray:
+    def _seed_config_dir(self):
+        if os.path.isdir(_CONFIG_DIR):
+            return
+        if not os.path.isdir(_SYSTEM_CONFIGS):
+            log.warning("config dir %s not found and no system default at %s", _CONFIG_DIR, _SYSTEM_CONFIGS)
+            return
+        log.info("config dir %s not found — seeding from %s", _CONFIG_DIR, _SYSTEM_CONFIGS)
+        try:
+            import shutil
+            os.makedirs(_CONFIG_DIR, exist_ok=True)
+            for name in os.listdir(_SYSTEM_CONFIGS):
+                shutil.copy2(os.path.join(_SYSTEM_CONFIGS, name), os.path.join(_CONFIG_DIR, name))
+            log.info("config dir seeded successfully")
+        except Exception as e:
+            log.error("failed to seed config dir: %s", e)
+
     def __init__(self):
+        self._seed_config_dir()
+
         # ── Status dot pixbufs for menu (12 px circles, no D-pad shape) ──
         self._pb = {
             "ok":     _load_pb(_DOT_OK,       12),
@@ -579,9 +598,9 @@ class DeckeryTray:
 # ── Entry point ───────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    import logging
     logging.basicConfig(
-        level=logging.DEBUG,
+        level=logging.INFO,
+        stream=sys.stderr,
         format="%(name)s: %(levelname)s: %(message)s",
     )
     DeckeryTray()
