@@ -125,7 +125,7 @@ echo ""
 # All sub-repos share this single container — package list lives here.
 
 echo "── Container ────────────────────────────────────────────────────────────"
-distrobox create --name deckery --image archlinux:latest || true
+distrobox create --name deckery --image archlinux:latest --yes || true
 echo ""
 
 # ── 3. Link default config ────────────────────────────────────────────────────
