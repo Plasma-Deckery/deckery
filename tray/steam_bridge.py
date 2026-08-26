@@ -16,6 +16,7 @@ be identical for every account that has Deckery installed.
 
 from __future__ import annotations
 
+import enum
 import glob
 import logging
 import os
@@ -36,12 +37,24 @@ _CONFIGSET_GLOB = os.path.expanduser(
 _EMPTY_VDF = os.path.expanduser(
     "~/.local/share/Steam/controller_base/empty.vdf"
 )
+_USERDATA_DIR = os.path.expanduser("~/.local/share/Steam/userdata/")
 
 # ── Internal helpers ──────────────────────────────────────────────────────────
 
+def _steam_user_logged_in() -> bool:
+    """Return True if at least one non-anonymous Steam account exists in userdata."""
+    try:
+        return any(
+            e.is_dir() and e.name not in ("0", "anonymous")
+            for e in os.scandir(_USERDATA_DIR)
+        )
+    except FileNotFoundError:
+        return False
+
+
 def _find_configset_paths() -> list[str]:
     paths = glob.glob(_CONFIGSET_GLOB)
-    if not paths:
+    if not paths and _steam_user_logged_in():
         log.warning("steam_bridge: no configset_controller_neptune.vdf found")
     return paths
 
@@ -85,12 +98,21 @@ def _set_template(text: str) -> str:
 
 # ── Public API ────────────────────────────────────────────────────────────────
 
-def is_configured() -> bool:
-    """Return True if ALL configset files have the 413080 entry pointing to empty.vdf."""
+class SteamState(enum.Enum):
+    OK             = "ok"             # configset exists and correct
+    USER_MISSING   = "user_missing"   # Steam never logged in — no action needed
+    CONFIG_MISSING = "config_missing" # logged in but configset file not found
+    ACTIVE         = "active"         # configset exists but Steam Input still active
+
+
+def steam_state() -> SteamState:
+    """Return the current Steam Input configuration state."""
     paths = _find_configset_paths()
     if not paths:
-        return False
-    return all(_get_template(_read(p)) == TEMPLATE_EMPTY for p in paths)
+        return SteamState.USER_MISSING if not _steam_user_logged_in() else SteamState.CONFIG_MISSING
+    if all(_get_template(_read(p)) == TEMPLATE_EMPTY for p in paths):
+        return SteamState.OK
+    return SteamState.ACTIVE
 
 
 def apply() -> bool:

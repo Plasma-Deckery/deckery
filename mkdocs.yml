@@ -77,3 +77,5 @@ nav:
     - Haptic Feedback: reference/haptic-feedback.md
     - State JSON: reference/state-json.md
     - Steam Input Mapping: reference/steam-input-mapping.md
+  - Similar Tools:
+    - Input Remapper: reference/comparison-input-remapper.md

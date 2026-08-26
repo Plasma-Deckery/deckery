@@ -95,7 +95,7 @@ DISPLAY = {
 def _tray_state(
     statuses: dict[str, str],
     paused: bool,
-    steam_configured: bool,
+    steam_state: steam_bridge.SteamState,
     has_update: bool,
     gaming_mode: bool = False,
 ) -> str:
@@ -103,6 +103,7 @@ def _tray_state(
     Return the tray icon priority key from combined system state.
     Result is one of: 'err', 'warn', 'update', 'gaming', 'ok'.
     Priority (highest first): err > gaming > warn > update > ok.
+    Only SteamState.ACTIVE propagates to the tray icon as warn.
     No GTK dependency — call this in unit tests directly.
     """
     any_failed = any(s == "failed" for s in statuses.values())
@@ -112,7 +113,7 @@ def _tray_state(
         return "err"
     if gaming_mode:
         return "gaming"
-    if any_down or paused or not steam_configured:
+    if any_down or paused or steam_state == steam_bridge.SteamState.ACTIVE:
         return "warn"
     if has_update:
         return "update"
@@ -234,7 +235,7 @@ class DeckeryTray:
         self._poll_running     = False
         self._state_timeout_id = None
         self._updater           = Updater(on_state_change=self._on_update_state_changed)
-        self._steam_configured  = steam_bridge.is_configured()
+        self._steam_state       = steam_bridge.steam_state()
         self._steam_applying    = False
 
         self._build_menu()
@@ -395,17 +396,17 @@ class DeckeryTray:
         return GLib.SOURCE_CONTINUE
 
     def _poll_thread(self):
-        statuses         = {name: _service_status(unit) for name, unit in SERVICES.items()}
-        makima           = _makima_state()
-        steam_configured = steam_bridge.is_configured()
-        GLib.idle_add(self._apply_poll, statuses, makima, steam_configured)
+        statuses    = {name: _service_status(unit) for name, unit in SERVICES.items()}
+        makima      = _makima_state()
+        s_state     = steam_bridge.steam_state()
+        GLib.idle_add(self._apply_poll, statuses, makima, s_state)
 
-    def _apply_poll(self, statuses: dict, makima: MakimaState, steam_configured: bool):
+    def _apply_poll(self, statuses: dict, makima: MakimaState, s_state: steam_bridge.SteamState):
         self._poll_running      = False
         self._paused            = makima.paused
         self._gaming_mode       = makima.gaming_mode
         self._statuses          = statuses
-        self._steam_configured  = steam_configured
+        self._steam_state       = s_state
 
         # ── Update service status icons + labels ──────────────────────────
         for name, status in statuses.items():
@@ -455,7 +456,7 @@ class DeckeryTray:
         key = _tray_state(
             self._statuses,
             self._paused,
-            self._steam_configured,
+            self._steam_state,
             self._updater.state == UpdateState.UPDATE_AVAILABLE,
             gaming_mode=self._gaming_mode,
         )
@@ -497,7 +498,7 @@ class DeckeryTray:
         return GLib.SOURCE_REMOVE
 
     def _on_steam_status_clicked(self, _item):
-        if not self._steam_configured and not self._steam_applying:
+        if self._steam_state == steam_bridge.SteamState.ACTIVE and not self._steam_applying:
             self._steam_applying = True
             threading.Thread(target=self._apply_steam_bridge, daemon=True).start()
 
@@ -545,22 +546,29 @@ class DeckeryTray:
         ])
 
     def _on_steam_applied(self):
-        self._steam_configured = True
-        self._steam_applying   = False
+        self._steam_state    = steam_bridge.SteamState.OK
+        self._steam_applying = False
         self._refresh_steam_item()
         self._refresh_tray_icon()
         return GLib.SOURCE_REMOVE
 
     def _refresh_steam_item(self) -> None:
         """Update the steam config status item in the menu."""
-        configured = self._steam_configured
-        pb  = self._pb.get("ok" if configured else "warn")
+        SS = steam_bridge.SteamState
+        state = self._steam_state
+        _LABELS = {
+            SS.OK:             "Steam Input: disabled",
+            SS.USER_MISSING:   "Steam Input: not logged in",
+            SS.CONFIG_MISSING: "Steam Input: config missing",
+            SS.ACTIVE:         "Steam Input: still active — click to disable",
+        }
+        pb  = self._pb.get("ok" if state in (SS.OK, SS.USER_MISSING) else "warn")
         img = self._items.get("status_steam-config_img")
         lbl = self._items.get("status_steam-config_lbl")
         if img and pb:
             img.set_from_pixbuf(pb)
         if lbl:
-            lbl.set_text("Steam Input: disabled" if configured else "Steam Input: still active — click to disable")
+            lbl.set_text(_LABELS.get(state, "Steam Input: unknown"))
 
     def _on_quit(self, _item):
         _service_ctrl("stop", "makima.service")
