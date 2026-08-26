@@ -19,6 +19,19 @@ BIN_DIR="$HOME/.local/bin"
 CFG_DIR="$HOME/.config/deckery"
 SYSTEMD_DIR="$HOME/.config/systemd/user"
 
+if ! command -v distrobox &>/dev/null; then
+    echo ""
+    echo "✗ distrobox is not installed."
+    echo ""
+    echo "  Deckery requires distrobox to build and run its services."
+    echo "  Please install it using your distribution's package manager,"
+    echo "  then re-run the installer."
+    echo ""
+    echo "  → https://distrobox.it/#installation"
+    echo ""
+    exit 1
+fi
+
 echo ""
 echo "╔══════════════════════════════════════╗"
 echo "║         Deckery Installer            ║"

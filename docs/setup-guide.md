@@ -5,7 +5,7 @@
 **Requirements:**
 
 - Steam Deck running [Bazzite](https://bazzite.gg) (or another Atomic Desktop with KDE Plasma + Wayland)
-- `distrobox` (pre-installed on Bazzite)
+- [`distrobox`](https://distrobox.it/#installation) (pre-installed on Bazzite; install manually on other distributions)
 - Internet connection
 
 Paste this into a terminal — it clones the repo and runs the installer:
