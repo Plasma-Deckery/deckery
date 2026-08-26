@@ -166,20 +166,27 @@ def _service_status(unit: str) -> str:
 class MakimaState(NamedTuple):
     paused:      bool
     gaming_mode: bool
+    lifecycle:   str   # "starting" | "ready" | "" (file absent / legacy)
+    no_device:   bool  # True when errors["no_device"] is present
 
 def _makima_state() -> MakimaState:
     try:
         with open(_STATE_JSON) as f:
-            ctx = json.load(f).get("context", {})
+            data = json.load(f)
+        ctx       = data.get("context", {})
+        lifecycle = data.get("lifecycle", "")
+        no_device = "no_device" in data.get("errors", {})
         return MakimaState(
             paused      = bool(ctx.get("paused",      False)),
             gaming_mode = bool(ctx.get("gaming_mode", False)),
+            lifecycle   = lifecycle,
+            no_device   = no_device,
         )
     except FileNotFoundError:
-        return MakimaState(paused=False, gaming_mode=False)
+        return MakimaState(paused=False, gaming_mode=False, lifecycle="", no_device=False)
     except Exception:
         log.warning("Failed to read %s", _STATE_JSON, exc_info=True)
-        return MakimaState(paused=False, gaming_mode=False)
+        return MakimaState(paused=False, gaming_mode=False, lifecycle="", no_device=False)
 
 
 def _service_ctrl(action: str, unit: str) -> None:
@@ -435,6 +442,12 @@ class DeckeryTray:
             elif name == "makima" and status == "active" and makima.paused:
                 pb_key  = "warn"
                 display = "paused"
+            elif name == "makima" and status == "active" and makima.lifecycle == "starting":
+                pb_key  = "grey"
+                display = "starting…"
+            elif name == "makima" and status == "active" and makima.no_device:
+                pb_key  = "err"
+                display = "no device"
             elif status == "active":
                 pb_key  = "ok"
                 display = "active"
