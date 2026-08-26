@@ -1,6 +1,6 @@
 Name:           deckery-tray
 Version:        0.3.0
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Deckery system tray — service monitor and control for KDE Plasma
 
 License:        GPL-3.0-only
