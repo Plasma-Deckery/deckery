@@ -472,7 +472,7 @@ class DeckeryTray:
         # ── Makima control visibility ─────────────────────────────────────
         makima_active = statuses.get("makima", "unknown") == "active"
         gaming        = makima.gaming_mode
-        self._items["pause"]      .set_visible(makima_active and not makima.paused and not gaming)
+        self._items["pause"]      .set_visible(makima_active and not makima.paused and not gaming and not makima.no_device)
         self._items["resume"]     .set_visible(makima_active and makima.paused)
         self._items["restart"]    .set_visible(makima_active and makima.paused)
         self._items["start"]      .set_visible(not makima_active)
