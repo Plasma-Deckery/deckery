@@ -489,7 +489,7 @@ class DeckeryTray:
             self._statuses,
             self._paused,
             self._steam_state,
-            self._updater.state == UpdateState.UPDATE_AVAILABLE,
+            self._updater.state == UpdateState.UPDATE_AVAILABLE,  # AHEAD_OF_RELEASE excluded — icon unchanged
             gaming_mode=self._gaming_mode,
         )
         icon, tooltip = _TRAY_ICONS[key]

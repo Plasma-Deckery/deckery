@@ -5,9 +5,16 @@ State machine:
 
     IDLE             → "Check for Updates"            clickable → starts check
     CHECKING         → "Checking for updates…"        grayed out
-    UP_TO_DATE       → "Up to date (vX.Y.Z)"          grayed out
+    UP_TO_DATE       → "Up to date"                   grayed out
     UPDATE_AVAILABLE → "Update available: vX.Y.Z"     clickable → runs get.sh
+    AHEAD_OF_RELEASE → "Rollback to vX.Y.Z"           clickable → runs get.sh
     ERROR            → "Update check failed — retry"  clickable → retries
+
+AHEAD_OF_RELEASE fires when HEAD is not at an exact tag but its commit
+timestamp is newer than the latest release tag — i.e. the user is running
+a development snapshot that is ahead of the published release. In this case
+get.sh is still the correct action (it installs the latest release, which
+is the rollback target). The tray icon is NOT changed in this state.
 """
 
 import json
@@ -37,6 +44,7 @@ class UpdateState(Enum):
     CHECKING         = auto()
     UP_TO_DATE       = auto()
     UPDATE_AVAILABLE = auto()
+    AHEAD_OF_RELEASE = auto()
     ERROR            = auto()
 
 
@@ -45,6 +53,7 @@ _SENSITIVE = {
     UpdateState.CHECKING:         False,
     UpdateState.UP_TO_DATE:       True,
     UpdateState.UPDATE_AVAILABLE: True,
+    UpdateState.AHEAD_OF_RELEASE: True,
     UpdateState.ERROR:            True,
 }
 
@@ -75,6 +84,35 @@ def _parse_version(v: str) -> tuple:
         return tuple(int(x) for x in v.split("."))
     except (ValueError, AttributeError):
         return (0,)
+
+
+def _local_commit_timestamp() -> int | None:
+    """Returns the Unix commit timestamp of HEAD, or None on error."""
+    try:
+        r = subprocess.run(
+            ["git", "-C", _DECKERY_DIR, "log", "-1", "--format=%ct", "HEAD"],
+            capture_output=True, text=True, timeout=5,
+        )
+        if r.returncode == 0 and r.stdout.strip():
+            return int(r.stdout.strip())
+    except Exception:
+        pass
+    return None
+
+
+def _tag_commit_timestamp(tag: str) -> int | None:
+    """Returns the Unix commit timestamp of the given tag (e.g. '0.3.0'), or None on error.
+    Tries the local repo first (fast); falls back to None if the tag is not fetched."""
+    try:
+        r = subprocess.run(
+            ["git", "-C", _DECKERY_DIR, "log", "-1", "--format=%ct", f"v{tag}"],
+            capture_output=True, text=True, timeout=5,
+        )
+        if r.returncode == 0 and r.stdout.strip():
+            return int(r.stdout.strip())
+    except Exception:
+        pass
+    return None
 
 
 def _fetch_latest_tag() -> str:
@@ -149,6 +187,8 @@ class Updater:
                 return "Up to date"
             case UpdateState.UPDATE_AVAILABLE:
                 return f"Update available: v{self._latest} — Install"
+            case UpdateState.AHEAD_OF_RELEASE:
+                return f"Rollback to v{self._latest}"
             case UpdateState.ERROR:
                 return "Update check failed — retry"
 
@@ -160,7 +200,7 @@ class Updater:
         """Call when the menu item is activated."""
         if self._state in (UpdateState.IDLE, UpdateState.UP_TO_DATE, UpdateState.ERROR):
             self._start_check()
-        elif self._state == UpdateState.UPDATE_AVAILABLE:
+        elif self._state in (UpdateState.UPDATE_AVAILABLE, UpdateState.AHEAD_OF_RELEASE):
             self._run_update()
 
     # ── Internal ──────────────────────────────────────────────────────────────
@@ -184,6 +224,16 @@ class Updater:
             log.info("latest: %s  local: %s", latest, local)
             if local != "unknown" and _parse_version(local) >= _parse_version(latest):
                 self._set_state(UpdateState.UP_TO_DATE)
+            elif local == "unknown":
+                # HEAD is not on an exact tag. Check whether it is *ahead* of the
+                # latest release (dev snapshot) or *behind* it (partial checkout).
+                local_ts = _local_commit_timestamp()
+                tag_ts   = _tag_commit_timestamp(latest)
+                if local_ts and tag_ts and local_ts > tag_ts:
+                    log.info("ahead of release: local ts %s > tag ts %s", local_ts, tag_ts)
+                    self._set_state(UpdateState.AHEAD_OF_RELEASE)
+                else:
+                    self._set_state(UpdateState.UPDATE_AVAILABLE)
             else:
                 self._set_state(UpdateState.UPDATE_AVAILABLE)
         except Exception as e:
