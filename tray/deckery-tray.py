@@ -99,6 +99,7 @@ def _tray_state(
     steam_state: steam_bridge.SteamState,
     has_update: bool,
     gaming_mode: bool = False,
+    no_device: bool = False,
 ) -> str:
     """
     Return the tray icon priority key from combined system state.
@@ -110,7 +111,7 @@ def _tray_state(
     any_failed = any(s == "failed" for s in statuses.values())
     any_down   = any(s != "active" for s in statuses.values())
 
-    if any_failed:
+    if any_failed or no_device:
         return "err"
     if gaming_mode:
         return "gaming"
@@ -258,6 +259,7 @@ class DeckeryTray:
         self._statuses: dict   = {}   # last known service statuses from poll
         self._paused           = False
         self._gaming_mode      = False
+        self._makima           = MakimaState(paused=False, gaming_mode=False, lifecycle="", no_device=False)
         self._poll_running     = False
         self._state_timeout_id = None
         self._updater           = Updater(on_state_change=self._on_update_state_changed)
@@ -429,6 +431,7 @@ class DeckeryTray:
 
     def _apply_poll(self, statuses: dict, makima: MakimaState, s_state: steam_bridge.SteamState):
         self._poll_running      = False
+        self._makima            = makima
         self._paused            = makima.paused
         self._gaming_mode       = makima.gaming_mode
         self._statuses          = statuses
@@ -491,6 +494,7 @@ class DeckeryTray:
             self._steam_state,
             self._updater.state == UpdateState.UPDATE_AVAILABLE,  # AHEAD_OF_RELEASE excluded — icon unchanged
             gaming_mode=self._gaming_mode,
+            no_device=self._makima.no_device,
         )
         icon, tooltip = _TRAY_ICONS[key]
         self._indicator.set_icon_full(icon, tooltip)
