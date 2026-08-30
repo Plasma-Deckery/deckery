@@ -26,6 +26,7 @@ log = logging.getLogger("deckery-tray")
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from updater import Updater, UpdateState, local_version
+import config_menu
 import steam_bridge
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
@@ -101,6 +102,8 @@ def _tray_state(
     has_update: bool,
     gaming_mode: bool = False,
     no_device: bool = False,
+    base_config_error: bool = False,
+    reinitializing: bool = False,
 ) -> str:
     """
     Return the tray icon priority key from combined system state.
@@ -112,11 +115,11 @@ def _tray_state(
     any_failed = any(s == "failed" for s in statuses.values())
     any_down   = any(s != "active" for s in statuses.values())
 
-    if any_failed or no_device:
+    if any_failed or no_device or base_config_error:
         return "err"
     if gaming_mode:
         return "gaming"
-    if any_down or paused or steam_state == steam_bridge.SteamState.ACTIVE:
+    if any_down or paused or reinitializing or steam_state == steam_bridge.SteamState.ACTIVE:
         return "warn"
     if has_update:
         return "update"
@@ -166,11 +169,12 @@ def _service_status(unit: str) -> str:
 
 
 class MakimaState(NamedTuple):
-    paused:      bool
-    gaming_mode: bool
-    lifecycle:   str   # "starting" | "ready" | "" (file absent / legacy)
-    no_device:   bool  # True when errors["no_device"] is present
-    configs:     list  # list of {"name": str, "enabled": bool, "status": str}
+    paused:            bool
+    gaming_mode:       bool
+    lifecycle:         str   # "starting" | "ready" | "" (file absent / legacy)
+    no_device:         bool  # True when errors["no_device"] is present
+    base_config_error: bool  # True when errors["base_config"] is present
+    configs:           list  # list of {"name": str, "enabled": bool, "status": str}
 
 def _makima_state() -> MakimaState:
     try:
@@ -178,7 +182,9 @@ def _makima_state() -> MakimaState:
             data = json.load(f)
         ctx       = data.get("context", {})
         lifecycle = data.get("lifecycle", "")
-        no_device = "no_device" in data.get("errors", {})
+        errors    = data.get("errors", {})
+        no_device         = "no_device"    in errors
+        base_config_error = "base_config"  in errors
         configs   = [
             {
                 "name":    c.get("name", ""),
@@ -190,17 +196,18 @@ def _makima_state() -> MakimaState:
             if c.get("name")
         ]
         return MakimaState(
-            paused      = bool(ctx.get("paused",      False)),
-            gaming_mode = bool(ctx.get("gaming_mode", False)),
-            lifecycle   = lifecycle,
-            no_device   = no_device,
-            configs     = configs,
+            paused            = bool(ctx.get("paused",      False)),
+            gaming_mode       = bool(ctx.get("gaming_mode", False)),
+            lifecycle         = lifecycle,
+            no_device         = no_device,
+            base_config_error = base_config_error,
+            configs           = configs,
         )
     except FileNotFoundError:
-        return MakimaState(paused=False, gaming_mode=False, lifecycle="", no_device=False, configs=[])
+        return MakimaState(paused=False, gaming_mode=False, lifecycle="", no_device=False, base_config_error=False, configs=[])
     except Exception:
         log.warning("Failed to read %s", _STATE_JSON, exc_info=True)
-        return MakimaState(paused=False, gaming_mode=False, lifecycle="", no_device=False, configs=[])
+        return MakimaState(paused=False, gaming_mode=False, lifecycle="", no_device=False, base_config_error=False, configs=[])
 
 
 def _service_ctrl(action: str, unit: str) -> None:
@@ -272,13 +279,21 @@ class DeckeryTray:
         self._statuses: dict   = {}   # last known service statuses from poll
         self._paused           = False
         self._gaming_mode      = False
-        self._makima           = MakimaState(paused=False, gaming_mode=False, lifecycle="", no_device=False, configs=[])
-        self._last_configs     = None  # tracks last rendered configs list for change detection
+        self._makima           = MakimaState(paused=False, gaming_mode=False, lifecycle="", no_device=False, base_config_error=False, configs=[])
         self._poll_running     = False
         self._state_timeout_id = None
         self._updater           = Updater(on_state_change=self._on_update_state_changed)
         self._steam_state       = steam_bridge.steam_state()
         self._steam_applying    = False
+
+        # Read initial state to size the config submenu correctly on first render.
+        # A full poll follows immediately after; this read is only for initial sizing.
+        initial_makima = _makima_state()
+        self._config_submenu = config_menu.ConfigSubmenu(
+            initial_configs = initial_makima.configs,
+            ipc             = _makima_ipc,
+            config_dir      = _CONFIG_DIR,
+        )
 
         self._build_menu()
         self._indicator.set_menu(self._menu)
@@ -375,19 +390,7 @@ class DeckeryTray:
         m.append(Gtk.SeparatorMenuItem())
 
         # ── Controller Bindings submenu ───────────────────────────────────
-        configs_item    = _icon_item("Controller Bindings", "input-gamepad")
-        configs_submenu = Gtk.Menu()
-        configs_item.set_submenu(configs_submenu)
-
-        # Static "Open config folder" — always lives at the bottom of the submenu.
-        open_cfg = _icon_item("Open config folder", "folder")
-        open_cfg.connect("activate", lambda _: _open_dir(_CONFIG_DIR))
-        configs_submenu.append(open_cfg)
-
-        self._items["configs_menu_item"]  = configs_item
-        self._items["configs_submenu"]    = configs_submenu
-        self._items["configs_open_folder"] = open_cfg
-        m.append(configs_item)
+        m.append(self._config_submenu.item)
 
         upd_item = _icon_item(self._updater.label, "system-software-update")
         upd_item.set_sensitive(self._updater.sensitive)
@@ -469,15 +472,21 @@ class DeckeryTray:
             elif name == "makima" and status == "active" and makima.paused:
                 pb_key  = "warn"
                 display = "paused"
-            elif name == "makima" and status == "active" and makima.lifecycle == "starting":
-                pb_key  = "grey"
-                display = "starting…"
+            elif name == "makima" and status == "active" and makima.lifecycle in ("starting", "reinitializing"):
+                pb_key  = "warn"
+                display = "reinitializing…"
             elif name == "makima" and status == "active" and makima.no_device:
                 pb_key  = "err"
                 display = "no device"
+            elif name == "makima" and status == "active" and makima.base_config_error:
+                pb_key  = "err"
+                display = "config error"
             elif status == "active":
                 pb_key  = "ok"
                 display = "active"
+            elif status == "activating":
+                pb_key  = "warn"
+                display = "starting…"
             elif status in ("inactive", "unknown"):
                 pb_key  = "grey"
                 display = status
@@ -494,120 +503,25 @@ class DeckeryTray:
         self._refresh_steam_item()
 
         # ── Makima control visibility ─────────────────────────────────────
-        makima_active = statuses.get("makima", "unknown") == "active"
-        gaming        = makima.gaming_mode
-        self._items["pause"]      .set_visible(makima_active and not makima.paused and not gaming and not makima.no_device)
-        self._items["resume"]     .set_visible(makima_active and makima.paused)
-        self._items["restart"]    .set_visible(makima_active and makima.paused)
-        self._items["start"]      .set_visible(not makima_active)
-        self._items["stop"]       .set_visible(makima_active and not makima.paused and not gaming)
+        makima_status     = statuses.get("makima", "unknown")
+        makima_active     = makima_status == "active"
+        makima_activating = makima_status == "activating"
+        gaming            = makima.gaming_mode
+        cfg_err           = makima.base_config_error
+        self._items["pause"]      .set_visible(makima_active and not makima.paused and not gaming and not makima.no_device and not cfg_err)
+        self._items["resume"]     .set_visible(makima_active and makima.paused and not cfg_err)
+        self._items["restart"]    .set_visible(makima_active and makima.paused and not cfg_err)
+        self._items["start"]      .set_visible(not makima_active and not makima_activating)
+        self._items["stop"]       .set_visible((makima_active and not gaming) or makima_activating)
         self._items["quit_gaming"].set_visible(makima_active and gaming)
 
-        # ── Configs submenu — only rebuild when list actually changed ─────
-        if makima.configs != self._last_configs:
-            self._last_configs = makima.configs
-            self._refresh_configs_submenu(makima.configs)
+        # ── Configs submenu ───────────────────────────────────────────────
+        self._config_submenu.refresh(makima.configs)
 
         # ── Tray icon ─────────────────────────────────────────────────────
         self._refresh_tray_icon()
 
         return GLib.SOURCE_REMOVE
-
-    # ── Configs submenu ───────────────────────────────────────────────────────
-
-    def _refresh_configs_submenu(self, configs: list) -> None:
-        """Rebuild the Configs submenu from the current config list.
-
-        Config items are sorted alphabetically and shown as CheckMenuItems.
-        Items with status 'error' are insensitive (greyed out).
-        The static 'Open config folder' item always stays at the bottom.
-        """
-        submenu   = self._items.get("configs_submenu")
-        open_item = self._items.get("configs_open_folder")
-        if submenu is None or open_item is None:
-            return
-
-        # Remove every child except the static open-folder item.
-        for child in list(submenu.get_children()):
-            if child is not open_item:
-                submenu.remove(child)
-
-        if configs:
-            sorted_configs = sorted(configs, key=lambda c: c["name"])
-            for cfg in reversed(sorted_configs):
-                name    = cfg["name"]
-                enabled = cfg["enabled"]
-                status  = cfg.get("status", "ok")
-
-                is_base = "::" not in name
-
-                # Build label with trailing unicode indicator:
-                #   🔒  base config (always on, non-interactive)
-                #   ⚠   warning (parse warning in config file)
-                #   ✕   error (config could not be parsed)
-                if status == "error":
-                    label_text = f"🛑 {name}"
-                elif status == "warning":
-                    label_text = f"⚠ {name}"
-                else:
-                    label_text = name
-
-                # Error configs: plain MenuItem, clickable — opens a dialog
-                # with the full error message. No CheckMenuItem (submenu +
-                # CheckMenuItem breaks toggle state in GTK3/dbusmenu).
-                if status == "error":
-                    item = Gtk.MenuItem(label=label_text)
-                    errors = cfg.get("errors", [])
-                    error_text = "\n\n".join(e.get("message", "") for e in errors) or "Unknown error"
-                    def _on_error_click(_widget, n=name, msg=error_text):
-                        dlg = Gtk.Dialog(title=f"Config error — {n}", modal=True)
-                        dlg.set_default_size(600, 300)
-                        dlg.add_button("Close", Gtk.ResponseType.CLOSE)
-
-                        sw = Gtk.ScrolledWindow()
-                        sw.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
-                        sw.set_margin_start(12)
-                        sw.set_margin_end(12)
-                        sw.set_margin_top(12)
-                        sw.set_margin_bottom(12)
-
-                        tv = Gtk.TextView()
-                        tv.set_editable(False)
-                        tv.set_cursor_visible(False)
-                        tv.set_monospace(True)
-                        tv.set_wrap_mode(Gtk.WrapMode.WORD_CHAR)
-                        tv.get_buffer().set_text(msg)
-                        sw.add(tv)
-
-                        dlg.get_content_area().pack_start(sw, True, True, 0)
-                        dlg.show_all()
-                        dlg.run()
-                        dlg.destroy()
-                    item.connect("activate", _on_error_click)
-                else:
-                    item = Gtk.CheckMenuItem(label=label_text)
-                    item.set_active(enabled)
-                    item.set_sensitive(not is_base)
-                    if not is_base:
-                        def _on_toggle(widget, n=name):
-                            _makima_ipc(f"config {'enable' if widget.get_active() else 'disable'} {n}")
-                        item.connect("toggled", _on_toggle)
-
-                item.show_all()
-                submenu.prepend(item)
-
-            sep = Gtk.SeparatorMenuItem()
-            sep.show()
-            # Separator sits between config items and "Open config folder".
-            # After prepend-loop, items are at positions 0..N-1; insert sep before open_item.
-            open_item_pos = len(sorted_configs)
-            submenu.insert(sep, open_item_pos)
-
-        open_item.show()
-        submenu.show()
-        # Re-register the menu with the AppIndicator so the panel (dbusmenu)
-        # picks up structural changes like new items or changed toggle states.
-        self._indicator.set_menu(self._menu)
 
     # ── Tray icon ─────────────────────────────────────────────────────────────
 
@@ -620,6 +534,8 @@ class DeckeryTray:
             self._updater.state == UpdateState.UPDATE_AVAILABLE,  # AHEAD_OF_RELEASE excluded — icon unchanged
             gaming_mode=self._gaming_mode,
             no_device=self._makima.no_device,
+            base_config_error=self._makima.base_config_error,
+            reinitializing=self._makima.lifecycle in ("starting", "reinitializing"),
         )
         icon, tooltip = _TRAY_ICONS[key]
         self._indicator.set_icon_full(icon, tooltip)
