@@ -552,32 +552,47 @@ class DeckeryTray:
                 else:
                     label_text = name
 
-                item = Gtk.CheckMenuItem(label=label_text)
-                # Set active BEFORE connecting signal — avoids spurious IPC on init.
-                item.set_active(enabled)
-                # Base and error configs are insensitive; the checkmark is still
-                # shown to indicate the last known enabled state.
-                item.set_sensitive(not is_base)
+                # Error configs: plain MenuItem, clickable — opens a dialog
+                # with the full error message. No CheckMenuItem (submenu +
+                # CheckMenuItem breaks toggle state in GTK3/dbusmenu).
+                if status == "error":
+                    item = Gtk.MenuItem(label=label_text)
+                    errors = cfg.get("errors", [])
+                    error_text = "\n\n".join(e.get("message", "") for e in errors) or "Unknown error"
+                    def _on_error_click(_widget, n=name, msg=error_text):
+                        dlg = Gtk.Dialog(title=f"Config error — {n}", modal=True)
+                        dlg.set_default_size(600, 300)
+                        dlg.add_button("Close", Gtk.ResponseType.CLOSE)
 
-                # For error configs: attach error messages as insensitive sub-items.
-                errors = cfg.get("errors", [])
-                if errors:
-                    error_submenu = Gtk.Menu()
-                    for e in errors:
-                        msg = e.get("message", "")
-                        lines = textwrap.wrap(msg, 60) or [msg]
-                        for line in lines:
-                            err_item = Gtk.MenuItem(label=line)
-                            err_item.set_sensitive(False)
-                            err_item.show()
-                            error_submenu.append(err_item)
-                    error_submenu.show()
-                    item.set_submenu(error_submenu)
+                        sw = Gtk.ScrolledWindow()
+                        sw.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+                        sw.set_margin_start(12)
+                        sw.set_margin_end(12)
+                        sw.set_margin_top(12)
+                        sw.set_margin_bottom(12)
 
-                if not is_base:
-                    def _on_toggle(widget, n=name):
-                        _makima_ipc(f"config {'enable' if widget.get_active() else 'disable'} {n}")
-                    item.connect("toggled", _on_toggle)
+                        tv = Gtk.TextView()
+                        tv.set_editable(False)
+                        tv.set_cursor_visible(False)
+                        tv.set_monospace(True)
+                        tv.set_wrap_mode(Gtk.WrapMode.WORD_CHAR)
+                        tv.get_buffer().set_text(msg)
+                        sw.add(tv)
+
+                        dlg.get_content_area().pack_start(sw, True, True, 0)
+                        dlg.show_all()
+                        dlg.run()
+                        dlg.destroy()
+                    item.connect("activate", _on_error_click)
+                else:
+                    item = Gtk.CheckMenuItem(label=label_text)
+                    item.set_active(enabled)
+                    item.set_sensitive(not is_base)
+                    if not is_base:
+                        def _on_toggle(widget, n=name):
+                            _makima_ipc(f"config {'enable' if widget.get_active() else 'disable'} {n}")
+                        item.connect("toggled", _on_toggle)
+
                 item.show_all()
                 submenu.prepend(item)
 
@@ -590,6 +605,9 @@ class DeckeryTray:
 
         open_item.show()
         submenu.show()
+        # Re-register the menu with the AppIndicator so the panel (dbusmenu)
+        # picks up structural changes like new items or changed toggle states.
+        self._indicator.set_menu(self._menu)
 
     # ── Tray icon ─────────────────────────────────────────────────────────────
 
