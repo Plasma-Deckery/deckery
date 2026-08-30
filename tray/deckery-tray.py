@@ -18,6 +18,7 @@ import os
 import socket
 import subprocess
 import sys
+import textwrap
 import threading
 from typing import NamedTuple
 
@@ -169,6 +170,7 @@ class MakimaState(NamedTuple):
     gaming_mode: bool
     lifecycle:   str   # "starting" | "ready" | "" (file absent / legacy)
     no_device:   bool  # True when errors["no_device"] is present
+    configs:     list  # list of {"name": str, "enabled": bool, "status": str}
 
 def _makima_state() -> MakimaState:
     try:
@@ -177,17 +179,28 @@ def _makima_state() -> MakimaState:
         ctx       = data.get("context", {})
         lifecycle = data.get("lifecycle", "")
         no_device = "no_device" in data.get("errors", {})
+        configs   = [
+            {
+                "name":    c.get("name", ""),
+                "enabled": bool(c.get("enabled", True)),
+                "status":  c.get("status", "ok"),
+                "errors":  c.get("errors", []),
+            }
+            for c in data.get("configs", [])
+            if c.get("name")
+        ]
         return MakimaState(
             paused      = bool(ctx.get("paused",      False)),
             gaming_mode = bool(ctx.get("gaming_mode", False)),
             lifecycle   = lifecycle,
             no_device   = no_device,
+            configs     = configs,
         )
     except FileNotFoundError:
-        return MakimaState(paused=False, gaming_mode=False, lifecycle="", no_device=False)
+        return MakimaState(paused=False, gaming_mode=False, lifecycle="", no_device=False, configs=[])
     except Exception:
         log.warning("Failed to read %s", _STATE_JSON, exc_info=True)
-        return MakimaState(paused=False, gaming_mode=False, lifecycle="", no_device=False)
+        return MakimaState(paused=False, gaming_mode=False, lifecycle="", no_device=False, configs=[])
 
 
 def _service_ctrl(action: str, unit: str) -> None:
@@ -259,7 +272,8 @@ class DeckeryTray:
         self._statuses: dict   = {}   # last known service statuses from poll
         self._paused           = False
         self._gaming_mode      = False
-        self._makima           = MakimaState(paused=False, gaming_mode=False, lifecycle="", no_device=False)
+        self._makima           = MakimaState(paused=False, gaming_mode=False, lifecycle="", no_device=False, configs=[])
+        self._last_configs     = None  # tracks last rendered configs list for change detection
         self._poll_running     = False
         self._state_timeout_id = None
         self._updater           = Updater(on_state_change=self._on_update_state_changed)
@@ -360,10 +374,20 @@ class DeckeryTray:
 
         m.append(Gtk.SeparatorMenuItem())
 
-        # ── Config / Updates ──────────────────────────────────────────────
-        cfg_item = _icon_item("Open config folder", "folder")
-        cfg_item.connect("activate", lambda _: _open_dir(_CONFIG_DIR))
-        m.append(cfg_item)
+        # ── Controller Bindings submenu ───────────────────────────────────
+        configs_item    = _icon_item("Controller Bindings", "input-gamepad")
+        configs_submenu = Gtk.Menu()
+        configs_item.set_submenu(configs_submenu)
+
+        # Static "Open config folder" — always lives at the bottom of the submenu.
+        open_cfg = _icon_item("Open config folder", "folder")
+        open_cfg.connect("activate", lambda _: _open_dir(_CONFIG_DIR))
+        configs_submenu.append(open_cfg)
+
+        self._items["configs_menu_item"]  = configs_item
+        self._items["configs_submenu"]    = configs_submenu
+        self._items["configs_open_folder"] = open_cfg
+        m.append(configs_item)
 
         upd_item = _icon_item(self._updater.label, "system-software-update")
         upd_item.set_sensitive(self._updater.sensitive)
@@ -479,10 +503,93 @@ class DeckeryTray:
         self._items["stop"]       .set_visible(makima_active and not makima.paused and not gaming)
         self._items["quit_gaming"].set_visible(makima_active and gaming)
 
+        # ── Configs submenu — only rebuild when list actually changed ─────
+        if makima.configs != self._last_configs:
+            self._last_configs = makima.configs
+            self._refresh_configs_submenu(makima.configs)
+
         # ── Tray icon ─────────────────────────────────────────────────────
         self._refresh_tray_icon()
 
         return GLib.SOURCE_REMOVE
+
+    # ── Configs submenu ───────────────────────────────────────────────────────
+
+    def _refresh_configs_submenu(self, configs: list) -> None:
+        """Rebuild the Configs submenu from the current config list.
+
+        Config items are sorted alphabetically and shown as CheckMenuItems.
+        Items with status 'error' are insensitive (greyed out).
+        The static 'Open config folder' item always stays at the bottom.
+        """
+        submenu   = self._items.get("configs_submenu")
+        open_item = self._items.get("configs_open_folder")
+        if submenu is None or open_item is None:
+            return
+
+        # Remove every child except the static open-folder item.
+        for child in list(submenu.get_children()):
+            if child is not open_item:
+                submenu.remove(child)
+
+        if configs:
+            sorted_configs = sorted(configs, key=lambda c: c["name"])
+            for cfg in reversed(sorted_configs):
+                name    = cfg["name"]
+                enabled = cfg["enabled"]
+                status  = cfg.get("status", "ok")
+
+                is_base = "::" not in name
+
+                # Build label with trailing unicode indicator:
+                #   🔒  base config (always on, non-interactive)
+                #   ⚠   warning (parse warning in config file)
+                #   ✕   error (config could not be parsed)
+                if status == "error":
+                    label_text = f"🛑 {name}"
+                elif status == "warning":
+                    label_text = f"⚠ {name}"
+                else:
+                    label_text = name
+
+                item = Gtk.CheckMenuItem(label=label_text)
+                # Set active BEFORE connecting signal — avoids spurious IPC on init.
+                item.set_active(enabled)
+                # Base and error configs are insensitive; the checkmark is still
+                # shown to indicate the last known enabled state.
+                item.set_sensitive(not is_base)
+
+                # For error configs: attach error messages as insensitive sub-items.
+                errors = cfg.get("errors", [])
+                if errors:
+                    error_submenu = Gtk.Menu()
+                    for e in errors:
+                        msg = e.get("message", "")
+                        lines = textwrap.wrap(msg, 60) or [msg]
+                        for line in lines:
+                            err_item = Gtk.MenuItem(label=line)
+                            err_item.set_sensitive(False)
+                            err_item.show()
+                            error_submenu.append(err_item)
+                    error_submenu.show()
+                    item.set_submenu(error_submenu)
+
+                if not is_base:
+                    def _on_toggle(widget, n=name):
+                        _makima_ipc(f"config {'enable' if widget.get_active() else 'disable'} {n}")
+                    item.connect("toggled", _on_toggle)
+                item.show_all()
+                submenu.prepend(item)
+
+            sep = Gtk.SeparatorMenuItem()
+            sep.show()
+            # Separator sits between config items and "Open config folder".
+            # After prepend-loop, items are at positions 0..N-1; insert sep before open_item.
+            open_item_pos = len(sorted_configs)
+            submenu.insert(sep, open_item_pos)
+
+        open_item.show()
+        submenu.show()
 
     # ── Tray icon ─────────────────────────────────────────────────────────────
 
