@@ -67,8 +67,8 @@ class TestVersionLabel:
         assert tray_mod._version_label("0.1.8") == "Deckery v0.1.8"
 
     def test_unknown_version(self, tray_mod):
-        # No tags in repo → show bare "Deckery" without version suffix.
-        assert tray_mod._version_label("unknown") == "Deckery"
+        # No tags in repo → show dev label without version suffix.
+        assert tray_mod._version_label("unknown") == "Deckery (dev)"
 
     def test_semver_with_patch(self, tray_mod):
         assert tray_mod._version_label("1.2.34") == "Deckery v1.2.34"
@@ -98,12 +98,20 @@ class TestTrayState:
             paused=False, steam_state="locked", has_update=False,
         ) == "err"
 
-    def test_err_when_steam_overwritten(self, tray_mod):
-        # Steam overwrote the config → critical, needs immediate action.
+    def test_warn_when_steam_active(self, tray_mod):
+        # Steam Input still active → user needs to act → amber.
+        import steam_bridge
         assert tray_mod._tray_state(
             {"makima": "active"},
-            paused=False, steam_state="overwritten", has_update=False,
-        ) == "err"
+            paused=False, steam_state=steam_bridge.SteamState.ACTIVE, has_update=False,
+        ) == "warn"
+
+    def test_ok_when_steam_ok(self, tray_mod):
+        import steam_bridge
+        assert tray_mod._tray_state(
+            {"makima": "active"},
+            paused=False, steam_state=steam_bridge.SteamState.OK, has_update=False,
+        ) == "ok"
 
     def test_warn_when_service_inactive(self, tray_mod):
         assert tray_mod._tray_state(
@@ -123,17 +131,21 @@ class TestTrayState:
             paused=True, steam_state="locked", has_update=False,
         ) == "warn"
 
-    def test_warn_when_steam_unlocked(self, tray_mod):
+    def test_ok_when_steam_user_missing(self, tray_mod):
+        # No Steam user logged in → no action needed → ok.
+        import steam_bridge
         assert tray_mod._tray_state(
             {"makima": "active"},
-            paused=False, steam_state="unlocked", has_update=False,
-        ) == "warn"
+            paused=False, steam_state=steam_bridge.SteamState.USER_MISSING, has_update=False,
+        ) == "ok"
 
-    def test_warn_when_steam_no_source(self, tray_mod):
+    def test_ok_when_steam_config_missing(self, tray_mod):
+        # Configset file not found → ok (Steam Input already inactive).
+        import steam_bridge
         assert tray_mod._tray_state(
             {"makima": "active"},
-            paused=False, steam_state="no_source", has_update=False,
-        ) == "warn"
+            paused=False, steam_state=steam_bridge.SteamState.CONFIG_MISSING, has_update=False,
+        ) == "ok"
 
     def test_update_when_no_other_issues(self, tray_mod):
         assert tray_mod._tray_state(
@@ -155,12 +167,13 @@ class TestTrayState:
             paused=True, steam_state="locked", has_update=True,
         ) == "warn"
 
-    def test_steam_err_beats_warn(self, tray_mod):
-        # overwritten (err) + service inactive (warn) → err.
+    def test_steam_active_loses_to_err(self, tray_mod):
+        # Steam ACTIVE (warn) + service inactive (warn) → warn, not err.
+        import steam_bridge
         assert tray_mod._tray_state(
             {"makima": "inactive"},
-            paused=False, steam_state="overwritten", has_update=False,
-        ) == "err"
+            paused=False, steam_state=steam_bridge.SteamState.ACTIVE, has_update=False,
+        ) == "warn"
 
     def test_empty_statuses_is_ok(self, tray_mod):
         # No services monitored → nothing can be wrong.
@@ -168,61 +181,43 @@ class TestTrayState:
             {}, paused=False, steam_state="locked", has_update=False,
         ) == "ok"
 
+    def test_err_when_no_device(self, tray_mod):
+        # errors["no_device"] present → red, even if service is active.
+        assert tray_mod._tray_state(
+            {"makima": "active"},
+            paused=False, steam_state="locked", has_update=False,
+            no_device=True,
+        ) == "err"
 
-# ── _steam_item_state ─────────────────────────────────────────────────────────
+    def test_err_when_base_config_error(self, tray_mod):
+        # errors["base_config"] present → red, even if service is active.
+        assert tray_mod._tray_state(
+            {"makima": "active"},
+            paused=False, steam_state="locked", has_update=False,
+            base_config_error=True,
+        ) == "err"
 
-class TestSteamItemState:
-    """
-    _steam_item_state() returns (dot_key, unlock_sensitive) for each state.
-    Unlock is only enabled when the file is actually locked (user can remove it).
-    """
+    def test_base_config_error_beats_warn_and_update(self, tray_mod):
+        # base_config_error + paused + update available → err wins.
+        assert tray_mod._tray_state(
+            {"makima": "active"},
+            paused=True, steam_state="locked", has_update=True,
+            base_config_error=True,
+        ) == "err"
 
-    def test_locked_green_unlock_enabled(self, tray_mod):
-        dot, unlock = tray_mod._steam_item_state("locked")
-        assert dot    == "ok"
-        assert unlock is True
+    def test_reinitializing_is_warn(self, tray_mod):
+        # Lifecycle "reinitializing" → amber warning, not error.
+        assert tray_mod._tray_state(
+            {"makima": "active"},
+            paused=False, steam_state="locked", has_update=False,
+            reinitializing=True,
+        ) == "warn"
 
-    def test_unlocked_yellow_unlock_disabled(self, tray_mod):
-        # File is already unlocked — "Unlock" would do nothing.
-        dot, unlock = tray_mod._steam_item_state("unlocked")
-        assert dot    == "warn"
-        assert unlock is False
+    def test_base_config_error_beats_reinitializing(self, tray_mod):
+        # base_config_error (err) wins over reinitializing (warn).
+        assert tray_mod._tray_state(
+            {"makima": "active"},
+            paused=False, steam_state="locked", has_update=False,
+            base_config_error=True, reinitializing=True,
+        ) == "err"
 
-    def test_overwritten_red_unlock_disabled(self, tray_mod):
-        # File was overwritten — lock it again first before unlocking makes sense.
-        dot, unlock = tray_mod._steam_item_state("overwritten")
-        assert dot    == "err"
-        assert unlock is False
-
-    def test_no_source_yellow_unlock_disabled(self, tray_mod):
-        dot, unlock = tray_mod._steam_item_state("no_source")
-        assert dot    == "warn"
-        assert unlock is False
-
-    def test_unknown_state_grey_unlock_disabled(self, tray_mod):
-        dot, unlock = tray_mod._steam_item_state("something_unexpected")
-        assert dot    == "grey"
-        assert unlock is False
-
-
-# ── _steam_click_action ───────────────────────────────────────────────────────
-
-class TestSteamClickAction:
-    """
-    _steam_click_action() routes a click on the steam status item to the
-    correct terminal action, or None when clicking does nothing.
-    """
-
-    def test_overwritten_opens_fix_and_lock(self, tray_mod):
-        assert tray_mod._steam_click_action("overwritten") == "fix_and_lock"
-
-    def test_unlocked_opens_lock(self, tray_mod):
-        assert tray_mod._steam_click_action("unlocked") == "lock"
-
-    def test_locked_is_noop(self, tray_mod):
-        # Already correct — nothing to do on click.
-        assert tray_mod._steam_click_action("locked") is None
-
-    def test_no_source_is_noop(self, tray_mod):
-        # Source file missing — there's nothing to lock or fix.
-        assert tray_mod._steam_click_action("no_source") is None

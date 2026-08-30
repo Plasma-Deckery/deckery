@@ -81,9 +81,9 @@ class ConfigSubmenu:
         self._sep.hide()
         self._submenu.append(self._sep)
 
-        open_cfg = _icon_item("Open config folder", "folder")
-        open_cfg.connect("activate", lambda _: subprocess.Popen(["xdg-open", self._config_dir]))
-        self._submenu.append(open_cfg)
+        self._open_cfg = _icon_item("Open config folder", "folder")
+        self._open_cfg.connect("activate", lambda _: subprocess.Popen(["xdg-open", self._config_dir]))
+        self._submenu.append(self._open_cfg)
 
         self._submenu.show_all()
 
@@ -119,29 +119,32 @@ class ConfigSubmenu:
         absent, shown when it is present.
         """
         chk = Gtk.CheckMenuItem(label="")
-        chk.set_no_show_all(True)
-        chk.hide()
         def _on_toggle(widget, n=name):
             self._ipc(f"config {'enable' if widget.get_active() else 'disable'} {n}")
         toggle_id = chk.connect("toggled", _on_toggle)
 
         err = Gtk.MenuItem(label="")
-        err.set_no_show_all(True)
-        err.hide()
         def _on_error_click(widget, n=name):
             _show_error_dialog(n, self._slots[n].error_text)
         err.connect("activate", _on_error_click)
 
         if self._sep is None:
-            # Initial build — append in the order _create_slot is called
+            # Initial build — append in the order _create_slot is called.
+            # Items start hidden; _apply() / show_all() sets final visibility.
             self._submenu.append(chk)
             self._submenu.append(err)
         else:
-            # Runtime growth — insert before separator
-            children = self._submenu.get_children()
-            pos      = children.index(self._sep)
-            self._submenu.insert(chk, pos)
-            self._submenu.insert(err, pos + 1)
+            # Runtime growth — dbusmenu only propagates append(), not insert().
+            # Temporarily remove the footer items, append the new slot, then
+            # re-append the footer so it stays at the bottom.
+            self._submenu.remove(self._sep)
+            self._submenu.remove(self._open_cfg)
+            self._submenu.append(chk)
+            self._submenu.append(err)
+            self._submenu.append(self._sep)
+            self._submenu.append(self._open_cfg)
+            chk.show()
+            err.hide()   # only one of the pair is shown; _apply() corrects this
 
         slot = _ConfigSlot(check=chk, error=err, toggle_id=toggle_id)
         self._slots[name] = slot
