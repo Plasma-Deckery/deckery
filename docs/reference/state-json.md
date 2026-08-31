@@ -27,6 +27,15 @@ done
 
 ```json
 {
+  "lifecycle": "ready",
+  "errors": {
+    "base_config": "parse error in Steam Deck.toml line 12: unexpected token"
+  },
+  "configs": [
+    { "name": "Steam Deck",                    "enabled": true,  "status": "ok",      "errors": [] },
+    { "name": "Steam Deck::org.mozilla.firefox","enabled": true,  "status": "warning", "errors": [] },
+    { "name": "Steam Deck::org.kde.konsole",   "enabled": false, "status": "ok",      "errors": [] }
+  ],
   "context": {
     "active_app": "org.mozilla.firefox",
     "config_stack": ["Steam Deck", "org.mozilla.firefox"],
@@ -124,6 +133,51 @@ done
 ---
 
 ## Fields
+
+### `lifecycle`
+
+String describing the current startup/reinitialisation phase of makima.
+
+| Value | Meaning |
+|---|---|
+| `"ready"` | Normal operation — fully initialised and processing input |
+| `"starting"` | First startup in progress — device grabs not yet complete |
+| `"reinitialising"` | Reinitialising after a device reconnect or resume — temporarily amber in the tray |
+| `""` | File absent or written by an older makima build that doesn't export this field |
+
+The tray shows an amber icon whenever `lifecycle` is `"starting"` or `"reinitialising"`, even if all services report `active`.
+
+---
+
+### `errors`
+
+Object mapping error slot names to human-readable error strings. Empty `{}` when there are no errors.
+
+| Key | When present |
+|---|---|
+| `"base_config"` | The base config (`Steam Deck.toml`) failed to parse — all remapping is suspended |
+| `"no_device"` | No compatible input device was found — makima is waiting for one to appear |
+
+When any key is present the tray shows a red icon, regardless of service state.
+
+---
+
+### `configs`
+
+Array of all config files known to makima, in the order they appear on disk. Updated whenever configs are loaded, reloaded, or their enabled state changes.
+
+Each entry:
+
+| Field | Type | Meaning |
+|---|---|---|
+| `name` | `string` | Config identifier — base configs use the device name (e.g. `"Steam Deck"`); app overrides use `"Device::app.class"` (e.g. `"Steam Deck::org.mozilla.firefox"`) |
+| `enabled` | `bool` | Whether this config is active. Base configs (`"::"` absent) are always enabled and cannot be toggled by the user. |
+| `status` | `string` | `"ok"`, `"warning"`, or `"error"` — `"error"` means the config could not be parsed and its slot in `errors` is populated |
+| `errors` | `[{message}]` | Parse or load errors for this config; empty when `status != "error"` |
+
+The tray's **Controller Bindings** submenu is driven directly from this array. Toggling a config via the tray sends a `config enable/disable <name>` IPC command, which updates `enabled` and rewrites this field.
+
+---
 
 ### `context`
 

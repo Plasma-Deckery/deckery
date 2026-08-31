@@ -21,11 +21,13 @@ The heart of Deckery — the input remapper. Reads raw evdev events directly fro
 | Bug fixes | D-Pad remapping, x11rb Wayland crash, evdev reconnect on device error |
 | Event-driven window focus | KWin D-Bus script replaces `kdotool` subprocess spawning — no polling, no latency |
 | Config inheritance | App overrides only declare what differs; base config is merged at runtime |
+| Config registry | Central store for all known configs with enable/disable IPC and live `state.json` export — see [App Config](app-config.md) |
 | Binding attributes | `label`, `no_pause`, `while_gaming` per binding — see [Bindings](bindings.md) |
 | Gaming Mode | Double-click trigger + Steam auto-detection — see [Gaming Mode](gaming-mode.md) |
-| State export | `/tmp/makima-state.json` — see [State JSON](../../reference/state-json.md) |
+| State export | `/tmp/makima-state.json` including `lifecycle`, `errors`, `configs` — see [State JSON](../../reference/state-json.md) |
 | Trackpad MT translation | Both pads emulated as standard system touchpad devices — see [Trackpad](trackpad.md) |
 | Pause / Resume IPC | Runtime control via Unix socket — see [IPC](../../reference/ipc.md) |
+| Reinitialising lifecycle | After device reconnect or resume, emits `lifecycle: "reinitialising"` so the tray can show amber without a spurious error |
 | Steam Deck keycodes | `BTN_GRIPL/R/L2/R2` for back paddles via patched `evdev` crate |
 | Unit test suite | 148 tests covering resolver, state export, analog helpers, config parsing, trackpad routing, and haptic encoding |
 

@@ -10,18 +10,22 @@ Makima-deckery exposes a Unix socket at `/tmp/makima-control.sock` for runtime c
 | `resume` | Resume normal remapping |
 | `gaming_mode enable` | Enable Gaming Mode — suppresses all remaps, passes raw input to the OS |
 | `gaming_mode disable` | Disable Gaming Mode — returns to normal remapping |
+| `config enable <name>` | Enable the named app-specific config (e.g. `Steam Deck::org.mozilla.firefox`) — reflected immediately in `state.json` `configs[].enabled` |
+| `config disable <name>` | Disable the named app-specific config — the base config remains active |
 | `analog-state-export on` | Write analog axis values (sticks, trackpads) into `state.json` on every change |
 | `analog-state-export off` | Stop writing analog values (default — reduces write frequency) |
 
 ## Usage
 
 ```bash
-echo "pause"                    | socat - UNIX-CONNECT:/tmp/makima-control.sock
-echo "resume"                   | socat - UNIX-CONNECT:/tmp/makima-control.sock
-echo "gaming_mode enable"       | socat - UNIX-CONNECT:/tmp/makima-control.sock
-echo "gaming_mode disable"      | socat - UNIX-CONNECT:/tmp/makima-control.sock
-echo "analog-state-export on"   | socat - UNIX-CONNECT:/tmp/makima-control.sock
-echo "analog-state-export off"  | socat - UNIX-CONNECT:/tmp/makima-control.sock
+echo "pause"                                        | socat - UNIX-CONNECT:/tmp/makima-control.sock
+echo "resume"                                       | socat - UNIX-CONNECT:/tmp/makima-control.sock
+echo "gaming_mode enable"                           | socat - UNIX-CONNECT:/tmp/makima-control.sock
+echo "gaming_mode disable"                          | socat - UNIX-CONNECT:/tmp/makima-control.sock
+echo "config enable Steam Deck::org.mozilla.firefox"  | socat - UNIX-CONNECT:/tmp/makima-control.sock
+echo "config disable Steam Deck::org.mozilla.firefox" | socat - UNIX-CONNECT:/tmp/makima-control.sock
+echo "analog-state-export on"                       | socat - UNIX-CONNECT:/tmp/makima-control.sock
+echo "analog-state-export off"                      | socat - UNIX-CONNECT:/tmp/makima-control.sock
 ```
 
 The socket may not exist if makima is not running — handle gracefully (socat exits with an error, nothing else happens). The current `paused` state is always reflected in `/tmp/makima-state.json`.
