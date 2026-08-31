@@ -53,8 +53,6 @@ Before running `get.sh`, the tray shows a confirmation dialog to prevent acciden
 
 In both cases the dialog defaults to **Cancel** — clicking the `X` or pressing Escape does nothing.
 
----
-
 ## Update flow
 
 Clicking "Install" opens a Konsole terminal window and runs `get.sh`:
