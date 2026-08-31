@@ -210,6 +210,19 @@ def _makima_state() -> MakimaState:
         return MakimaState(paused=False, gaming_mode=False, lifecycle="", no_device=False, base_config_error=False, configs=[])
 
 
+def _git_dirty_files(repo_dir: str) -> list[str]:
+    """Return a list of modified/untracked files in repo_dir, or [] if clean / not a git repo."""
+    try:
+        r = subprocess.run(
+            ["git", "-C", repo_dir, "status", "--porcelain"],
+            capture_output=True, text=True, timeout=3,
+        )
+        lines = [l.strip() for l in r.stdout.splitlines() if l.strip()]
+        return lines
+    except Exception:
+        return []
+
+
 def _service_ctrl(action: str, unit: str) -> None:
     subprocess.Popen(["systemctl", "--user", action, unit])
 
@@ -558,7 +571,48 @@ class DeckeryTray:
         _hud_dbus("ToggleOsd")
 
     def _on_update_clicked(self, _item):
+        state = self._updater.state
+        if state == UpdateState.AHEAD_OF_RELEASE:
+            if not self._confirm_install(rollback=True):
+                return
+        elif state == UpdateState.UPDATE_AVAILABLE:
+            dirty = _git_dirty_files(_DECKERY_DIR)
+            if dirty and not self._confirm_install(rollback=False, dirty=dirty):
+                return
         self._updater.on_clicked()
+
+    def _confirm_install(self, rollback: bool, dirty: list[str] | None = None) -> bool:
+        """Confirmation dialog before update or rollback. Returns True if the user confirms."""
+        dirty = dirty or _git_dirty_files(_DECKERY_DIR)
+
+        if rollback:
+            title  = f"Auf {self._updater.label.replace('Rollback to ', '')} zurücksetzen?"
+            action = "Das Rollback installiert die letzte Release-Version und startet Deckery neu."
+        else:
+            title  = f"Deckery {self._updater.label.replace('Update available: ', '')} installieren?"
+            action = "Das Update installiert die neue Version und startet Deckery neu."
+
+        if dirty:
+            detail = (
+                "Die folgenden Dateien haben uncommittete Änderungen, die dabei "
+                "überschrieben werden könnten:\n\n"
+                + "\n".join(f"  {f}" for f in dirty)
+                + f"\n\n{action}"
+            )
+        else:
+            detail = action
+
+        dialog = Gtk.MessageDialog(
+            flags=0,
+            message_type=Gtk.MessageType.WARNING if dirty else Gtk.MessageType.QUESTION,
+            buttons=Gtk.ButtonsType.OK_CANCEL,
+            text=title,
+        )
+        dialog.format_secondary_text(detail)
+        dialog.set_default_response(Gtk.ResponseType.CANCEL)
+        response = dialog.run()
+        dialog.destroy()
+        return response == Gtk.ResponseType.OK
 
     def _on_update_state_changed(self):
         """Called by Updater when its state changes."""
