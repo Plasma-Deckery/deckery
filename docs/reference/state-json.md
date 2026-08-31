@@ -142,7 +142,7 @@ String describing the current startup/reinitialisation phase of makima.
 |---|---|
 | `"ready"` | Normal operation — fully initialised and processing input |
 | `"starting"` | First startup in progress — device grabs not yet complete |
-| `"reinitialising"` | Reinitialising after a device reconnect or resume — temporarily amber in the tray |
+| `"reinitializing"` | Reinitializing after a device reconnect, device error, or config file change — temporarily amber in the tray |
 | `""` | File absent or written by an older makima build that doesn't export this field |
 
 The tray shows an amber icon whenever `lifecycle` is `"starting"` or `"reinitialising"`, even if all services report `active`.
@@ -173,7 +173,7 @@ Each entry:
 | `name` | `string` | Config identifier — base configs use the device name (e.g. `"Steam Deck"`); app overrides use `"Device::app.class"` (e.g. `"Steam Deck::org.mozilla.firefox"`) |
 | `enabled` | `bool` | Whether this config is active. Base configs (`"::"` absent) are always enabled and cannot be toggled by the user. |
 | `status` | `string` | `"ok"`, `"warning"`, or `"error"` — `"error"` means the config could not be parsed and its slot in `errors` is populated |
-| `errors` | `[{message}]` | Parse or load errors for this config; empty when `status != "error"` |
+| `errors` | `[{severity, message}]` | Parse or load errors for this config; empty when `status != "error"`. Each entry: `{ "severity": "error" \| "warning", "message": "..." }` |
 
 The tray's **Controller Bindings** submenu is driven directly from this array. Toggling a config via the tray sends a `config enable/disable <name>` IPC command, which updates `enabled` and rewrites this field.
 

@@ -30,7 +30,12 @@ The tray menu item follows a simple state machine:
 | `CHECKING` | Checking for updates… | ❌ | — |
 | `UP_TO_DATE` | Up to date | ✅ | Re-check |
 | `UPDATE_AVAILABLE` | Update available: vX.Y.Z — Install | ✅ | Run `get.sh` |
+| `AHEAD_OF_RELEASE` | Rollback to vX.Y.Z | ✅ | Run `get.sh` |
 | `ERROR` | Update check failed — retry | ✅ | Re-check |
+
+**`AHEAD_OF_RELEASE`** fires when HEAD is not at an exact release tag but its commit timestamp is *newer* than the latest published tag — i.e. the user is running a development snapshot built from a commit that is ahead of the release. This is not treated as an error (the tray icon stays unchanged). Clicking the item runs `get.sh`, which checks out the latest release tag — effectively a rollback to the last stable release.
+
+Version timestamps are compared using local `git log --format=%ct` on both HEAD and the latest release tag. No additional network round-trip is needed for the comparison — only the GitHub Releases API call (already made during the update check) is required.
 
 ## Auto-check schedule
 

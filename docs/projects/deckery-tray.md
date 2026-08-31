@@ -54,6 +54,19 @@ plasma-core.target  ← KDE-only, not active in Gamescope/Gaming Mode
 
 Status updates run on a background thread to keep the GTK main loop responsive. A `Gio.FileMonitor` on `makima-state.json` triggers an immediate debounced refresh (120 ms window) whenever the file changes — pause state changes appear in the menu within milliseconds.
 
+**Makima service menu item** displays a per-state label based on `state.json`:
+
+| Condition | Dot colour | Label shown |
+|---|---|---|
+| `lifecycle == "starting"` | grey | `starting…` |
+| `errors.no_device` present | red | `no device` |
+| `errors.base_config` present | red | `active — base config error` |
+| `lifecycle == "reinitializing"` | amber | `reinitializing…` |
+| paused | amber | `paused` |
+| ready, no errors | green | `active` |
+
+When `errors.no_device` is set, **Pause Deckery** is hidden from the menu — pausing an input mapper that has no device is meaningless.
+
 **Controller Bindings submenu (`config_menu.py`):**
 
 The submenu is managed by a dedicated `ConfigSubmenu` class in `tray/config_menu.py`. It holds one permanent slot per config name (a `CheckMenuItem`/`MenuItem` pair). Slots are created at startup from the initial `state.json` read; if a new config appears at runtime a slot is appended live. Slots are never destroyed — they are hidden when their config is absent.
