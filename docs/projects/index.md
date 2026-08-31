@@ -25,6 +25,12 @@ On every input event, makima writes a fully-resolved state snapshot to `/tmp/mak
 
 ---
 
+### [deckery-controller](deckery-controller.md)
+
+Hardware abstraction library for the Steam Deck controller. Handles everything device-specific: transparent suspend/resume reconnect, exclusive evdev grab (`EVIOCGRAB`), the cooperative D-Bus yield protocol that lets `deckery-auth` temporarily take over the controller for PIN entry, hidraw discovery, Lizard Mode suppression heartbeat, and haptic feedback encoding.
+
+---
+
 ### [Deckery Tray](deckery-tray.md)
 
 The control panel for the entire Deckery stack, living in the KDE system tray. No terminal needed for day-to-day use.
