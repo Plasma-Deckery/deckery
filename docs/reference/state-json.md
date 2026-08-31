@@ -47,7 +47,7 @@ done
     "active_outputs": [
       { "key": "KEY_LEFTCTRL", "silent": false }
     ],
-    "available_modifiers": ["BTN_MODE"],
+    "available_modifiers": { "BTN_MODE": { "has_app_combos": false } },
     "analog_state_export": false
   },
   "bindings": {
@@ -191,7 +191,7 @@ The tray's **Controller Bindings** submenu is driven directly from this array. T
 | `held_modifiers` | `[string]` | Modifier buttons currently physically held (e.g. `["BTN_TL"]`). Empty when no modifier is held. **Use this to switch between normal and modifier view.** |
 | `active_buttons` | `[string]` | All buttons currently physically held, including non-modifiers. **Use this to highlight buttons on the gamepad layout.** |
 | `active_outputs` | `[{key, silent}]` | System-level output keys currently being held, resolved from `active_buttons` + current modifiers. Each entry: `{ "key": "KEY_LEFTCTRL", "silent": false }`. |
-| `available_modifiers` | `[string]` | Modifier buttons that, if pressed next, would unlock additional combo bindings. Use to hint which modifiers are worth showing in the HUD. |
+| `available_modifiers` | `object` | Modifier buttons that, if pressed next, would unlock additional combo bindings. Keys are button names; value is `{ "has_app_combos": bool }`. `has_app_combos: true` means at least one qualifying combo for that modifier comes from an app-specific config override — the HUD signals this with a distinct accent. Use to hint which modifiers are worth showing. |
 | `analog_state_export` | `bool` | Whether analog data (sticks, trackpads) is currently being written into this file. |
 
 ---

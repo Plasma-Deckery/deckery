@@ -19,6 +19,7 @@ Toggle open (default: L3) to pause remapping and inspect your full button layout
 - Trackpad and stick positions rendered as analog overlays on the silhouette
 - Dot colours: **amber** = modifier held, **white** = button active, **gray** = unbound
 - Small amber dot on buttons that would unlock a combo if held next (discoverable modifiers)
+- Cyan underline diamond accent on modifier buttons whose combos come from an app-specific config override (`available_modifiers[btn].has_app_combos == true`) — distinguishes app-tailored shortcuts from base-config combos at a glance
 
 ### OSD (On-Screen Display)
 
@@ -46,7 +47,7 @@ Built with GTK4 + gtk4-layer-shell (Wayland Layer Shell protocol). Two persisten
 
 | Window | Type | Input region |
 |---|---|---|
-| `Win` | HUD overlay | Small region for title bar buttons |
+| `Win` | HUD overlay | Recalculated on every draw to cover only the visible close/title bar buttons |
 | `OsdWin` | OSD overlay | None — fully click-through |
 
 Both windows are Wayland layer-shell surfaces anchored to the center of the screen. The OSD runs at all times; the HUD is shown/hidden on demand.

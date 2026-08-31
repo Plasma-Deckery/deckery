@@ -71,3 +71,4 @@ The tray renders `warning` configs with a `⚠` prefix and `error` configs with 
 | `no_pause = true` | Binding fires even when makima is paused (e.g. HUD is open) |
 | `no_off = true` | Binding fires even in Off mode (implies `no_pause`) |
 | `CUSTOM_MODIFIERS` | Defines which buttons act as modifier keys in this config |
+| `GRAB_DEVICE = "true"` | Enables exclusive evdev grab (`EVIOCGRAB`) for this device. **Off by default** — must be an explicit opt-in. With grab active, no other process receives events from the device node. See [deckery-controller](../deckery-controller.md) for grab details. |

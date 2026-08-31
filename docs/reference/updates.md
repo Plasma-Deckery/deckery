@@ -43,6 +43,18 @@ Version timestamps are compared using local `git log --format=%ct` on both HEAD 
 - **Every hour** thereafter
 - Error states are retried on the next auto-check interval
 
+## Confirmation dialog
+
+Before running `get.sh`, the tray shows a confirmation dialog to prevent accidental installs:
+
+**Rollback** (`AHEAD_OF_RELEASE`): dialog is always shown, with `WARNING` severity (the install will overwrite local dev changes).
+
+**Update** (`UPDATE_AVAILABLE`): the deckery repo is checked for uncommitted files via `git status --porcelain`. If dirty files are found, the dialog is shown at `WARNING` severity with the list of affected files. If the working tree is clean, the dialog is shown at `QUESTION` severity.
+
+In both cases the dialog defaults to **Cancel** — clicking the `X` or pressing Escape does nothing.
+
+---
+
 ## Update flow
 
 Clicking "Install" opens a Konsole terminal window and runs `get.sh`:
