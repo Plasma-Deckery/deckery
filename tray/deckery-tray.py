@@ -525,7 +525,7 @@ class DeckeryTray:
         self._items["resume"]     .set_visible(makima_active and makima.paused and not cfg_err)
         self._items["restart"]    .set_visible(makima_active and (makima.paused or makima.no_device) and not cfg_err)
         self._items["start"]      .set_visible(not makima_active and not makima_activating)
-        self._items["stop"]       .set_visible((makima_active and not gaming and not makima.no_device) or makima_activating)
+        self._items["stop"]       .set_visible((makima_active and not gaming) or makima_activating)
         self._items["quit_gaming"].set_visible(makima_active and gaming)
 
         # ── Configs submenu ───────────────────────────────────────────────
