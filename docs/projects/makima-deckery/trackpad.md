@@ -115,22 +115,16 @@ See [Trackpad Architecture](../../reference/trackpad-architecture.md) under Deve
 | ⏳ | Gesture tool integration — discrete gesture zones trigger makima actions; continuous gestures go directly to the input stack | [deckery#3](https://github.com/Plasma-Deckery/deckery/issues/3) |
 | ✅ | Merge `trackpad-config` branch to `main` | — |
 
-## Trackball Mode (experimental)
+## Trackball Mode (not implemented)
 
-!!! warning "Feature branch, uncertain future"
-    Trackball mode is implemented on the `trackpad-config` branch of makima-deckery and is not part of a release. The implementation is incomplete and it is not yet clear whether this mode will be developed further or is needed at all.
+!!! warning "Placeholder only — no behaviour yet"
+    `mode = "trackball"` is accepted by the config parser, but no handler is spawned: no virtual device is created and no events are forwarded. Setting it is equivalent to `mode = "disabled"`. The module (`src/trackball.rs`) exists only so the config schema has a home once real behaviour lands.
 
-Setting `mode = "trackball"` turns a pad into a relative mouse device with exponential momentum decay — the cursor continues moving after the finger lifts and gradually decelerates, similar to a physical trackball.
+The intent is to turn a pad into a relative pointing device with momentum — the cursor continues moving after the finger lifts and gradually decelerates, similar to a physical trackball, rather than mapping absolute finger position.
 
-```toml
-[trackpad.right]
-mode = "trackball"
+Two design questions are deliberately still open:
 
-[trackpad.right.handler_config]
-speed_scale        = 0.02   # raw-unit → pixel scale factor
-deceleration       = 0.95   # per-tick velocity multiplier during coast (0 = instant stop, 1 = no friction)
-min_velocity_px_s  = 10.0   # stop coasting below this speed (px/s)
-tick_ms            = 16     # coast update interval in ms (~60 Hz)
-```
+- Whether trackball is a *movement-type variant* inside the existing `mt-trackpad` handler, or a fully separate module with its own output device (relative mouse events instead of absolute multi-touch events).
+- What the config fields should be. An earlier draft carried momentum, velocity and deadzone knobs, but none of them were ever wired to the firmware, so they were removed rather than documented as if they worked.
 
-The haptic config is the same as `mt-trackpad` (`on_press`, `on_release`, `on_movement`).
+There are consequently **no trackball config fields** at present, and no trackball haptic config.
