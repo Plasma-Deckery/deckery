@@ -52,7 +52,13 @@ _DOT_INACTIVE = os.path.join(_ICONS, "dot-inactive.svg")
 _DOT_GAMING   = os.path.join(_ICONS, "dot-gaming.svg")
 
 _STATE_JSON         = "/tmp/makima-state.json"
-_MAKIMA_SOCK        = "/tmp/makima-control.sock"
+# Makima binds its control socket in $XDG_RUNTIME_DIR (/run/user/<uid>), not in
+# /tmp: /tmp is mode 1777, and this socket accepts "pause". No /tmp fallback —
+# it could only ever find a socket someone else squatted.
+_MAKIMA_SOCK        = os.path.join(
+    os.environ.get("XDG_RUNTIME_DIR") or f"/run/user/{os.getuid()}",
+    "makima-control.sock",
+)
 _CONFIG_DIR         = os.path.expanduser("~/.config/deckery")
 _SYSTEM_CONFIGS     = "/usr/share/deckery/configs"
 _GITHUB_DISCUSSIONS = "https://github.com/Plasma-Deckery/deckery/discussions"

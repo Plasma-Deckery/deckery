@@ -25,7 +25,7 @@ This page explains how makima-deckery differs and why both tools exist.
 | **IMU / stick tracking** | No | Yes — exported to state.json |
 | **Steam Deck back paddles** | Partial (via evdev) | Yes — BTN_GRIPL/R/L2/R2 natively |
 | **HUD integration** | No | Yes — deckery-hud |
-| **IPC socket** | No | Yes — `/tmp/makima-control.sock` |
+| **IPC socket** | No | Yes — `$XDG_RUNTIME_DIR/makima-control.sock` |
 | **Runs as root** | Yes | No — input group sufficient |
 | **Wayland-native** | Problematic (known bugs) | Yes |
 | **Language** | Python | Rust |

@@ -39,8 +39,8 @@ For the pulse chain format and all available fields, see [Haptic Feedback](hapti
 ## IPC commands
 
 ```bash
-echo "gaming_mode enable"  | socat - UNIX-CONNECT:/tmp/makima-control.sock
-echo "gaming_mode disable" | socat - UNIX-CONNECT:/tmp/makima-control.sock
+echo "gaming_mode enable"  | socat - UNIX-CONNECT:$XDG_RUNTIME_DIR/makima-control.sock
+echo "gaming_mode disable" | socat - UNIX-CONNECT:$XDG_RUNTIME_DIR/makima-control.sock
 ```
 
 See [IPC](ipc.md) for the full command reference.

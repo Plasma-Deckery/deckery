@@ -49,7 +49,7 @@ plasma-core.target  ← KDE-only, not active in Gamescope/Gaming Mode
 |---|---|
 | `systemctl --user is-active` | Running state of makima and deckery-hud |
 | `/tmp/makima-state.json` | `paused`, `lifecycle`, `errors`, `configs` |
-| `/tmp/makima-control.sock` | Sending IPC commands (pause / resume / config enable / disable) |
+| `$XDG_RUNTIME_DIR/makima-control.sock` | Sending IPC commands (pause / resume / config enable / disable) |
 | `configset_controller_neptune.vdf` | Steam Input configured state (polled every 2 s) |
 
 Status updates run on a background thread to keep the GTK main loop responsive. A `Gio.FileMonitor` on `makima-state.json` triggers an immediate debounced refresh (120 ms window) whenever the file changes — pause state changes appear in the menu within milliseconds.

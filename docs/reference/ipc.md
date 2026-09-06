@@ -1,6 +1,8 @@
 # IPC
 
-Makima-deckery exposes a Unix socket at `/tmp/makima-control.sock` for runtime control. Commands are newline-terminated strings.
+Makima-deckery exposes a Unix socket at `$XDG_RUNTIME_DIR/makima-control.sock` for runtime control. Commands are newline-terminated strings.
+
+`$XDG_RUNTIME_DIR` is `/run/user/<uid>` — a per-user tmpfs with mode `0700`, created by systemd at login. The socket lives there rather than in `/tmp` because `/tmp` is world-writable, and this socket accepts `pause`: anything able to create the path first could switch off input remapping. The per-user location also means each logged-in user gets their own socket, which is how `deckery-auth-daemon` addresses instances individually — it scans `/run/user/*/makima-control.sock`.
 
 ## Commands
 
@@ -18,14 +20,14 @@ Makima-deckery exposes a Unix socket at `/tmp/makima-control.sock` for runtime c
 ## Usage
 
 ```bash
-echo "pause"                                        | socat - UNIX-CONNECT:/tmp/makima-control.sock
-echo "resume"                                       | socat - UNIX-CONNECT:/tmp/makima-control.sock
-echo "gaming_mode enable"                           | socat - UNIX-CONNECT:/tmp/makima-control.sock
-echo "gaming_mode disable"                          | socat - UNIX-CONNECT:/tmp/makima-control.sock
-echo "config enable Steam Deck::org.mozilla.firefox"  | socat - UNIX-CONNECT:/tmp/makima-control.sock
-echo "config disable Steam Deck::org.mozilla.firefox" | socat - UNIX-CONNECT:/tmp/makima-control.sock
-echo "analog-state-export on"                       | socat - UNIX-CONNECT:/tmp/makima-control.sock
-echo "analog-state-export off"                      | socat - UNIX-CONNECT:/tmp/makima-control.sock
+echo "pause"                                        | socat - UNIX-CONNECT:$XDG_RUNTIME_DIR/makima-control.sock
+echo "resume"                                       | socat - UNIX-CONNECT:$XDG_RUNTIME_DIR/makima-control.sock
+echo "gaming_mode enable"                           | socat - UNIX-CONNECT:$XDG_RUNTIME_DIR/makima-control.sock
+echo "gaming_mode disable"                          | socat - UNIX-CONNECT:$XDG_RUNTIME_DIR/makima-control.sock
+echo "config enable Steam Deck::org.mozilla.firefox"  | socat - UNIX-CONNECT:$XDG_RUNTIME_DIR/makima-control.sock
+echo "config disable Steam Deck::org.mozilla.firefox" | socat - UNIX-CONNECT:$XDG_RUNTIME_DIR/makima-control.sock
+echo "analog-state-export on"                       | socat - UNIX-CONNECT:$XDG_RUNTIME_DIR/makima-control.sock
+echo "analog-state-export off"                      | socat - UNIX-CONNECT:$XDG_RUNTIME_DIR/makima-control.sock
 ```
 
 The socket may not exist if makima is not running — handle gracefully (socat exits with an error, nothing else happens). The current `paused` state is always reflected in `/tmp/makima-state.json`.

@@ -12,7 +12,7 @@ The heart of Deckery — the input remapper. Reads raw evdev events directly fro
 - **Modifier keys** — hold a button to activate a second layer of bindings
 - **Trackpad MT devices** — exposes the Steam Deck trackpads as standard uinput multi-touch devices for libinput and gesture tools
 - **HUD state export** — writes a fully-resolved state snapshot to `/tmp/makima-state.json` on every input event for deckery-hud to consume
-- **IPC control socket** — pause, resume, and configure the service at runtime via `/tmp/makima-control.sock`
+- **IPC control socket** — pause, resume, and configure the service at runtime via `$XDG_RUNTIME_DIR/makima-control.sock`
 
 ## What's different from upstream
 

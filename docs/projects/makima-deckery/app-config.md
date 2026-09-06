@@ -46,8 +46,8 @@ Via the tray's **Controller Bindings** submenu — check or uncheck a config ent
 Via IPC directly:
 
 ```bash
-echo "config enable Steam Deck::org.mozilla.firefox"  | socat - UNIX-CONNECT:/tmp/makima-control.sock
-echo "config disable Steam Deck::org.mozilla.firefox" | socat - UNIX-CONNECT:/tmp/makima-control.sock
+echo "config enable Steam Deck::org.mozilla.firefox"  | socat - UNIX-CONNECT:$XDG_RUNTIME_DIR/makima-control.sock
+echo "config disable Steam Deck::org.mozilla.firefox" | socat - UNIX-CONNECT:$XDG_RUNTIME_DIR/makima-control.sock
 ```
 
 The enabled state is persisted across makima restarts and reflected in `state.json` under `configs[].enabled`.

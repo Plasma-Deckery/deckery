@@ -23,5 +23,6 @@ plasma-core.target                ← KDE-only, not active in Gamescope/Gaming M
                │
                ├─ /tmp/makima-state.json  ──► deckery-hud  (live overlay)
                │                         └──► deckery-tray (status display)
-               └─ /tmp/makima-control.sock ◄── deckery-tray (pause / resume)
+               └─ $XDG_RUNTIME_DIR/makima-control.sock
+                                          ◄── deckery-tray (pause / resume)
 ```
