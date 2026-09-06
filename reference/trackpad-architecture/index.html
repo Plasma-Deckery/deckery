@@ -1,0 +1,2307 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://plasma-deckery.github.io/deckery/reference/trackpad-architecture/">
+      
+      
+        <link rel="prev" href="../architecture/">
+      
+      
+        <link rel="next" href="../installer-script/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Trackpad Architecture - Deckery</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="blue-grey" data-md-color-accent="teal">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#trackpad-architecture" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Deckery" class="md-header__button md-logo" aria-label="Deckery" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Deckery
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Trackpad Architecture
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="blue-grey" data-md-color-accent="teal"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="blue-grey" data-md-color-accent="teal"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Plasma-Deckery/deckery" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Plasma-Deckery/deckery
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../.." class="md-tabs__link">
+          
+  
+  
+    
+  
+  Home
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../projects/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Projects
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../../development/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Development
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../comparison-input-remapper/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Similar Tools
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Deckery" class="md-nav__button md-logo" aria-label="Deckery" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Deckery
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Plasma-Deckery/deckery" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Plasma-Deckery/deckery
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_1" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../.." class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_1" id="__nav_1_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Home
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../setup-guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Setup Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../progress-and-challenges/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Progress & Challenges
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../projects/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Projects
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2" id="__nav_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Projects
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_2" id="__nav_2_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Own Projects
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Own Projects
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../projects/deckery-hud/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deckery HUD
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_2_2" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../projects/makima-deckery/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Makima Deckery
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2_2_2" id="__nav_2_2_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Makima Deckery
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../projects/makima-deckery/app-config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    App Config
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../projects/makima-deckery/bindings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Bindings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../projects/makima-deckery/gaming-mode/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gaming Mode
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../projects/makima-deckery/trackpad/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trackpad
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../projects/deckery-tray/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deckery Tray
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_2_4" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../projects/steamdeck-dotfiles/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Steam Deck Dotfiles
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2_2_4" id="__nav_2_2_4_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_2_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_2_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Steam Deck Dotfiles
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../projects/steamdeck-dotfiles/chezmoi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chezmoi & Tracking
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_3" id="__nav_2_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Forked Tools
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Forked Tools
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../projects/kyanite/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kyanite
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../projects/maximized-window-gaps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    maximized-window-gaps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_4" id="__nav_2_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Further Tools
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Further Tools
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../projects/krohnkite/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kröhnkite
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../projects/openwhispr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OpenWhispr
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Development
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trackpad Architecture
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trackpad Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#why-hidraw-not-evdev" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why hidraw, not evdev
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data flow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#layer-1-pad_hidrawrs-raw-producer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Layer 1 — pad_hidraw.rs: raw producer
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#layer-2-trackpad_routerrs-core-routing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Layer 2 — trackpad_router.rs: Core routing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#layer-3-handler-modules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Layer 3 — handler modules
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#config-ownership-split" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Config ownership split
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-combined-gesture-channel-gesture_padrs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The combined gesture channel — gesture_pad.rs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#haptic-feedback-mechanism" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Haptic feedback mechanism
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#virtual-device-geometry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Virtual device geometry
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lizard-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lizard Mode
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kdelibinput-defaults" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        KDE/libinput defaults
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../installer-script/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installer Script
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../updates/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Updates
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ipc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    IPC
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gaming-mode/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gaming Mode
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../haptic-feedback/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Haptic Feedback
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../state-json/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    State JSON
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../steam-input-mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Steam Input Mapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Similar Tools
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Similar Tools
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../comparison-input-remapper/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Input Remapper
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#why-hidraw-not-evdev" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why hidraw, not evdev
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data flow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#layer-1-pad_hidrawrs-raw-producer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Layer 1 — pad_hidraw.rs: raw producer
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#layer-2-trackpad_routerrs-core-routing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Layer 2 — trackpad_router.rs: Core routing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#layer-3-handler-modules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Layer 3 — handler modules
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#config-ownership-split" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Config ownership split
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-combined-gesture-channel-gesture_padrs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The combined gesture channel — gesture_pad.rs
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#haptic-feedback-mechanism" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Haptic feedback mechanism
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#virtual-device-geometry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Virtual device geometry
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lizard-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lizard Mode
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kdelibinput-defaults" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        KDE/libinput defaults
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/Plasma-Deckery/deckery/edit/main/docs/reference/trackpad-architecture.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+
+
+<h1 id="trackpad-architecture">Trackpad Architecture</h1>
+<p>Internal implementation notes for makima-deckery's trackpad emulation (merged to <code>main</code>, not yet in a release — see <a href="../../projects/makima-deckery/trackpad/">Trackpad</a> for the user-facing config reference).</p>
+<h2 id="why-hidraw-not-evdev">Why hidraw, not evdev</h2>
+<p>The kernel driver (<code>hid-steam</code>) exposes trackpad position on evdev as <code>ABS_HAT0X/Y</code> (left) / <code>ABS_HAT1X/Y</code> (right), with clicks on <code>BTN_THUMB</code>/<code>BTN_THUMB2</code>. Earlier versions of this feature read position from evdev. That turned out to be the wrong source: evdev and hidraw are two different HID interfaces of the same physical device, read via two independent kernel/userspace paths, and they can arrive out of order relative to each other — combining "position from evdev" with "touch from hidraw" caused large cursor jumps on reposition.</p>
+<p>Makima instead parses the raw 64-byte hidraw report directly (<code>pad_hidraw.rs</code>) and reads position, touch state, <em>and</em> click for both pads out of that single read. Because all of it comes from one <code>read()</code>, it's atomic by construction — there is no ordering bug possible, and no evdev fallback: if no hidraw sibling device is found for a controller, trackpad position/touch is simply unavailable (state.json will show pads as untouched, and MT-trackpad mode gets no input).</p>
+<h2 id="data-flow">Data flow</h2>
+<div class="highlight"><pre><span></span><code>hidraw report (64 bytes, both pads atomically)
+        │
+        ▼
+pad_hidraw.rs ◄──────────────── HapticCommand (feature report 0x8F back to device)
+        │  PadFrame{lx,ly,ltouch,lclick,rx,ry,rtouch,rclick}
+        ▼
+trackpad_router.rs                                    always ──► PadState ──► state.json
+        │  Core routing + gesture-session state machine (pad-order-independent)
+        │
+        ├─ left touching, no gesture session  ──► SinglePadFrame  ──► mt_trackpad::run_single  ──► "Deckery Left Trackpad"
+        ├─ right touching, no gesture session  ──► SinglePadFrame  ──► mt_trackpad::run_single  ──► "Deckery Right Trackpad"
+        └─ both touching (gesture session)     ──► CombinedPadFrame ──► gesture_pad::run        ──► "Deckery Combined Trackpad"
+</code></pre></div>
+<p>Three layers, each independently testable and swappable:</p>
+<div class="highlight"><pre><span></span><code>pad_hidraw.rs        Raw producer. Parses hidraw reports into PadFrame per pad
+                      and exposes a HapticCommand sink for feature-report
+                      writes back to the device. No knowledge of modes,
+                      gestures, or haptic policy — pure HID wire-format
+                      decode/encode.
+
+trackpad_router.rs    Core routing. Owned by EventReader, not by any handler.
+                      Always mirrors raw position/touch/click into state.json
+                      regardless of mode, tracks combined two-finger gesture-
+                      session entry/exit, and routes each frame to whichever
+                      per-channel handler input is attached.
+
+handler modules       Interpreters downstream of the router. Each turns one
+(mt_trackpad.rs,      channel's frame stream into virtual device events plus
+gesture_pad.rs, ...)  its own haptic policy. Selected per pad via `mode` in
+                      the config; a handler owns everything about "what this
+                      mode feels like" and self-parses its own config shape.
+</code></pre></div>
+<p>This split exists so a new interpretation of the same raw pad data — a trackball-style relative-mouse mode, a radial/zone mode, different haptic timing — is a new handler module consuming the same <code>SinglePadFrame</code>/<code>CombinedPadFrame</code> stream, without touching the raw parser or the router.</p>
+<h2 id="layer-1-pad_hidrawrs-raw-producer">Layer 1 — <code>pad_hidraw.rs</code>: raw producer</h2>
+<p>Reads the controller's raw hidraw interface (the <code>.0005</code> sibling of the evdev gamepad node — found via sysfs, see <code>find_hidraw_for_evdev</code>) and, on every report, emits a <code>PadFrame</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="k">pub</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">PadFrame</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="n">lx</span><span class="p">:</span><span class="w"> </span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="k">pub</span><span class="w"> </span><span class="n">ly</span><span class="p">:</span><span class="w"> </span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="k">pub</span><span class="w"> </span><span class="n">ltouch</span><span class="p">:</span><span class="w"> </span><span class="kt">bool</span><span class="p">,</span><span class="w"> </span><span class="k">pub</span><span class="w"> </span><span class="n">lclick</span><span class="p">:</span><span class="w"> </span><span class="kt">bool</span><span class="p">,</span>
+<span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="n">rx</span><span class="p">:</span><span class="w"> </span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="k">pub</span><span class="w"> </span><span class="n">ry</span><span class="p">:</span><span class="w"> </span><span class="kt">i32</span><span class="p">,</span><span class="w"> </span><span class="k">pub</span><span class="w"> </span><span class="n">rtouch</span><span class="p">:</span><span class="w"> </span><span class="kt">bool</span><span class="p">,</span><span class="w"> </span><span class="k">pub</span><span class="w"> </span><span class="n">rclick</span><span class="p">:</span><span class="w"> </span><span class="kt">bool</span><span class="p">,</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Byte offsets were determined empirically by recording evdev and hidraw simultaneously against a shared monotonic clock. Position lives at fixed <code>i16</code> offsets in the report; touch and click for both pads are separate bits within the same status byte (<code>byte[10]</code>) — confirmed against the upstream <code>hid-steam</code> kernel driver's own bit layout.</p>
+<p>This layer also owns the write side: haptic pulses ("click ticks", gesture feedback) are sent back to the device as HID feature reports (<code>HIDIOCSFEATURE</code>, report ID <code>0x8F</code>) via a <code>HapticCommand</code> channel. <code>HapticPad::{Left, Right, Both}</code> selects which actuator fires — its wire encoding was fixed empirically against real hardware (not read from kernel source alone, which described the opposite mapping).</p>
+<p>Trackpad position/touch/click data and the Lizard Mode suppression heartbeat share this same raw hidraw file descriptor.</p>
+<h2 id="layer-2-trackpad_routerrs-core-routing">Layer 2 — <code>trackpad_router.rs</code>: Core routing</h2>
+<p>Not spawned as its own task — called from <code>EventReader::run</code> inside the same <code>tokio::join!</code> as everything else, so it can borrow shared state (<code>PadState</code>, gesture-session flag) for its whole lifetime.</p>
+<p>Two responsibilities, always active regardless of config:</p>
+<ol>
+<li><strong>State export.</strong> Every frame updates <code>PadState</code> (position, hardware touch, pressed) for both pads unconditionally — <code>state.json</code> reflects raw hardware truth even when a pad's <code>mode = "disabled"</code>, so the HUD can visualize trackpad input with no handler attached.</li>
+<li><strong>Gesture-session tracking.</strong> A pure, pad-order-independent state machine (<code>decide_gesture_transition</code>) decides whether a combined two-finger gesture session is active: it starts the instant <em>both</em> pads are simultaneously touching, and ends the instant <em>either</em> lifts — regardless of which pad touched down or lifted first. On exit, whichever pad is still touching gets a synthetic touch-down resume on its own individual channel, so a two-finger gesture that becomes one finger seamlessly continues as single-pad input instead of just stopping.</li>
+</ol>
+<p>Beyond that, the router's only job is dispatch: forward each frame to whichever of <code>left_tx</code> / <code>right_tx</code> / <code>combined_tx</code> channels are <code>Some</code> (i.e. have a handler attached for that mode). A <code>None</code> channel is a disabled channel — the router skips sending into it entirely rather than blocking on a channel nobody is reading, so a pad set to <code>"disabled"</code> can never stall routing for the other pad.</p>
+<p><code>state.json</code> writes are rate-limited to ~60 Hz for analog movement, but bypass the limit entirely for digital transitions (touch lift/down, gesture enter/exit) so those are never delayed.</p>
+<h2 id="layer-3-handler-modules">Layer 3 — handler modules</h2>
+<p>A handler consumes one channel's frame stream (<code>SinglePadFrame</code> for an individual pad, <code>CombinedPadFrame</code> for the gesture channel) and decides what it <em>means</em>: which virtual device to emit MT events on, and what haptic feedback (if any) to fire and when. Selected per pad via <code>mode</code> in <code>[trackpad.left]</code> / <code>[trackpad.right]</code>.</p>
+<table>
+<thead>
+<tr>
+<th><code>mode</code></th>
+<th>Handler</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>"disabled"</code></td>
+<td>none</td>
+<td>Default. No virtual device, no events forwarded. Position/touch/click still tracked into <code>state.json</code> by the router.</td>
+</tr>
+<tr>
+<td><code>"mt-trackpad"</code></td>
+<td><code>mt_trackpad.rs</code></td>
+<td>Implemented. Emits standard MT touchpad events (<code>Deckery Left/Right Trackpad</code>), plus haptic click-ticks on both the press and release edges.</td>
+</tr>
+<tr>
+<td><code>"trackball"</code></td>
+<td><code>trackball.rs</code></td>
+<td><strong>Stub only.</strong> Accepted as a config value without warning, but no handler is actually wired into the router's <code>tokio::join!</code> — behaves identically to <code>"disabled"</code> today. Only its (currently empty) config struct exists, as a home for the shape once real relative-mouse behaviour lands.</td>
+</tr>
+<tr>
+<td><code>"scroll"</code></td>
+<td><code>scroll_pad.rs</code></td>
+<td><strong>Stub only</strong>, same status as <code>"trackball"</code> — module exists, nothing dispatches to it yet.</td>
+</tr>
+</tbody>
+</table>
+<p>The combined gesture channel (<code>[trackpad.gestures]</code>, enabled via <code>combined_gesture_device = true</code>) is handled separately by <code>gesture_pad.rs</code> — see below.</p>
+<h2 id="config-ownership-split">Config ownership split</h2>
+<p>Config for a trackpad side is split between Core (<code>config.rs</code>) and the handler that <code>mode</code> selects, and each side only ever knows its own half:</p>
+<ul>
+<li><strong>Core owns <code>mode</code></strong> (which handler gets spawned), <strong><code>click_pressure</code></strong> (a HID feature-report threshold that lives on the physical sensor itself — independent of whichever handler is active, since two handlers could never sensibly want different firmware thresholds at the same time), <strong><code>kde</code></strong> (the <code>[trackpad.*.kde]</code> sub-table, consumed by <code>kde_input_defaults</code> before any device is created — see <a href="#kdelibinput-defaults">KDE/libinput defaults</a> below), and router-level settings like <code>combined_gesture_device</code>.</li>
+<li><strong>Everything else</strong> in a <code>[trackpad.left]</code> / <code>[trackpad.right]</code> / <code>[trackpad.gestures]</code> table is handler-specific (haptics policy, movement algorithm, gesture semantics) and is handed to the handler as a raw, unparsed <code>toml::Value</code> — Core never learns or validates the shape. Each handler module defines its own <code>#[derive(Deserialize)]</code> struct and parses itself, falling back to defaults (with a logged warning) on any shape mismatch, so a typo in a handler-owned field can never crash makima or block input on the pad.</li>
+</ul>
+<p>This is why <code>mt_trackpad::MtTrackpadConfig</code> and <code>gesture_pad::GesturePadConfig</code> exist as self-contained structs living in their own handler files instead of centralized in <code>config.rs</code>.</p>
+<h2 id="the-combined-gesture-channel-gesture_padrs">The combined gesture channel — <code>gesture_pad.rs</code></h2>
+<p>The combined device isn't a distinct physical sensor — it has no <code>mode</code> or <code>click_pressure</code> of its own, so it doesn't get a <code>TrackpadSideConfig</code> like <code>left</code>/<code>right</code> do. Instead it's its own handler module with its own config shape, self-parsed from the raw <code>[trackpad.gestures]</code> table.</p>
+<p>A click during a two-finger gesture has no established touchpad semantics (unlike a single-finger tap/click on an individual pad) — so unlike <code>mt_trackpad</code>'s <code>on_press</code>/<code>on_release</code>, there is deliberately <strong>no click-based haptic</strong> on the gesture channel. The physical click bit is still forwarded to the virtual device's <code>BTN_LEFT</code> unconditionally (same as a real multi-touch pad would report it), just with no haptic tied to it.</p>
+<p>What <em>is</em> meaningful for a gesture is its lifecycle — start, ongoing movement, end — so <code>GestureHapticConfig</code> is keyed on that instead (<code>on_gesture_start</code>/<code>on_gesture_move</code>/<code>on_gesture_end</code>).</p>
+<p><code>gesture_pad::run</code> currently only sees a flat stream of <code>CombinedPadFrame</code>s, not session-transition events — recognising "session just started/ended" needs a signal from <code>trackpad_router</code>'s gesture-session tracking that isn't plumbed through to the handler yet. The config shape is settled and parses today; wiring the actual pulses is a follow-up.</p>
+<h2 id="haptic-feedback-mechanism">Haptic feedback mechanism</h2>
+<p>Both <code>mt_trackpad</code> (individual pads) and <code>gesture_pad</code> (combined channel) share the same underlying pulse mechanism (<code>mt_trackpad::pulse</code>) and wire format (<code>pad_hidraw::HapticCommand</code> → HID feature report <code>0x8F</code>), but each owns its <em>own</em> policy for when to fire:</p>
+<ul>
+<li><strong><code>mt_trackpad</code></strong>: fires two independent pulses per pad — <code>on_press</code> on the press edge and <code>on_release</code> on the release edge of a physical click. A click is really two separately feelable edges, not one event, so each gets its own configurable pulse. Both default to the same tuned three-pulse burst (8ms on / 8ms off, <code>duration_us=8000, interval_us=8000, count=3, gain_db=0</code>) if unset — validated on real Steam Deck hardware against the Lizard Mode click buzz as a reference feel. <code>gain_db</code> is deliberately left at <code>0</code> by default: on-hardware A/B testing showed no perceptible effect from raising it, so it isn't a real lever the way the timing fields are (tracked in <a href="https://github.com/Plasma-Deckery/makima-deckery/issues/20">makima-deckery#20</a>).</li>
+<li><strong><code>gesture_pad</code></strong>: fires on gesture lifecycle events (start/move/end) instead of click — not wired up yet, see above.</li>
+</ul>
+<p>Haptic parameters (<code>duration_us</code>, <code>interval_us</code>, <code>count</code>, <code>gain_db</code>) are identical across both — same <code>HapticPulse</code> struct — only the trigger condition differs per handler.</p>
+<h2 id="virtual-device-geometry">Virtual device geometry</h2>
+<p>Position is Y-corrected to libinput convention (hardware reports up as negative; the virtual device flips this). On the combined device, left/right pads are split into left/right halves of a shared X axis so a pinch gesture tracks correctly across both MT slots. libinput derives everything it needs — two-finger scroll/pan, pinch-zoom — purely from the two <code>ABS_MT_POSITION</code> slots; there is no separate gesture-type event makima produces.</p>
+<h2 id="lizard-mode">Lizard Mode</h2>
+<p>Full Steam independence requires suppressing the <code>hid-steam</code> kernel driver's built-in mouse/scroll fallback ("Lizard Mode"), which otherwise emits mouse/scroll events directly from the trackpads, bypassing makima entirely. Controlled via <code>SUPPRESS_LIZARD_MODE</code> — see <a href="../lizard-mode/">Lizard Mode</a> for the user-facing setting. Implementation-wise it shares the same raw hidraw file descriptor that <code>pad_hidraw.rs</code> uses for trackpad data: a heartbeat sends suppression feature reports every 4 s, and if makima crashes or exits, the fd closes and Lizard Mode re-activates automatically within ~8 s.</p>
+<h2 id="kdelibinput-defaults">KDE/libinput defaults</h2>
+<p>When a virtual MT device first appears, KWin reads <code>~/.config/kcminputrc</code> for a <code>[Libinput][vendor][product][name]</code> section and applies those settings. Without such a section, KDE defaults apply — which include tap-to-click enabled and adaptive acceleration, neither of which is right for a Steam Deck pad.</p>
+<p><code>kde_input_defaults.rs</code> solves this by writing the relevant sections to <code>kcminputrc</code> <strong>before</strong> the uinput nodes are created, so KWin always finds them on first device discovery. It runs every time <code>device_session.rs</code> sets up a trackpad session (i.e. on every makima start and on every config-file reload that triggers a session restart), and always overwrites the Deckery sections — making the <code>[trackpad.*.kde]</code> TOML block the single source of truth rather than KWin's settings UI.</p>
+<p>All three virtual devices share the same stable uinput IDs (vendor <code>0x1234</code>, product <code>0x5678</code>, bus <code>BUS_VIRTUAL</code>), so KWin's per-device settings always key on the same identifiers across reboots.</p>
+<p>Default values written (all overridable via <code>[trackpad.*.kde]</code> / <code>[trackpad.gestures.kde]</code>):</p>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Single pad default</th>
+<th>Gesture pad default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>TapToClick</code></td>
+<td><code>false</code></td>
+<td><code>false</code></td>
+</tr>
+<tr>
+<td><code>DisableWhileTyping</code></td>
+<td><code>false</code></td>
+<td><code>false</code></td>
+</tr>
+<tr>
+<td><code>PointerAcceleration</code></td>
+<td><code>0.200</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>PointerAccelerationProfile</code></td>
+<td><code>2</code> (flat)</td>
+<td><code>2</code> (flat)</td>
+</tr>
+<tr>
+<td><code>NaturalScroll</code></td>
+<td><code>false</code></td>
+<td><code>true</code></td>
+</tr>
+<tr>
+<td><code>ScrollFactor</code></td>
+<td>—</td>
+<td><code>0.5</code></td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "navigation.indexes", "search.suggest", "search.highlight", "content.code.copy", "content.action.edit"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
