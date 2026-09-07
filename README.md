@@ -17,6 +17,73 @@ Deckery remaps controller buttons to keyboard keys, shortcuts, and actions — w
 
 → [Progress & open challenges](https://plasma-deckery.github.io/deckery/progress-and-challenges/)
 
+## Compatibility
+
+|  | **Bazzite 43** | **Bazzite 44** | **CachyOS Handheld** | **GNOME** | **Hyprland** |
+|---|---|---|---|---|---|
+| **Base** | Fedora 43, immutable | Fedora 44, immutable | Arch, rolling | — | — |
+| **Kernel** | ≤ 6.17 | 7.2 | 7.x | — | — |
+| **Desktop** | KDE Plasma 6 | KDE Plasma 6 | KDE Plasma 6 | GNOME | Hyprland |
+| **Installation** | COPR + `rpm-ostree` | COPR + `rpm-ostree` | `get.sh` (distrobox) | — | — |
+| **Controller backend** | evdev (hid-steam) | hidraw-native | hidraw-native | — | — |
+| **Steam Deck** | ✅ | ✅ | ✅ | — | — |
+| **Other handhelds** | ✅ HHD pre-installed | ❌ HHD → InputPlumber | ❓ untested | — | — |
+| **Button remapping** | ✅ | ✅ | ✅ | — | — |
+| **Per-app bindings** (window focus) | ✅ KWin D-Bus | ✅ KWin D-Bus | ✅ KWin D-Bus | ❌ | ❓ ¹ |
+| **Desktop management** (workspaces, activities) | ✅ KWin D-Bus | ✅ KWin D-Bus | ✅ KWin D-Bus | ❌ | ❌ |
+| **HUD overlay** | ✅ wlr-layer-shell | ✅ wlr-layer-shell | ✅ wlr-layer-shell | ❌ | ❓ untested ² |
+| **Tray icon** | ✅ | ✅ | ✅ | — | — |
+| **Trackpad + haptics** | ✅ | ✅ | ✅ | — | — |
+| **Gaming Mode guard** | ✅ `plasma-core.target` | ✅ `plasma-core.target` | ⚠️ untested | — | ❌ |
+
+¹ Planned: native Hyprland IPC socket (`activewindow` events on `.socket2.sock`). `zwlr_foreign_toplevel_manager_v1` has known reliability issues on Hyprland (app_id unreliable). A PoC exists in `tools/foreign-toplevel-test/` but is untested on a real Hyprland system. Tracked in [makima-deckery#36](https://github.com/Plasma-Deckery/makima-deckery/issues/36).  
+² `zwlr_layer_shell_v1` is documented as supported by Hyprland — untested in practice.
+
+<details>
+<summary>Details — controller backend, per-app bindings, HUD overlay, other handhelds</summary>
+
+**Controller backend — why it differs between Bazzite 43 and 44**
+
+Linux kernel 7.1 changed the `hid-steam` driver
+([commit `cd33a91`](https://github.com/torvalds/linux/commit/cd33a91d37eb4d7c6ce56aa7f4688066309808eb),
+Vicki Pfau / Valve): opening `/dev/hidraw*` now fully unregisters the Steam Deck evdev node.
+On kernel ≤ 6.17 (Bazzite 43), the evdev node stays alive alongside hidraw and makima reads
+from it normally. On kernel 7.1+ (Bazzite 44, CachyOS), the evdev node disappears the moment
+hidraw is opened — makima therefore reads controller input directly from the 64-byte HID reports
+on the hidraw device. The hidraw interface allows multiple simultaneous readers, so there is no
+conflict with Steam.
+
+**Per-app bindings — why KDE-only**
+
+Per-app bindings require knowing which window is active. makima detects this via the
+`org.kde.kwin.Scripting` D-Bus interface — a KWin-exclusive signal (`workspace.windowActivated`).
+There is no compositor-agnostic equivalent: each compositor needs its own adapter
+([makima-deckery#36](https://github.com/Plasma-Deckery/makima-deckery/issues/36)).
+Since all major handheld Linux distributions ship KDE Plasma as their desktop session, this is
+not a practical limitation today.
+
+**HUD overlay — why a wlroots compositor is required**
+
+`deckery-hud` uses `gtk4-layer-shell`, which implements the `zwlr_layer_shell_v1` Wayland
+protocol. This protocol is supported by KDE KWin, Hyprland, Sway, and Niri — but deliberately
+not by GNOME/Mutter. Since all tested handheld distros use KDE Plasma, this is not a blocker
+([deckery#55](https://github.com/Plasma-Deckery/deckery/issues/55)).
+
+**Other handhelds — the HHD needle's eye**
+
+On non-Steam-Deck handhelds (ROG Ally, Legion Go, AYANEO, etc.), makima needs to see a
+"Steam Deck Controller" evdev node to apply its config. [HHD](https://github.com/hhd-dev/hhd)
+achieved this by creating a virtual Steam Deck UHID — `hid-steam` would bind to it and expose
+the expected evdev node on every handheld. One config, all devices. Bazzite 43 shipped HHD by
+default. Bazzite 44 replaced HHD with
+[InputPlumber](https://github.com/ShadowBlip/InputPlumber), which presents a virtual
+Xbox/DualSense pad instead — no fake Steam Deck UHID, so makima's config no longer matches.
+Tracked in [makima-deckery#46](https://github.com/Plasma-Deckery/makima-deckery/issues/46).
+
+</details>
+
+→ [Setup guide](https://plasma-deckery.github.io/deckery/setup-guide/)
+
 ## ☕ Support Deckery
 
 Deckery is free and open-source. If you use this project or share the vision of a truly efficient Linux handheld, your support directly fuels its development.
@@ -83,13 +150,6 @@ The installer sets everything up and walks you through the Steam Input configura
 → [Setup Guide](https://plasma-deckery.github.io/deckery/setup-guide/)
 
 ---
-
-## Device
-
-Tested on: Steam Deck (Bazzite 43, KDE Plasma 6, Wayland)
-
-### Coffee
-Deckery is free and open-source. If you find the project useful and want to support its ambitious goal, i would be honoured if you considered donating. Thanks :)
 
 <p align="center">
   <a href="https://ko-fi.com/phischdev" target="_blank">
