@@ -1,6 +1,79 @@
 # VM Testing
 
-Scripts for testing Deckery in a Bazzite 44 QEMU virtual machine with live Steam Controller passthrough.
+Scripts for testing Deckery in QEMU virtual machines with live Steam Controller passthrough.
+
+Two VMs are supported:
+
+| VM | Distro | SSH port | User | Scripts prefix |
+|----|--------|----------|------|----------------|
+| Bazzite 44 | Fedora/Bazzite | `localhost:2222` | `liveuser` | `vm-start.sh`, `controller-*.sh` |
+| CachyOS Handheld | Arch/CachyOS | `localhost:2224` | `deck` | `cachyos-*.sh` |
+
+---
+
+## CachyOS Handheld VM
+
+**VM disk:** `/home/philipp/VMs/cachyos-test/install-disk.qcow2`  
+**Snapshots:** `snap-cachyos-clean`, `snap-cachyos-kde-ready`, `snap-cachyos-gamescope-venus`, `snap-cachyos-deckery-main`  
+**SSH key:** `~/.ssh/vm_key` (ed25519, no passphrase)  
+**SSH:** `localhost:2224`, user `deck`
+
+### Scripts
+
+| Script | What it does |
+|--------|-------------|
+| `cachyos-vm-start.sh` | Start the CachyOS VM with GTK display |
+| `cachyos-plymouth-fix.sh` | Kill plymouthd after every boot (required, see below) |
+| `cachyos-controller-attach.sh` | Pass Steam Controller from host → CachyOS VM |
+| `cachyos-controller-detach.sh` | Return Steam Controller from CachyOS VM → host |
+
+### Typical test session
+
+```bash
+# 1. Start VM
+bash testing/cachyos-vm-start.sh
+
+# 2. Wait for SSH
+until SSH_ASKPASS="" SSH_ASKPASS_REQUIRE=never \
+  ssh -i ~/.ssh/vm_key -o BatchMode=yes -o PasswordAuthentication=no \
+  -o StrictHostKeyChecking=no -o ConnectTimeout=3 -p 2224 \
+  deck@localhost "echo up" 2>/dev/null; do sleep 5; done
+
+# 3. Kill Plymouth (ALWAYS required after boot — see Known Issues)
+bash testing/cachyos-plymouth-fix.sh
+
+# 4. Pass controller to VM
+bash testing/cachyos-controller-attach.sh
+
+# 5. Return controller to host when done
+bash testing/cachyos-controller-detach.sh
+```
+
+### Deploying a new makima-deckery build
+
+```bash
+# In the VM, run redeploy.sh (builds inside the 'deckery' distrobox):
+SSH_ASKPASS="" SSH_ASKPASS_REQUIRE=never \
+  ssh -i ~/.ssh/vm_key -o BatchMode=yes -o PasswordAuthentication=no \
+  -o StrictHostKeyChecking=no -p 2224 deck@localhost \
+  "bash ~/makima-deckery/redeploy.sh"
+```
+
+### Known issues — CachyOS VM
+
+- **Plymouth hangs after every boot** (`plymouth-quit.service` times out).  
+  `plymouthd` holds the DRM device (virtio-vga); KDE is running behind it but invisible.  
+  Fix: always run `cachyos-plymouth-fix.sh` after boot.
+
+- **`qdbus` not installed** (Qt 6-only distro; `qdbus6` is the replacement).  
+  The installer (`makima-deckery/install.sh`) creates `~/.local/bin/qdbus → qdbus6` automatically.  
+  Without this, all `run = ["qdbus ..."]` actions in deckery configs silently fail.
+
+- **Display manager:** CachyOS uses `plasmalogin` (not SDDM). Autologin as `deck` into a Wayland session. `kwin_wayland` starts as a child of `startplasma-wayland`, not via systemd.
+
+---
+
+## Bazzite 44 VM
 
 ## Setup
 
