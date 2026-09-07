@@ -1,0 +1,11 @@
+# Hyprland Desktop — placeholder.
+#
+# Deliberately empty. It exists to prove the compositor gate keeps a module out
+# of the merge entirely: under KDE nothing in here is ever applied, and the
+# include produces no warning.
+#
+# Not a translation of kde-desktop.toml. Hyprland has no Activities and a
+# different tiling model, so the bindings will be chosen from scratch.
+
+[module]
+requires_compositor = "Hyprland"

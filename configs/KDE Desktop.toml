@@ -1,0 +1,42 @@
+# KDE Desktop — window and workspace control.
+#
+# Window and workspace bindings live together because they are chosen together:
+# what "maximize" or "next desktop" should do depends on the compositor's whole
+# desktop model, not on the two halves independently. A Hyprland port is a
+# re-think of this file, not a translation of it.
+#
+# Plain module: names no device and no window class, so it only ever runs
+# because a base config lists it under [modules] include.
+#
+# Note: KrohnkiteToggleFloat needs the Krohnkite KWin script installed.
+# Everything else here uses stock KWin shortcuts.
+
+[module]
+requires_compositor = "KDE"
+
+[remap]
+L1-Start = { keys = ["KEY_LEFTALT", "KEY_F3"], label = "Window Menu" }
+
+[commands]
+# --- L1+R1+Face → Window management ---
+L1-R1-A = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Window Fullscreen'"], label = "Fullscreen" }
+L1-R1-X = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Window Maximize'"], label = "Maximize/Restore" }
+L1-R1-Y = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'KrohnkiteToggleFloat'"], label = "Toggle Float" }
+L1-R1-B = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Window Close'"], label = "Close Window" }
+
+L1-Select = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Grid View'"], label = "Desktop Grid" }
+
+# --- L1 + DPad → Virtual Desktop / Activity switching ---
+L1-Up    = { run = ["qdbus org.kde.KWin /KWin previousDesktop"], label = "Previous Desktop" }
+L1-Down  = { run = ["qdbus org.kde.KWin /KWin nextDesktop"], label = "Next Desktop" }
+L1-Left  = { run = ["qdbus org.kde.ActivityManager /ActivityManager/Activities org.kde.ActivityManager.Activities.PreviousActivity"], label = "Previous Activity" }
+L1-Right = { run = ["qdbus org.kde.ActivityManager /ActivityManager/Activities org.kde.ActivityManager.Activities.NextActivity"], label = "Next Activity" }
+
+# --- L1+R1+DPad → Move window to another virtual desktop ---
+L1-R1-Up    = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Window One Desktop Up'"],   label = "Window to Previous Desktop" }
+L1-R1-Down  = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Window One Desktop Down'"], label = "Window to Next Desktop" }
+L1-R1-Right = { run = ["bash -c 'N=$(qdbus org.kde.KWin /KWin numberOfDesktops); for i in $(seq $(qdbus org.kde.KWin /KWin currentDesktop) $((N-1))); do qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut \"Window One Desktop to the Right\"; done'"], label = "Window to Last Desktop" }
+L1-R1-Select = { run = ["/var/home/philipp/Programming/makima-deckery/tools/next-on-last-desktop.sh"], label = "Next window on last desktop" }
+
+[hints]
+KEY_LEFTALT-KEY_TAB = "Tab (Switch Windows)"

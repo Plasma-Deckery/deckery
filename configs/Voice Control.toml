@@ -1,0 +1,8 @@
+# Voice Control — OpenWhispr push-to-talk.
+#
+# Optional: drop this file, or take it out of the base config's
+# [modules] include, and the binding disappears with it.
+
+[remap]
+# --- L1 + R5 → OpenWhispr (Ctrl + PageDown) ---
+L1-R5 = { keys = ["KEY_LEFTCTRL", "KEY_PAGEDOWN"], label = "Text to Speech (Ctrl+PgDn)" }

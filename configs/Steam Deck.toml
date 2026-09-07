@@ -1,116 +1,121 @@
-# Deckery — Steam Deck Default Config
-#
-# Steam Deck button reference:
-#   BTN_SOUTH   = A        BTN_NORTH   = X  (kernel: BTN_X = BTN_NORTH = 307)
-#   BTN_EAST    = B        BTN_WEST    = Y  (kernel: BTN_Y = BTN_WEST  = 308)
-#   BTN_TL      = L1       BTN_TR      = R1
-#   ABS_Z       = L2 (analog trigger)
-#   ABS_RZ      = R2 (analog trigger)
-#   BTN_THUMBL  = L3       BTN_THUMBR  = R3
-#   BTN_SELECT  = Select   BTN_START   = Start (☰)
-#   BTN_MODE    = Steam Button
-#   BTN_BASE    = QAM (···)
+# Deckery — Steam Deck Base Config
+
+[device]
+class = "hid-steam"
+names = ["Steam Deck", "Valve Software Steam Controller"]
+
+# Readable button names for this hardware. Declared once here and in effect for
+# every file in this directory, modules and app overrides included. Kernel names
+# keep working alongside them. Combos join with `-`.
+# Paddles L4/R4 are the top pair, L5/R5 the bottom pair.
+aliases = { A = "BTN_SOUTH", B = "BTN_EAST", X = "BTN_NORTH", Y = "BTN_WEST", L1 = "BTN_TL", R1 = "BTN_TR", L2 = "BTN_TL2", R2 = "BTN_TR2", L3 = "BTN_THUMBL", R3 = "BTN_THUMBR", L4 = "BTN_GRIPL", L5 = "BTN_GRIPL2", R4 = "BTN_GRIPR", R5 = "BTN_GRIPR2", Up = "BTN_DPAD_UP", Down = "BTN_DPAD_DOWN", Left = "BTN_DPAD_LEFT", Right = "BTN_DPAD_RIGHT", Select = "BTN_SELECT", Start = "BTN_START", Steam = "BTN_MODE" }
+
+# A stack: every module sits below this file, so anything bound here wins over
+# all of them. Among the modules themselves the last entry outranks the earlier
+# ones — general layers first, specific opt-ins last.
+[modules]
+include = [
+  "KDE Desktop",
+  "Hyprland Desktop",
+  "Voice Control",
+]
 
 [remap]
 # --- Mouse clicks (triggers as buttons) ---
-BTN_TL2 = { keys = ["BTN_RIGHT"], no_pause = true, silent = true }  # L2 → right-click
-BTN_TR2 = { keys = ["BTN_LEFT"],  no_pause = true, silent = true }  # R2 → left-click
+L2 = { keys = ["BTN_RIGHT"], no_pause = true, silent = true }
+R2 = { keys = ["BTN_LEFT"],  no_pause = true, silent = true }
 
 # --- Basic navigation ---
-BTN_DPAD_UP    = ["KEY_UP"]
-BTN_DPAD_DOWN  = ["KEY_DOWN"]
-BTN_DPAD_LEFT  = ["KEY_LEFT"]
-BTN_DPAD_RIGHT = ["KEY_RIGHT"]
-BTN_SOUTH      = ["KEY_ENTER"]      # A
-BTN_EAST       = ["KEY_ESC"]        # B
-BTN_NORTH      = ["KEY_BACKSPACE"]  # X  (BTN_NORTH = BTN_X = physical X button)
-BTN_WEST       = ["KEY_SPACE"]      # Y  (BTN_WEST  = BTN_Y = physical Y button)
-BTN_START      = ["KEY_F10"]        # three-stripes button (right) → menu bar
-BTN_SELECT     = ["KEY_TAB"]        # View button (left) → Tab
+Up     = ["KEY_UP"]
+Down   = ["KEY_DOWN"]
+Left   = ["KEY_LEFT"]
+Right  = ["KEY_RIGHT"]
+A      = ["KEY_ENTER"]
+B      = ["KEY_ESC"]
+X      = ["KEY_BACKSPACE"]
+Y      = ["KEY_SPACE"]
+Start  = ["KEY_F10"]   # three-stripes button → menu bar
+Select = ["KEY_TAB"]
 
-# --- Layer-modifier buttons (CUSTOM_MODIFIERS + Remap) ---
-# These buttons emit their output key as a real system modifier when held
-# AND act as layer-modifiers for combos (BTN_TL-* combos).
-BTN_TL = []   # L1 → pure layer-modifier, no output key
-BTN_TR = []   # R1 → pure layer-modifier, no output key
-
-# --- Internal Modifier: Steam Button ---
-# BTN_MODE (Steam Button) is defined as an internal modifier in CUSTOM_MODIFIERS.
-# It is NOT directly remapped (no BTN_MODE = [...]), only used for combos.
-# State tracking: BTN_MODE is exported in held_modifiers (state.json).
-# Combos: BTN_MODE-BTN_* prefix for combo bindings (e.g. BTN_MODE-BTN_NORTH, BTN_MODE-BTN_GRIPR2)
+# Not redundant: a modifier that is held and released without any combo firing
+# taps its raw button through to the virtual gamepad. The empty output is what
+# suppresses that, so L1/R1 stay pure layer keys.
+L1 = []
+R1 = []
 
 # --- Right stick ---
-BTN_THUMBR = ["BTN_LEFT"]   # R3 → left-click
+R3 = ["BTN_LEFT"]
 
 # --- Back paddles ---
-BTN_GRIPL   = ["KEY_LEFTSHIFT"]  # L4 (top left)    → Shift
-BTN_GRIPL2  = ["KEY_LEFTMETA"]   # L5 (bottom left) → Super/Win
-BTN_GRIPR   = ["KEY_LEFTALT"]    # R4 (top right)   → Alt
-BTN_GRIPR2  = ["KEY_LEFTCTRL"]   # R5 (bottom right) → Ctrl
+L4 = ["KEY_LEFTSHIFT"]
+L5 = ["KEY_LEFTMETA"]
+R4 = ["KEY_LEFTALT"]
+R5 = ["KEY_LEFTCTRL"]
 
-# --- L1+X/Y → Copy/Paste  |  L1+B/A → Undo/Redo ---
-BTN_TL-BTN_NORTH = { keys = ["KEY_LEFTCTRL", "KEY_C"],                  label = "Copy" }   # L1+X
-BTN_TL-BTN_WEST  = { keys = ["KEY_LEFTCTRL", "KEY_V"],                  label = "Paste" }  # L1+Y
-BTN_TL-BTN_EAST  = { keys = ["KEY_LEFTCTRL", "KEY_Z"],                  label = "Undo" }   # L1+B
-BTN_TL-BTN_SOUTH = { keys = ["KEY_LEFTCTRL", "KEY_LEFTSHIFT", "KEY_Z"], label = "Redo" }   # L1+A
+# --- L1 layer: Copy/Paste, Undo/Redo ---
+L1-X = { keys = ["KEY_LEFTCTRL", "KEY_C"], label = "Copy" }
+L1-Y = { keys = ["KEY_LEFTCTRL", "KEY_V"], label = "Paste" }
+L1-B = { keys = ["KEY_LEFTCTRL", "KEY_Z"], label = "Undo" }
+L1-A = { keys = ["KEY_LEFTCTRL", "KEY_LEFTSHIFT", "KEY_Z"], label = "Redo" }
 
-
-# --- Voice control: L1 + R5 → OpenWhispr (Ctrl + PageDown) ---
-BTN_TL-BTN_GRIPR2 = { keys = ["KEY_LEFTCTRL", "KEY_PAGEDOWN"], label = "Text to Speech (Ctrl+PgDn)" }
-
-# --- Steam layer: Steam+X → Keyboard, Steam+B → Handheld Daemon (Steam Input handles both) ---
-BTN_MODE-BTN_NORTH = { keys = [], label = "(Steam Keyboard)" }     # Steam+X: makima does nothing, Steam Input opens OSK
-BTN_MODE-BTN_EAST  = { keys = [], label = "(Handheld Daemon)" }    # Steam+B: makima does nothing, handheld daemon handles it
-
-# --- L1 + Start (three stripes) → Window Menu ---
-BTN_TL-BTN_START = { keys = ["KEY_LEFTALT", "KEY_F3"], label = "Window Menu" }
+# --- Steam layer: makima stays out of the way, Steam Input handles both ---
+Steam-X = { keys = [], label = "(Steam Keyboard)" }
+Steam-B = { keys = [], label = "(Handheld Daemon)" }
 
 [commands]
-# --- L3 → Toggle Deckery HUD ---
-BTN_THUMBL = { run = ["deckery-hud-toggle"], no_pause = true, silent = true, label = "Toggle HUD" }
-
-# --- L1 + SELECT → Desktop Grid ---
-BTN_TL-BTN_SELECT = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Grid View'"], label = "Desktop Grid" }
-
-# --- L1 + DPad → KDE Virtual Desktop / Activity switching ---
-BTN_TL-BTN_DPAD_UP    = { run = ["qdbus org.kde.KWin /KWin previousDesktop"], label = "Previous Desktop" }
-BTN_TL-BTN_DPAD_DOWN  = { run = ["qdbus org.kde.KWin /KWin nextDesktop"], label = "Next Desktop" }
-BTN_TL-BTN_DPAD_LEFT  = { run = ["qdbus org.kde.ActivityManager /ActivityManager/Activities org.kde.ActivityManager.Activities.PreviousActivity"], label = "Previous Activity" }
-BTN_TL-BTN_DPAD_RIGHT = { run = ["qdbus org.kde.ActivityManager /ActivityManager/Activities org.kde.ActivityManager.Activities.NextActivity"], label = "Next Activity" }
-
-# --- L1+R1+DPad → Move window to another virtual desktop ---
-BTN_TL-BTN_TR-BTN_DPAD_UP    = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Window One Desktop Up'"],   label = "Window to Previous Desktop" }
-BTN_TL-BTN_TR-BTN_DPAD_DOWN  = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Window One Desktop Down'"], label = "Window to Next Desktop" }
-BTN_TL-BTN_TR-BTN_DPAD_RIGHT = { run = ["bash -c 'N=$(qdbus org.kde.KWin /KWin numberOfDesktops); for i in $(seq $(qdbus org.kde.KWin /KWin currentDesktop) $((N-1))); do qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut \"Window One Desktop to the Right\"; done'"], label = "Window to Last Desktop" }
-
-# --- L1+R1+Face → Window management ---
-BTN_TL-BTN_TR-BTN_SOUTH = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Window Fullscreen'"],     label = "Fullscreen" }         # L1+R1+A
-BTN_TL-BTN_TR-BTN_NORTH = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Window Maximize'"],        label = "Maximize/Restore" }  # L1+R1+X
-BTN_TL-BTN_TR-BTN_WEST  = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'KrohnkiteToggleFloat'"], label = "Toggle Float" }       # L1+R1+Y
-BTN_TL-BTN_TR-BTN_EAST  = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Window Close'"],         label = "Close Window" }       # L1+R1+B
+L3 = { run = ["deckery-hud-toggle"], no_pause = true, silent = true, label = "Toggle HUD" }
 
 [settings]
-CUSTOM_MODIFIERS = "BTN_TL-BTN_TR-BTN_MODE"   # Layer-modifier buttons (L1, R1, Steam)
+# Buttons that act as layer modifiers. Left empty on purpose: any button used
+# on the left side of a combo (L1-X, Steam-B, ...) is registered automatically.
+# This setting is only needed to declare a modifier that appears in no combo.
+CUSTOM_MODIFIERS = ""
 
 # Right stick → mouse (makima takes over, Steam group 25 inactive)
 RSTICK = "cursor"
 RSTICK_SENSITIVITY = "4"   # Polling interval in ms (4 = 250Hz)
 RSTICK_DEADZONE = "15"     # Deadzone against stick drift (value * 200 = raw threshold)
+LSTICK_DEADZONE = "15"     # Same drift threshold for the left stick
 
 16_BIT_AXIS = "true"   # Steam Deck uses 16-bit axis values like Xbox
 
-# Trackpad configuration
-# mode = "mt-trackpad" → virtual uinput MT device (libinput/gestures)
-# mode = "trackball"   → firmware trackball (TRACKPAD_RELATIVE_MOUSE via HID)
-# mode = "disabled"    → state export only, no device (default)
-# combined_gesture_device = true → "Deckery Combined Trackpad" when both pads active simultaneously
+# ── Gaming Mode ───────────────────────────────────────────────────────────────
+# Both values below are the built-in defaults, written out so it is visible that
+# the knob exists. Deleting the whole section changes nothing.
+
+[gaming_mode]
+# Double-click this button to toggle Gaming Mode. key = "disabled" turns the
+# trigger off; ms is the maximum gap between the two clicks.
+trigger = { key = "BTN_BASE", ms = 400 }   # QAM (···)
+
+# Also enable Gaming Mode on its own when a Steam game or Big Picture is focused.
+auto_detect_steam_games = true
+
+# ── Trackpads ─────────────────────────────────────────────────────────────────
 
 [trackpad]
 combined_gesture_device = true
 
 [trackpad.right]
 mode = "mt-trackpad"
+click_pressure = 30000   # Firmware click-pressure threshold, raw u16
+
+# on_movement fires at most once per `pixel_interval` raw units of travel.
+[trackpad.right.haptic]
+on_press   = { duration_us = 8000, interval_us = 8000, count = 3, gain_db = 0 }
+on_release = { duration_us = 8000, interval_us = 8000, count = 3, gain_db = 0 }
+# on_movement = { pixel_interval = 3000, duration_us = 4000, interval_us = 4000, count = 1, gain_db = 0 }
+
+# KDE/libinput settings written to kcminputrc for this pad's virtual device.
+[trackpad.right.kde]
+pointer_acceleration = 0.2
+pointer_acceleration_profile = "flat"   # or "adaptive"
+tap_to_click = false
 
 [trackpad.left]
 mode = "disabled"
+
+[trackpad.gestures.kde]
+natural_scroll = true
+scroll_factor = 0.5
+tap_to_click = false

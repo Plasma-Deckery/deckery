@@ -1,0 +1,21 @@
+# Firefox — overrides on top of the base config.
+# L1+DPad Left/Right falls back to activity switching (from kde-desktop).
+
+[module]
+match_window_class = "org.mozilla.firefox"
+
+[remap]
+# --- R1 + DPad → browser navigation ---
+R1-Left  = { keys = ["KEY_LEFTALT", "KEY_LEFT"],  label = "Back" }
+R1-Right = { keys = ["KEY_LEFTALT", "KEY_RIGHT"], label = "Forward" }
+R1-Up    = { keys = ["KEY_LEFTCTRL", "KEY_LEFTSHIFT", "KEY_TAB"], label = "Previous Tab" }
+R1-Down  = { keys = ["KEY_LEFTCTRL", "KEY_TAB"],  label = "Next Tab" }
+
+# --- R1 + Face → tab management ---
+R1-A = { keys = ["KEY_LEFTCTRL", "KEY_T"], label = "New Tab" }
+R1-B = { keys = ["KEY_LEFTCTRL", "KEY_W"], label = "Close Tab" }
+R1-X = { keys = ["KEY_LEFTCTRL", "KEY_LEFTSHIFT", "KEY_T"], label = "Reopen Closed Tab" }
+R1-Y = { keys = ["KEY_LEFTCTRL", "KEY_R"], label = "Reload" }
+
+# --- R1 + hamburger → sidebar collapse ---
+R1-Start = { keys = ["KEY_LEFTALT", "KEY_LEFTCTRL", "KEY_Z"], label = "Collapse Sidebar" }

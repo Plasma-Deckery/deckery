@@ -1,0 +1,13 @@
+# Terminal (Konsole) — overrides on top of the base config.
+
+[module]
+match_window_class = "org.kde.konsole"
+
+[remap]
+B    = ["KEY_LEFTCTRL", "KEY_C"]   # Ctrl+C instead of Esc
+L1-X = { keys = ["KEY_LEFTCTRL", "KEY_LEFTSHIFT", "KEY_C"], label = "Copy" }
+L1-Y = { keys = ["KEY_LEFTCTRL", "KEY_LEFTSHIFT", "KEY_V"], label = "Paste" }
+
+# --- R1 + Face → Tab-Verwaltung (parallel zu Firefox) ---
+R1-A = { keys = ["KEY_LEFTCTRL", "KEY_LEFTSHIFT", "KEY_T"], label = "New Tab" }
+R1-B = { keys = ["KEY_LEFTCTRL", "KEY_LEFTSHIFT", "KEY_W"], label = "Close Tab" }
