@@ -153,13 +153,22 @@ def _icon_item(label: str, icon_name: str) -> Gtk.ImageMenuItem:
 # ── IPC / Service control ─────────────────────────────────────────────────────
 
 def _makima_ipc(cmd: str) -> None:
+    """Send one command to makima's control socket. Failures are non-fatal.
+
+    Swallowing the exception is deliberate — makima not running is a normal
+    state and must not take the tray down with it. Staying silent about it is
+    not: a failed command means the menu already did something visible (a
+    checkbox flipped) while nothing reached makima, so the UI now asserts
+    something untrue. Exactly that combination, with the socket path having
+    moved to $XDG_RUNTIME_DIR, hid a broken tray for 35 commits.
+    """
     try:
         with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
             s.settimeout(0.5)
             s.connect(_MAKIMA_SOCK)
             s.sendall((cmd + "\n").encode())
-    except Exception:
-        pass
+    except Exception as e:
+        log.warning("IPC %r failed on %s: %s", cmd, _MAKIMA_SOCK, e)
 
 
 def _service_status(unit: str) -> str:
