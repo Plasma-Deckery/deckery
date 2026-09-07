@@ -59,6 +59,75 @@ fi
 echo ""
 
 # ── Clone or checkout a sub-repo at the correct ref ──────────────────────────
+#
+# Two invariants govern everything below, and both used to be violated.
+#
+# 1. remote.origin.fetch must stay the standard branch refspec. Cloning with
+#    --branch <tag> sets it to that one tag instead, and a repo in that state
+#    can never see origin/main again — no tracking, no pull, pinned to the
+#    release it was installed at, silently and permanently. So we clone plain
+#    and check the tag out afterwards, and we rewrite the refspec on every run
+#    so installs already broken in the field repair themselves.
+#
+# 2. The checkout is somebody's working directory. makima and the HUD get
+#    edited in place when testing on a device or in a VM, so nothing on the
+#    main path may reset, force or discard. Where we cannot fast-forward we
+#    say why and move on.
+
+_missing_tag_error() {
+    echo ""
+    echo "✗ ERROR: Release tag '$RELEASE_TAG' not found in $1."
+    echo ""
+    echo "  This means $1 has not yet published a matching release."
+    echo "  All three repos must be tagged together for a release to be installable."
+    echo ""
+    echo "  → https://github.com/Plasma-Deckery/$1/releases"
+    echo ""
+    exit 1
+}
+
+# Idempotent; also repairs clones made by older installers with --branch <tag>.
+_repair_refspec() {
+    git -C "$1" config remote.origin.fetch '+refs/heads/*:refs/remotes/origin/*'
+}
+
+# Fast-forward an existing checkout to origin/main, or explain why we won't.
+_update_to_main() {
+    local name="$1" dir="$2" branch head target
+
+    branch="$(git -C "$dir" symbolic-ref --quiet --short HEAD || true)"
+
+    if [ -z "$branch" ]; then
+        # Detached — typically left behind by an earlier release install.
+        echo "$name: detached HEAD → switching to main"
+        git -C "$dir" checkout main 2>/dev/null \
+            || git -C "$dir" checkout -b main --track origin/main
+        branch=main
+    fi
+
+    if [ "$branch" != "main" ]; then
+        echo "  ⚠ $name: on branch '$branch', not main — left untouched"
+        return
+    fi
+
+    # Without this a plain `git pull` fails with "no tracking information",
+    # which the old code reported as "local changes present".
+    git -C "$dir" branch --set-upstream-to=origin/main main >/dev/null 2>&1 || true
+
+    head="$(git -C "$dir" rev-parse HEAD)"
+    target="$(git -C "$dir" rev-parse origin/main)"
+
+    if [ "$head" = "$target" ]; then
+        echo "$name: already up to date"
+    elif ! git -C "$dir" merge-base --is-ancestor HEAD origin/main; then
+        echo "  ⚠ $name: has local commits not on origin/main — left untouched"
+    elif ! git -C "$dir" merge --ff-only origin/main >/dev/null 2>&1; then
+        # Git's own message ends in "Aborting", which reads like the installer
+        # gave up. Name the files in the way instead — that is the actionable part.
+        echo "  ⚠ $name: fast-forward blocked by uncommitted changes — left untouched"
+        git -C "$dir" diff --name-only | sed 's/^/      /'
+    fi
+}
 
 _checkout_subrepo() {
     local name="$1"
@@ -66,43 +135,41 @@ _checkout_subrepo() {
     local dir="$3"
 
     if [ ! -d "$dir" ]; then
-        if [ -n "$RELEASE_TAG" ]; then
-            echo "Cloning $name @ $RELEASE_TAG..."
-            if ! git clone --branch "$RELEASE_TAG" --depth 1 "$url" "$dir" 2>/dev/null; then
-                echo ""
-                echo "✗ ERROR: Release tag '$RELEASE_TAG' not found in $name."
-                echo ""
-                echo "  This means $name has not yet published a matching release."
-                echo "  All three repos must be tagged together for a release to be installable."
-                echo ""
-                echo "  → https://github.com/Plasma-Deckery/$name/releases"
-                echo ""
-                exit 1
-            fi
-        else
-            echo "Cloning $name (latest main)..."
-            git clone "$url" "$dir"
-        fi
+        echo "Cloning $name..."
+        # --filter=blob:none keeps the clone fast without truncating refs the
+        # way --depth 1 does.
+        git clone --filter=blob:none "$url" "$dir"
+        _repair_refspec "$dir"
     else
-        if [ -n "$RELEASE_TAG" ]; then
-            echo "$name: checking out $RELEASE_TAG..."
-            git -C "$dir" fetch --tags --force
-            if ! git -C "$dir" checkout -f "$RELEASE_TAG" 2>/dev/null; then
-                echo ""
-                echo "✗ ERROR: Release tag '$RELEASE_TAG' not found in $name."
-                echo ""
-                echo "  This means $name has not yet published a matching release."
-                echo "  All three repos must be tagged together for a release to be installable."
-                echo ""
-                echo "  → https://github.com/Plasma-Deckery/$name/releases"
-                echo ""
-                exit 1
-            fi
-        else
-            echo "$name: pulling latest..."
-            git -C "$dir" pull --ff-only || echo "  (skipped — local changes present)"
-        fi
+        _repair_refspec "$dir"
+        echo "$name: fetching..."
+        git -C "$dir" fetch origin --tags --force
     fi
+
+    if [ -n "$RELEASE_TAG" ]; then
+        echo "$name: checking out $RELEASE_TAG..."
+        # --force is deliberate here: a release install means "give me exactly
+        # this tag". The non-destructive handling applies to the main path.
+        git -C "$dir" checkout --force "$RELEASE_TAG" 2>/dev/null \
+            || _missing_tag_error "$name"
+    else
+        _update_to_main "$name" "$dir"
+    fi
+}
+
+# One line per repo: branch, what it tracks, where it stands. Drift of the kind
+# fixed above is invisible until somebody looks, so the installer looks.
+_repo_summary() {
+    local name="$1" dir="$2" branch tracking
+    # `return 0`, not a bare `return`: a bare one passes the failed test's
+    # status up, and under `set -e` that aborts the installer — in the one
+    # function whose entire job is to report rather than act.
+    [ -d "$dir/.git" ] || return 0
+    branch="$(git -C "$dir" symbolic-ref --quiet --short HEAD \
+        || echo "detached@$(git -C "$dir" describe --tags --always HEAD 2>/dev/null)")"
+    tracking="$(git -C "$dir" rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' 2>/dev/null || echo '—')"
+    printf '  %-16s %-24s → %-14s %s\n' \
+        "$name" "$branch" "$tracking" "$(git -C "$dir" log --oneline -1 --format='%h %s' | cut -c1-46)"
 }
 
 # ── 1. Clone / update sub-repos ──────────────────────────────────────────────
@@ -116,6 +183,11 @@ _checkout_subrepo "makima-deckery" \
 _checkout_subrepo "deckery-hud" \
     "https://github.com/Plasma-Deckery/deckery-hud.git" \
     "$HUD_DIR"
+
+echo ""
+_repo_summary "deckery"        "$DECKERY_DIR"
+_repo_summary "makima-deckery" "$MAKIMA_DIR"
+_repo_summary "deckery-hud"    "$HUD_DIR"
 
 echo ""
 
