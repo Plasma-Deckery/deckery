@@ -9,11 +9,14 @@ Two VMs are supported:
 | Bazzite 44 | Fedora/Bazzite | `localhost:2222` | `liveuser` | `vm-start.sh`, `controller-*.sh` |
 | CachyOS Handheld | Arch/CachyOS | `localhost:2224` | `deck` | `cachyos-*.sh` |
 
+All scripts look for the VM images under `~/VMs`. Set `VM_ROOT` to point
+somewhere else, e.g. `VM_ROOT=/mnt/data/vms bash testing/vm-start.sh`.
+
 ---
 
 ## CachyOS Handheld VM
 
-**VM disk:** `/home/philipp/VMs/cachyos-test/install-disk.qcow2`  
+**VM disk:** `~/VMs/cachyos-test/install-disk.qcow2`  
 **Snapshots:** `snap-cachyos-clean`, `snap-cachyos-kde-ready`, `snap-cachyos-gamescope-venus`, `snap-cachyos-deckery-main`  
 **SSH key:** `~/.ssh/vm_key` (ed25519, no passphrase)  
 **SSH:** `localhost:2224`, user `deck`
@@ -77,7 +80,7 @@ SSH_ASKPASS="" SSH_ASKPASS_REQUIRE=never \
 
 ## Setup
 
-**VM disk:** `/home/philipp/VMs/bazzite-test/install-disk.qcow2`  
+**VM disk:** `~/VMs/bazzite-test/install-disk.qcow2`  
 **Snapshot (clean, no Deckery):** `snap-bazzite44-clean`  
 **SSH key:** `~/.ssh/vm_key` (ed25519, no passphrase)  
 **SSH port:** `localhost:2222`, user `liveuser`
@@ -123,7 +126,7 @@ bash testing/controller-detach.sh
 ```bash
 # Restore clean snapshot (VM must be stopped)
 qemu-img snapshot -a snap-bazzite44-clean \
-  /home/philipp/VMs/bazzite-test/install-disk.qcow2
+  ~/VMs/bazzite-test/install-disk.qcow2
 
 # Start VM, then:
 ssh ... liveuser@localhost "sudo dnf5 copr enable phischx/Deckery -y"

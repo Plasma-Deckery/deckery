@@ -1,7 +1,7 @@
 #!/bin/bash
 # Return the Steam Deck Controller from the VM back to the host.
 
-SOCK=/home/philipp/VMs/bazzite-test/monitor.sock
+SOCK="${VM_ROOT:-$HOME/VMs}/bazzite-test/monitor.sock"
 
 if [ ! -S "$SOCK" ]; then
   echo "ERROR: VM not running (no monitor socket at $SOCK)"

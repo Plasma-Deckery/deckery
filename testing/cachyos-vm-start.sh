@@ -7,8 +7,10 @@
 #   Run cachyos-plymouth-fix.sh (or the inline fix below) after SSH comes up.
 #
 # Requirements: qemu-system-x86_64, OVMF (edk2-ovmf), KVM
+#
+# Set VM_ROOT to keep the VM images somewhere other than ~/VMs.
 
-VMDIR=/home/philipp/VMs/cachyos-test
+VMDIR="${VM_ROOT:-$HOME/VMs}/cachyos-test"
 
 # Kill any stale QEMU instance first — deleting socket files while an old
 # QEMU is still running creates an FD/inode mismatch that breaks monitor access.

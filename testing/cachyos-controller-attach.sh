@@ -5,7 +5,7 @@
 #
 # Requires: VM running with -device qemu-xhci,id=xhci (see cachyos-vm-start.sh)
 
-SOCK=/home/philipp/VMs/cachyos-test/monitor.sock
+SOCK="${VM_ROOT:-$HOME/VMs}/cachyos-test/monitor.sock"
 
 if [ ! -S "$SOCK" ]; then
   echo "ERROR: VM not running (no monitor socket at $SOCK)"

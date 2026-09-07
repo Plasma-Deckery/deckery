@@ -5,7 +5,7 @@
 #
 # Requires: VM running with -device qemu-xhci,id=xhci (see vm-start.sh)
 
-SOCK=/home/philipp/VMs/bazzite-test/monitor.sock
+SOCK="${VM_ROOT:-$HOME/VMs}/bazzite-test/monitor.sock"
 
 if [ ! -S "$SOCK" ]; then
   echo "ERROR: VM not running (no monitor socket at $SOCK)"

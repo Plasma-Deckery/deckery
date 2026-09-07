@@ -3,8 +3,10 @@
 # Controller passthrough is NOT active at start — use controller-attach.sh to add it.
 #
 # Requirements: qemu-system-x86_64, OVMF (edk2-ovmf), KVM
+#
+# Set VM_ROOT to keep the VM images somewhere other than ~/VMs.
 
-VMDIR=/home/philipp/VMs/bazzite-test
+VMDIR="${VM_ROOT:-$HOME/VMs}/bazzite-test"
 
 rm -f "$VMDIR/monitor.sock" "$VMDIR/serial.sock"
 
