@@ -225,17 +225,20 @@ fi
 ln -sf "$BASE_SRC" "$BASE_DST"
 echo "Linked: Steam Deck.toml"
 
-for src in "$DECKERY_DIR/configs/Steam Deck::"*.toml; do
-    [ -e "$src" ] || continue
-    name="$(basename "$src")"
-    dst="$CFG_DIR/$name"
+# Install all non-base configs recursively (modules, app overrides, subdirs).
+# Skips Steam Deck.toml (already linked above) and the base config itself.
+while IFS= read -r src; do
+    rel="${src#$DECKERY_DIR/configs/}"
+    [ "$rel" = "Steam Deck.toml" ] && continue
+    dst="$CFG_DIR/$rel"
+    mkdir -p "$(dirname "$dst")"
     if [ -e "$dst" ]; then
         mv -f "$dst" "$dst.old"
-        echo "Backed up: $name → $name.old"
+        echo "Backed up: $rel → $rel.old"
     fi
     cp "$src" "$dst"
-    echo "Installed: $name"
-done
+    echo "Installed: $rel"
+done < <(find "$DECKERY_DIR/configs" -name "*.toml" | sort)
 
 echo ""
 
