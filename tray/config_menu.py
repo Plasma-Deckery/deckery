@@ -5,13 +5,18 @@ Each config gets exactly one dedicated slot (CheckMenuItem + MenuItem pair)
 identified by name.  Slots are never reused for a different config — they
 stay in the submenu permanently (hidden when their config is absent).
 
-Update strategy:
-  - Config already has a slot → update in-place (label, active, visible)
-  - Config is new            → append a fresh slot; dbusmenu propagates it
-  - Config was removed       → hide its slot (reappears if the config returns)
+Rows are grouped: each base config, its included modules indented beneath it,
+then an "Apps" heading with the per-application overrides. Grouping comes from
+the "kind" and "parent" fields makima writes into state.json — the tray never
+inspects config files itself.
 
-dbusmenu propagates both property changes (label, active, visible) and
-append() of new GTK items to the panel without a full re-fetch.
+Update strategy:
+  - Same set of configs   → update slots in-place (label, active, visible)
+  - Set or order changed  → re-append every item in display order
+  - Config was removed    → its slot leaves the menu (reappears if it returns)
+
+dbusmenu propagates property changes and append() of new GTK items, but not
+insert(). Anything that changes the order therefore has to re-append the lot.
 
 Data flow:
   DeckeryTray polls state.json → calls ConfigSubmenu.refresh(configs)
@@ -30,12 +35,62 @@ from dataclasses import dataclass
 log = logging.getLogger("deckery-tray")
 
 
+@dataclass(frozen=True)
+class Row:
+    """One line in the submenu: either a config or the "Apps" heading.
+
+    ``prefix`` carries the tree glyph a nested entry is drawn with.
+    """
+    name:    str
+    prefix:  str = ""
+    heading: bool = False
+
+
+def display_rows(configs: list) -> list[Row]:
+    """Order configs for display: each base, its modules beneath it, then apps.
+
+    Pure — no GTK, no I/O. Grouping comes entirely from the "kind" and "parent"
+    fields; a config missing them lands in the top-level group.
+    """
+    def group(kind: str) -> list:
+        return sorted((c for c in configs if c.get("kind") == kind),
+                      key=lambda c: c["name"].lower())
+
+    def nest(entries: list) -> list[Row]:
+        last = len(entries) - 1
+        return [Row(c["name"], "└─ " if i == last else "├─ ")
+                for i, c in enumerate(entries)]
+
+    bases   = group("base")
+    modules = group("module")
+    apps    = group("app")
+    base_names = {b["name"] for b in bases}
+
+    rows: list[Row] = []
+    for base in bases:
+        rows.append(Row(base["name"]))
+        rows += nest([m for m in modules if m.get("parent") == base["name"]])
+
+    # A module whose parent is gone, or a file that would not parse: neither can
+    # be nested, but both still need a row — that row is where the error shows.
+    strays = [m for m in modules if m.get("parent") not in base_names]
+    strays += [c for c in configs if c.get("kind") not in ("base", "module", "app")]
+    rows += [Row(c["name"]) for c in sorted(strays, key=lambda c: c["name"].lower())]
+
+    if apps:
+        rows.append(Row("Apps", heading=True))
+        rows += nest(apps)
+    return rows
+
+
 @dataclass
 class _ConfigSlot:
     """One row in the Controller Bindings submenu, bound to a single config name.
 
-    ``check``     Gtk.CheckMenuItem — shown for ok / warning configs.
-    ``error``     Gtk.MenuItem      — shown for error configs; opens a dialog.
+    ``check``     Gtk.CheckMenuItem — shown for toggleable ok / warning configs.
+    ``error``     Gtk.MenuItem      — the non-toggleable row: every error, plus
+                  the base config in any state. Sensitive only when it has
+                  something to report, and then a click opens the dialog.
     ``toggle_id`` GObject handler ID for "toggled" on ``check``; used to block
                   the signal during programmatic set_active() calls.
     ``error_text`` Last known full error message for the dialog.
@@ -65,27 +120,23 @@ class ConfigSubmenu:
         self._config_dir = config_dir
         self._slots:     dict[str, _ConfigSlot] = {}   # name → slot
         self._last:      list | None = None
-        self._sep:       Gtk.SeparatorMenuItem | None = None  # set after initial loop
+        self._layout:    list | None = None            # last rendered row order
 
         self._parent  = _icon_item("Controller Bindings", "input-gamepad")
         self._submenu = Gtk.Menu()
         self._parent.set_submenu(self._submenu)
 
-        # Build initial slots in alphabetical order.
-        # _sep is still None here, so _create_slot() appends to end.
-        for cfg in sorted(initial_configs, key=lambda c: c["name"]):
-            self._create_slot(cfg["name"])
+        self._apps_heading = Gtk.MenuItem(label="Apps")
+        self._apps_heading.set_sensitive(False)
 
         self._sep = Gtk.SeparatorMenuItem()
         self._sep.set_no_show_all(True)
         self._sep.hide()
-        self._submenu.append(self._sep)
 
         self._open_cfg = _icon_item("Open config folder", "folder")
         self._open_cfg.connect("activate", lambda _: subprocess.Popen(["xdg-open", self._config_dir]))
-        self._submenu.append(self._open_cfg)
 
-        self._submenu.show_all()
+        self._apply(initial_configs)
 
     # ── Public API ────────────────────────────────────────────────────────────
 
@@ -108,16 +159,7 @@ class ConfigSubmenu:
     # ── Private ───────────────────────────────────────────────────────────────
 
     def _create_slot(self, name: str) -> _ConfigSlot:
-        """Create a new slot for *name* and add it to the submenu.
-
-        During initial construction (_sep is None) slots are appended to the
-        end.  When called at runtime (_sep exists) the slot is inserted
-        immediately before the separator so the "Open config folder" link stays
-        at the bottom.
-
-        The slot remains in the submenu permanently — hidden when its config is
-        absent, shown when it is present.
-        """
+        """Create the widget pair for *name*. Placement is done by _relayout."""
         chk = Gtk.CheckMenuItem(label="")
         def _on_toggle(widget, n=name):
             self._ipc(f"config {'enable' if widget.get_active() else 'disable'} {n}")
@@ -128,67 +170,77 @@ class ConfigSubmenu:
             _show_error_dialog(n, self._slots[n].error_text)
         err.connect("activate", _on_error_click)
 
-        if self._sep is None:
-            # Initial build — append in the order _create_slot is called.
-            # Items start hidden; _apply() / show_all() sets final visibility.
-            self._submenu.append(chk)
-            self._submenu.append(err)
-        else:
-            # Runtime growth — dbusmenu only propagates append(), not insert().
-            # Temporarily remove the footer items, append the new slot, then
-            # re-append the footer so it stays at the bottom.
-            self._submenu.remove(self._sep)
-            self._submenu.remove(self._open_cfg)
-            self._submenu.append(chk)
-            self._submenu.append(err)
-            self._submenu.append(self._sep)
-            self._submenu.append(self._open_cfg)
-            chk.show()
-            err.hide()   # only one of the pair is shown; _apply() corrects this
-
         slot = _ConfigSlot(check=chk, error=err, toggle_id=toggle_id)
         self._slots[name] = slot
         return slot
 
+    def _relayout(self, rows: list) -> None:
+        """Re-append every item so the menu matches *rows* top to bottom."""
+        for child in self._submenu.get_children():
+            self._submenu.remove(child)
+        for row in rows:
+            if row.heading:
+                self._submenu.append(self._apps_heading)
+                continue
+            slot = self._slots[row.name]
+            self._submenu.append(slot.check)
+            self._submenu.append(slot.error)
+        self._submenu.append(self._sep)
+        self._submenu.append(self._open_cfg)
+        self._submenu.show_all()
+
     def _apply(self, configs: list) -> None:
         config_map = {c["name"]: c for c in configs}
+        rows       = display_rows(configs)
 
-        for name, cfg in config_map.items():
-            if name not in self._slots:
-                self._create_slot(name)
+        for row in rows:
+            if not row.heading and row.name not in self._slots:
+                self._create_slot(row.name)
 
-            slot    = self._slots[name]
-            enabled = cfg["enabled"]
+        layout = [(r.heading, r.name, r.prefix) for r in rows]
+        if layout != self._layout:
+            self._layout = layout
+            self._relayout(rows)
+
+        for row in rows:
+            if row.heading:
+                continue
+            cfg     = config_map[row.name]
+            slot    = self._slots[row.name]
             status  = cfg.get("status", "ok")
-            is_base = "::" not in name
             errors  = cfg.get("errors", [])
+            label   = f"{row.prefix}{row.name}"
 
             slot.error_text = "\n\n".join(e.get("message", "") for e in errors) or "Unknown error"
 
+            label_text = f"⚠ {label}" if status == "warning" else label
+
             if status == "error":
-                slot.error.set_label(f"🛑 {name}")
+                slot.error.set_label(f"🛑 {label}")
+                slot.error.set_sensitive(True)
+                slot.check.hide()
+                slot.error.show()
+            elif cfg.get("kind") == "base":
+                # The base config is the device itself — switching it off would
+                # leave makima with nothing to apply. A tick that is always set
+                # and never clickable is noise, so the base is drawn as a plain
+                # row instead, greyed out like the "Apps" group. A warning makes
+                # it clickable, and the click opens the message dialog.
+                slot.error.set_label(label_text)
+                slot.error.set_sensitive(bool(errors))
                 slot.check.hide()
                 slot.error.show()
             else:
-                label_text = f"⚠ {name}" if status == "warning" else name
                 GObject.signal_handler_block(slot.check, slot.toggle_id)
                 try:
                     slot.check.set_label(label_text)
-                    slot.check.set_active(enabled)
-                    slot.check.set_sensitive(not is_base)
+                    slot.check.set_active(cfg["enabled"])
                 finally:
                     GObject.signal_handler_unblock(slot.check, slot.toggle_id)
                 slot.error.hide()
                 slot.check.show()
 
-        # Hide slots whose config is no longer present
-        for name, slot in self._slots.items():
-            if name not in config_map:
-                slot.check.hide()
-                slot.error.hide()
-
-        if self._sep:
-            self._sep.show() if config_map else self._sep.hide()
+        self._sep.show() if config_map else self._sep.hide()
 
 
 # ── Module-level helpers ──────────────────────────────────────────────────────

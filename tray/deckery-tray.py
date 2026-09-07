@@ -194,6 +194,8 @@ def _makima_state() -> MakimaState:
         configs   = [
             {
                 "name":    c.get("name", ""),
+                "kind":    c.get("kind", "base"),
+                "parent":  c.get("parent"),
                 "enabled": bool(c.get("enabled", True)),
                 "status":  c.get("status", "ok"),
                 "errors":  c.get("errors", []),

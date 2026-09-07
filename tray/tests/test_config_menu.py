@@ -20,14 +20,16 @@ import config_menu as cm
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
-def _cfg(name, enabled=True, status="ok", errors=None):
+def _cfg(name, enabled=True, status="ok", errors=None, kind="app", parent=None):
     """Build a config dict matching makima's state.json format."""
-    return {"name": name, "enabled": enabled, "status": status,
-            "errors": errors or []}
+    return {"name": name, "kind": kind, "parent": parent, "enabled": enabled,
+            "status": status, "errors": errors or []}
 
 
-APP_CFG  = "Steam Deck::org.mozilla.firefox"   # has '::' → not base
-BASE_CFG = "Steam Deck"                         # no '::' → base config
+APP_CFG  = "Firefox"
+BASE_CFG = "Steam Deck"
+# Nested rows carry a tree glyph; a lone entry in its group is the last one.
+APP_ROW  = f"└─ {APP_CFG}"
 
 
 @pytest.fixture
@@ -39,7 +41,7 @@ def ipc():
 def sub(ipc):
     """ConfigSubmenu seeded with one app config and the base config."""
     return cm.ConfigSubmenu(
-        initial_configs=[_cfg(APP_CFG), _cfg(BASE_CFG)],
+        initial_configs=[_cfg(APP_CFG), _cfg(BASE_CFG, kind="base")],
         ipc=ipc,
         config_dir="/tmp/cfg",
     )
@@ -90,7 +92,7 @@ class TestOkStatus:
 
     def test_plain_label(self, sub):
         sub.refresh([_cfg(APP_CFG)])
-        sub._slots[APP_CFG].check.set_label.assert_called_with(APP_CFG)
+        sub._slots[APP_CFG].check.set_label.assert_called_with(APP_ROW)
 
     def test_active_true_when_enabled(self, sub):
         sub.refresh([_cfg(APP_CFG, enabled=True)])
@@ -100,15 +102,25 @@ class TestOkStatus:
         sub.refresh([_cfg(APP_CFG, enabled=False)])
         sub._slots[APP_CFG].check.set_active.assert_called_with(False)
 
-    def test_app_config_is_sensitive(self, sub):
-        # name contains '::' → is_base=False → user can toggle it
+    def test_app_config_shows_a_checkbox(self, sub):
         sub.refresh([_cfg(APP_CFG)])
-        sub._slots[APP_CFG].check.set_sensitive.assert_called_with(True)
+        slot = sub._slots[APP_CFG]
+        slot.check.show.assert_called()
+        slot.error.hide.assert_called()
 
-    def test_base_config_is_not_sensitive(self, sub):
-        # name has no '::' → is_base=True → not togglable by user
-        sub.refresh([_cfg(BASE_CFG)])
-        sub._slots[BASE_CFG].check.set_sensitive.assert_called_with(False)
+    def test_base_config_has_no_checkbox(self, sub):
+        # The base cannot be switched off, so it gets no checkbox at all.
+        sub.refresh([_cfg(BASE_CFG, kind="base")])
+        slot = sub._slots[BASE_CFG]
+        slot.error.set_label.assert_called_with(BASE_CFG)
+        slot.error.show.assert_called()
+        slot.check.hide.assert_called()
+        slot.check.show.assert_not_called()
+
+    def test_healthy_base_is_not_clickable(self, sub):
+        # Nothing to report → no dialog to open.
+        sub.refresh([_cfg(BASE_CFG, kind="base")])
+        sub._slots[BASE_CFG].error.set_sensitive.assert_called_with(False)
 
 
 # ── warning status ────────────────────────────────────────────────────────────
@@ -117,9 +129,20 @@ class TestWarningStatus:
     def test_check_shown_with_warning_prefix(self, sub):
         sub.refresh([_cfg(APP_CFG, status="warning")])
         slot = sub._slots[APP_CFG]
-        slot.check.set_label.assert_called_with(f"⚠ {APP_CFG}")
+        slot.check.set_label.assert_called_with(f"⚠ {APP_ROW}")
         slot.check.show.assert_called()
         slot.error.hide.assert_called()
+
+    def test_base_keeps_warning_prefix_and_becomes_clickable(self, sub):
+        # The base has no checkbox, so its warning rides on the plain row —
+        # which turns sensitive so the message dialog can be opened.
+        sub.refresh([_cfg(BASE_CFG, kind="base", status="warning",
+                          errors=[{"message": "no bindings defined"}])])
+        slot = sub._slots[BASE_CFG]
+        slot.error.set_label.assert_called_with(f"⚠ {BASE_CFG}")
+        slot.error.set_sensitive.assert_called_with(True)
+        slot.error.show.assert_called()
+        assert slot.error_text == "no bindings defined"
 
 
 # ── error status ──────────────────────────────────────────────────────────────
@@ -133,7 +156,7 @@ class TestErrorStatus:
 
     def test_error_label_has_stop_sign(self, sub):
         sub.refresh([_cfg(APP_CFG, status="error")])
-        sub._slots[APP_CFG].error.set_label.assert_called_with(f"🛑 {APP_CFG}")
+        sub._slots[APP_CFG].error.set_label.assert_called_with(f"🛑 {APP_ROW}")
 
     def test_error_text_from_errors_list(self, sub):
         errors = [{"message": "missing key 'foo'"}, {"message": "bad value"}]
@@ -144,21 +167,28 @@ class TestErrorStatus:
         sub.refresh([_cfg(APP_CFG, status="error", errors=[])])
         assert sub._slots[APP_CFG].error_text == "Unknown error"
 
+    def test_base_error_wins_over_the_plain_row(self, sub):
+        # Status is checked before kind, so a broken base reports itself with a
+        # stop sign instead of being drawn as a silent greyed-out row.
+        sub.refresh([_cfg(BASE_CFG, kind="base", status="error",
+                          errors=[{"message": "no device section"}])])
+        slot = sub._slots[BASE_CFG]
+        slot.error.set_label.assert_called_with(f"🛑 {BASE_CFG}")
+        slot.error.set_sensitive.assert_called_with(True)
+        slot.check.hide.assert_called()
+        assert slot.error_text == "no device section"
+
 
 # ── removed config ────────────────────────────────────────────────────────────
 
 class TestRemovedConfig:
-    def test_absent_config_hides_both_widgets(self, sub):
-        # APP_CFG present initially; after refresh without it, slot is hidden.
+    def test_absent_config_leaves_the_layout(self, sub):
         sub.refresh([_cfg(APP_CFG)])
-        slot = sub._slots[APP_CFG]
-        slot.check.reset_mock()
-        slot.error.reset_mock()
+        assert any(r.name == APP_CFG for r in cm.display_rows([_cfg(APP_CFG)]))
 
         sub.refresh([])  # APP_CFG removed
 
-        slot.check.hide.assert_called()
-        slot.error.hide.assert_called()
+        assert sub._layout == []
 
     def test_slot_reappears_when_config_returns(self, sub):
         sub.refresh([])                       # hide everything
