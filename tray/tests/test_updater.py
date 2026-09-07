@@ -61,7 +61,13 @@ class TestParseVersion:
 # ── local_version ─────────────────────────────────────────────────────────────
 
 class TestLocalVersion:
-    """local_version() reads the highest semver tag from git."""
+    """local_version() reads the tag of the checked-out commit, or 'unknown'.
+
+    Deliberately not the highest tag in the repo — that was the behaviour
+    80e8c3f fixed. Once tags have been fetched the highest one is present
+    regardless of what is checked out, so a dev snapshot claimed to be a
+    release. 'unknown' is what marks a checkout as being off-release.
+    """
 
     def _git_result(self, stdout: str, returncode: int = 0):
         r = MagicMock()
@@ -69,10 +75,15 @@ class TestLocalVersion:
         r.stdout = stdout
         return r
 
-    def test_returns_highest_tag(self):
+    def test_queries_head_exactly(self):
+        """Guards 80e8c3f: the tag must come from HEAD, not from a tag listing."""
         with patch.object(upd.subprocess, "run",
-                          return_value=self._git_result("v0.1.6\nv0.1.5\n")):
+                          return_value=self._git_result("v0.1.6\n")) as run:
             assert local_version() == "0.1.6"
+        argv = run.call_args[0][0]
+        assert "describe" in argv
+        assert "--exact-match" in argv
+        assert "HEAD" in argv
 
     def test_strips_leading_v(self):
         with patch.object(upd.subprocess, "run",
@@ -256,13 +267,38 @@ class TestCheckThread:
         assert u._state  == UpdateState.UPDATE_AVAILABLE
         assert u._latest == "0.2.0"
 
-    def test_up_to_date_when_local_version_unknown(self):
-        # Can't tell if update is needed → treat as up to date (safe default).
+    def test_unknown_local_version_ahead_of_release(self):
+        # "unknown" means HEAD sits on no tag — a dev checkout. Newer than the
+        # latest tag, so the offer is a rollback, not an update.
         u = self._make()
-        with patch.object(upd, "_fetch_latest_tag", return_value="0.2.0"), \
-             patch.object(upd, "local_version",      return_value="unknown"):
+        with patch.object(upd, "_fetch_latest_tag",        return_value="0.2.0"), \
+             patch.object(upd, "local_version",            return_value="unknown"), \
+             patch.object(upd, "_local_commit_timestamp",  return_value=2000), \
+             patch.object(upd, "_tag_commit_timestamp",    return_value=1000):
             u._check_thread()
-        assert u._state == UpdateState.UP_TO_DATE
+        assert u._state == UpdateState.AHEAD_OF_RELEASE
+
+    def test_unknown_local_version_behind_release(self):
+        # Same "unknown", but older than the tag — a partial or stale checkout.
+        # Here the release genuinely is an update.
+        u = self._make()
+        with patch.object(upd, "_fetch_latest_tag",        return_value="0.2.0"), \
+             patch.object(upd, "local_version",            return_value="unknown"), \
+             patch.object(upd, "_local_commit_timestamp",  return_value=1000), \
+             patch.object(upd, "_tag_commit_timestamp",    return_value=2000):
+            u._check_thread()
+        assert u._state == UpdateState.UPDATE_AVAILABLE
+
+    def test_unknown_local_version_without_timestamps(self):
+        # No timestamps obtainable → cannot prove we are ahead, so offer the
+        # release rather than silently claiming to be current.
+        u = self._make()
+        with patch.object(upd, "_fetch_latest_tag",        return_value="0.2.0"), \
+             patch.object(upd, "local_version",            return_value="unknown"), \
+             patch.object(upd, "_local_commit_timestamp",  return_value=None), \
+             patch.object(upd, "_tag_commit_timestamp",    return_value=None):
+            u._check_thread()
+        assert u._state == UpdateState.UPDATE_AVAILABLE
 
     def test_error_when_network_fails(self):
         u = self._make()
