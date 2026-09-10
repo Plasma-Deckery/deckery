@@ -8,7 +8,7 @@ names = ["Steam Deck", "Valve Software Steam Controller"]
 # every file in this directory, modules and app overrides included. Kernel names
 # keep working alongside them. Combos join with `-`.
 # Paddles L4/R4 are the top pair, L5/R5 the bottom pair.
-aliases = { A = "BTN_SOUTH", B = "BTN_EAST", X = "BTN_NORTH", Y = "BTN_WEST", L1 = "BTN_TL", R1 = "BTN_TR", L2 = "BTN_TL2", R2 = "BTN_TR2", L3 = "BTN_THUMBL", R3 = "BTN_THUMBR", L4 = "BTN_GRIPL", L5 = "BTN_GRIPL2", R4 = "BTN_GRIPR", R5 = "BTN_GRIPR2", Up = "BTN_DPAD_UP", Down = "BTN_DPAD_DOWN", Left = "BTN_DPAD_LEFT", Right = "BTN_DPAD_RIGHT", Select = "BTN_SELECT", Start = "BTN_START", Steam = "BTN_MODE" }
+aliases = { A = "BTN_SOUTH", B = "BTN_EAST", X = "BTN_WEST", Y = "BTN_NORTH", L1 = "BTN_TL", R1 = "BTN_TR", L2 = "BTN_TL2", R2 = "BTN_TR2", L3 = "BTN_THUMBL", R3 = "BTN_THUMBR", L4 = "BTN_GRIPL", L5 = "BTN_GRIPL2", R4 = "BTN_GRIPR", R5 = "BTN_GRIPR2", Up = "BTN_DPAD_UP", Down = "BTN_DPAD_DOWN", Left = "BTN_DPAD_LEFT", Right = "BTN_DPAD_RIGHT", Select = "BTN_SELECT", Start = "BTN_START", Steam = "BTN_MODE" }
 
 # A stack: every module sits below this file, so anything bound here wins over
 # all of them. Among the modules themselves the last entry outranks the earlier
