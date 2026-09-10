@@ -276,9 +276,7 @@ class DeckeryTray:
         log.info("config dir %s not found — seeding from %s", _CONFIG_DIR, _SYSTEM_CONFIGS)
         try:
             import shutil
-            os.makedirs(_CONFIG_DIR, exist_ok=True)
-            for name in os.listdir(_SYSTEM_CONFIGS):
-                shutil.copy2(os.path.join(_SYSTEM_CONFIGS, name), os.path.join(_CONFIG_DIR, name))
+            shutil.copytree(_SYSTEM_CONFIGS, _CONFIG_DIR)
             log.info("config dir seeded successfully")
         except Exception as e:
             log.error("failed to seed config dir: %s", e)

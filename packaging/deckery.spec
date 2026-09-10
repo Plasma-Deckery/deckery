@@ -58,15 +58,11 @@ install -Dm644 deckery.desktop \
 
 # Default configs — installed to system path; deckery-tray seeds
 # ~/.config/deckery/ from here on first run.
-install -dm755 %{buildroot}%{_datadir}/deckery/configs
-install -pm644 "configs/Steam Deck.toml" \
-    %{buildroot}%{_datadir}/deckery/configs/
-for f in configs/Steam\ Deck::*.toml; do
-    [ -f "$f" ] && install -pm644 "$f" %{buildroot}%{_datadir}/deckery/configs/
+install -dm755 %{buildroot}%{_datadir}/deckery/configs/apps
+find configs -name "*.toml" | while read f; do
+    rel="${f#configs/}"
+    install -Dpm644 "$f" "%{buildroot}%{_datadir}/deckery/configs/$rel"
 done
-# VDF template for Steam Input onboarding (read via DECKERY_CONFIGS path)
-install -pm644 configs/desktop_neptune.vdf \
-    %{buildroot}%{_datadir}/deckery/configs/
 
 %files
 %license LICENSE

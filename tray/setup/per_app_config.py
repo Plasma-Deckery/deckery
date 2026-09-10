@@ -6,16 +6,13 @@ from .ipc import hud_toggle
 
 
 def _app_name(filename: str) -> str:
+    # New layout: apps/Firefox.toml  → short="Firefox", app_id=""
     base = os.path.basename(filename)
-    if "::" in base:
-        app_id = base.split("::", 1)[1].replace(".toml", "")
-        short  = app_id.rsplit(".", 1)[-1].capitalize()
-        return short, app_id
     return base.replace(".toml", ""), ""
 
 
 def _scan_apps():
-    pattern = os.path.join(DECKERY_CONFIGS, "*::*.toml")
+    pattern = os.path.join(DECKERY_CONFIGS, "apps", "*.toml")
     return sorted(
         (p, _app_name(p)) for p in glob.glob(pattern)
     )
