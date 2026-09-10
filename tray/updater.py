@@ -61,10 +61,16 @@ _SENSITIVE = {
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 def local_version() -> str:
-    """Returns the version tag of the currently checked-out commit (e.g. '0.1.8').
-    Uses git describe --exact-match so the result reflects what is actually
-    running, not just the highest tag present in the repo.
-    Returns 'unknown' if HEAD is not at a tagged commit or git is unavailable."""
+    """Returns the version of the currently running Deckery installation.
+
+    Tries two sources in order:
+    1. git describe --exact-match HEAD  — works for source/install.sh installs
+       where the tray runs from a checked-out repo at a tagged commit.
+    2. rpm -q deckery                   — works for RPM installs (Copr/Bazzite);
+       the tray lives under /usr/lib/deckery/tray/ with no .git present.
+
+    Returns 'unknown' if both sources fail or the version cannot be parsed."""
+    # 1. Git source install
     try:
         r = subprocess.run(
             ["git", "-C", _DECKERY_DIR, "describe", "--tags", "--exact-match", "HEAD"],
@@ -72,9 +78,21 @@ def local_version() -> str:
         )
         if r.returncode == 0 and r.stdout.strip():
             return r.stdout.strip().lstrip("v")
-        return "unknown"
     except Exception:
-        return "unknown"
+        pass
+
+    # 2. RPM install fallback
+    try:
+        r = subprocess.run(
+            ["rpm", "-q", "deckery", "--qf", "%{VERSION}"],
+            capture_output=True, text=True, timeout=5,
+        )
+        if r.returncode == 0 and r.stdout.strip():
+            return r.stdout.strip()
+    except Exception:
+        pass
+
+    return "unknown"
 
 
 def _parse_version(v: str) -> tuple:

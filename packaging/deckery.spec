@@ -1,6 +1,6 @@
 Name:           deckery
 Version:        0.3.0
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        Steam Deck input stack for KDE Plasma — meta-package
 
 # next_minor is the first version that would introduce a breaking change.
@@ -72,6 +72,15 @@ done
 %{_datadir}/deckery/
 
 %changelog
+* Thu Sep 11 2026 Philipp Schimmelfennig <philipp@plasma-deckery.dev> - 0.3.0-3
+- Fix config seeding: use shutil.copytree so apps/ subdir is copied on
+  first-run (os.listdir+copy2 silently skipped subdirectories)
+- Fix per-app config scan: look in apps/*.toml instead of old *::*.toml glob
+- Fix RPM version detection in updater: fall back to rpm -q when no git repo
+  present (Copr installs always showed "update available" due to unknown version)
+- Update spec for new config structure: recursive find over configs/ replaces
+  manual installs; removes stale desktop_neptune.vdf and Steam Deck::*.toml refs
+
 * Sat Aug 16 2026 Philipp Schimmelfennig <philipp@plasma-deckery.dev> - 0.3.0-1
 - Initial meta-package release
 - Pulls in makima-deckery, deckery-hud, deckery-tray at compatible versions
