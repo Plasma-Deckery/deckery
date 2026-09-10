@@ -2,7 +2,7 @@
 # L1+DPad Left/Right falls back to activity switching (from kde-desktop).
 
 [module]
-match_window_class = "org.mozilla.firefox"
+match_window_class = "firefox"
 
 [remap]
 # --- R1 + DPad → browser navigation ---
