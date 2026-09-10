@@ -9,7 +9,6 @@
 #   - The Steam Deck.toml config symlink (not custom app configs or user edits)
 #
 # What this does NOT remove:
-#   - The cloned repos in ~/.local/share/deckery/ (your configs live there)
 #   - App-specific config files in ~/.config/deckery/
 #   - Steam Input configset entry (413080 block removed from configset_controller_neptune.vdf)
 #
@@ -21,13 +20,15 @@ BIN_DIR="$HOME/.local/bin"
 SYSTEMD_DIR="$HOME/.config/systemd/user"
 CFG_DIR="$HOME/.config/deckery"
 CFG_DIR_LEGACY="$HOME/.config/makima"
+SHARE_DIR="$HOME/.local/share/deckery"
 ICON_DIR="$HOME/.local/share/icons/hicolor/scalable/apps"
 APPS_DIR="$HOME/.local/share/applications"
 
 if [[ "$1" != "--yes" ]]; then
     echo ""
-    echo "This will remove all Deckery services, binaries, and the distrobox container."
-    echo "Your configs in ~/.local/share/deckery/ will NOT be deleted."
+    echo "This will remove all Deckery services, binaries, the distrobox container,"
+    echo "and the cloned repos in ~/.local/share/deckery/."
+    echo "Your app configs in ~/.config/deckery/ will NOT be deleted."
     echo ""
     read -r -p "Continue? [y/N] " reply
     [[ "$reply" =~ ^[Yy]$ ]] || { echo "Aborted."; exit 0; }
@@ -106,13 +107,25 @@ done
 [ "$_removed_symlink" -eq 0 ] && echo "Skipped: Steam Deck.toml (not a symlink — keeping user file)"
 echo ""
 
+# ── 8. Remove cloned repos ───────────────────────────────────────────────────
+#
+# ~/.local/share/deckery/ contains the cloned source repos and default configs.
+# App-specific user configs live in ~/.config/deckery/ and are NOT removed.
+
+echo "── Removing cloned repos ────────────────────────────────────────────────"
+if [ -d "$SHARE_DIR" ]; then
+    rm -rf "$SHARE_DIR" && echo "Removed: $SHARE_DIR"
+else
+    echo "Skipped: $SHARE_DIR not found"
+fi
+echo ""
+
 # ── Done ──────────────────────────────────────────────────────────────────────
 
 echo "╔══════════════════════════════════════╗"
 echo "║          Deckery uninstalled         ║"
 echo "╚══════════════════════════════════════╝"
 echo ""
-echo "  Repos and custom configs kept in:"
-echo "  ~/.local/share/deckery/"
+echo "  App configs kept in:"
 echo "  ~/.config/deckery/"
 echo ""
