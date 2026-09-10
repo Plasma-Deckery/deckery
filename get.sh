@@ -3,8 +3,15 @@
 #
 # Usage:
 #   curl -sSL https://raw.githubusercontent.com/Plasma-Deckery/deckery/main/get.sh | bash
+#   curl -sSL https://raw.githubusercontent.com/Plasma-Deckery/deckery/main/get.sh | bash -s -- --main
+#
+# Options:
+#   --main   Skip release tag checkout and install directly from main (dev/test)
 
 set -e
+
+USE_MAIN=0
+for _arg in "$@"; do [ "$_arg" = "--main" ] && USE_MAIN=1; done
 
 DECKERY_DIR="$HOME/.local/share/deckery/deckery"
 
@@ -21,18 +28,25 @@ else
     git -C "$DECKERY_DIR" fetch origin --tags --force
 fi
 
-# Find the latest release tag by version sort — works regardless of HEAD position
-# (describe --abbrev=0 fails when repo is left in detached HEAD from a prior update).
-LATEST_TAG="$(git -C "$DECKERY_DIR" tag --sort=-version:refname | head -1)"
-if [ -n "$LATEST_TAG" ]; then
-    echo "Checking out latest release: $LATEST_TAG"
-    git -C "$DECKERY_DIR" checkout --force "$LATEST_TAG"
-else
-    echo "No release tag found — running from main (development mode)"
+# --main: always use the latest commit on main, skip release tag logic.
+if [ "$USE_MAIN" = "1" ]; then
+    echo "Checking out main (development mode)..."
     git -C "$DECKERY_DIR" checkout --force main
+    git -C "$DECKERY_DIR" pull origin main
+    export DECKERY_RELEASE_TAG=""
+else
+    # Find the latest release tag by version sort — works regardless of HEAD position
+    # (describe --abbrev=0 fails when repo is left in detached HEAD from a prior update).
+    LATEST_TAG="$(git -C "$DECKERY_DIR" tag --sort=-version:refname | head -1)"
+    if [ -n "$LATEST_TAG" ]; then
+        echo "Checking out latest release: $LATEST_TAG"
+        git -C "$DECKERY_DIR" checkout --force "$LATEST_TAG"
+    else
+        echo "No release tag found — running from main (development mode)"
+        git -C "$DECKERY_DIR" checkout --force main
+    fi
+    export DECKERY_RELEASE_TAG="$LATEST_TAG"
 fi
-
-export DECKERY_RELEASE_TAG="$LATEST_TAG"
 
 set +e
 bash "$DECKERY_DIR/install.sh"
