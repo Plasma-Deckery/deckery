@@ -1,13 +1,13 @@
 Name:           deckery
-Version:        0.3.0
-Release:        3%{?dist}
+Version:        0.4.0
+Release:        1%{?dist}
 Summary:        Steam Deck input stack for KDE Plasma — meta-package
 
 # next_minor is the first version that would introduce a breaking change.
 # Patch releases (0.3.x) are compatible and update independently.
 # When a minor bump (0.4.0) happens: update Version, next_minor, and tag
 # all component repos simultaneously.
-%global next_minor 0.4
+%global next_minor 0.5
 
 License:        GPL-3.0-only
 URL:            https://github.com/Plasma-Deckery/deckery
@@ -72,6 +72,10 @@ done
 %{_datadir}/deckery/
 
 %changelog
+* Thu Sep 11 2026 Philipp Schimmelfennig <philipp@plasma-deckery.dev> - 0.4.0-1
+- Minor version bump: 0.3.0 → 0.4.0
+- All component constraints updated: >= 0.4.0, < 0.5
+
 * Thu Sep 11 2026 Philipp Schimmelfennig <philipp@plasma-deckery.dev> - 0.3.0-3
 - Fix config seeding: use shutil.copytree so apps/ subdir is copied on
   first-run (os.listdir+copy2 silently skipped subdirectories)
