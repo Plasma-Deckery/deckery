@@ -23,5 +23,5 @@ R1-Start = { keys = ["KEY_LEFTALT", "KEY_LEFTCTRL", "KEY_Z"], label = "Collapse 
 # --- R1 + Paddles → dev tools / utils ---
 R1-R4 = { keys = ["KEY_F12"],                                          label = "Developer Tools" }
 R1-R5 = { keys = ["KEY_LEFTSHIFT", "KEY_ESC"],                        label = "Task Manager" }
-R1-L4 = { keys = ["KEY_LEFTCTRL", "KEY_J"],                           label = "Downloads" }
+R1-L4 = { keys = ["KEY_LEFTCTRL", "KEY_LEFTSHIFT", "KEY_Y"],          label = "Downloads" }
 R1-L5 = { keys = ["KEY_LEFTCTRL", "KEY_LEFTSHIFT", "KEY_P"],          label = "New Private Window" }
