@@ -1,7 +1,7 @@
 # Terminal (Konsole) — overrides on top of the base config.
 
 [module]
-match_window_class = "org.kde.konsole"
+match_window_class = ["konsole", "org.kde.konsole"]
 
 [remap]
 B    = ["KEY_LEFTCTRL", "KEY_C"]   # Ctrl+C instead of Esc
