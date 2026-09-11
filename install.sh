@@ -252,8 +252,11 @@ echo "── Installing Deckery Tray ──────────────�
 mkdir -p "$BIN_DIR"
 
 TRAY_PACKAGES="python python-gobject python-cairo gtk3 libayatana-appindicator librsvg git"
-if ! distrobox enter deckery -- pacman -Q $TRAY_PACKAGES &>/dev/null; then
+_TRAY_STAMP="/var/cache/deckery-tray-packages.stamp"
+_TRAY_HASH="$(echo "$TRAY_PACKAGES" | md5sum | cut -d' ' -f1)"
+if [ "$(distrobox enter deckery -- cat "$_TRAY_STAMP" 2>/dev/null)" != "$_TRAY_HASH" ]; then
     distrobox enter deckery -- sudo pacman -S --needed --noconfirm $TRAY_PACKAGES
+    echo "$_TRAY_HASH" | distrobox enter deckery -- sudo tee "$_TRAY_STAMP" > /dev/null
 fi
 echo "Installed: tray packages"
 
