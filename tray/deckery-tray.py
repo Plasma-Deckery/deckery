@@ -25,7 +25,7 @@ from typing import NamedTuple
 log = logging.getLogger("deckery-tray")
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from updater import Updater, UpdateState, local_version
+from updater import Updater, UpdateState, local_version, _DECKERY_DIR
 import config_menu
 import steam_bridge
 
