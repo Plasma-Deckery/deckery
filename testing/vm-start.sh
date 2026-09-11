@@ -10,7 +10,7 @@ VMDIR="${VM_ROOT:-$HOME/VMs}/bazzite-test"
 
 rm -f "$VMDIR/monitor.sock" "$VMDIR/serial.sock"
 
-setsid qemu-system-x86_64 \
+setsid env GDK_BACKEND=x11 GDK_CORE_DEVICE_EVENTS=1 qemu-system-x86_64 \
   -enable-kvm -cpu host -smp 4 -m 4G \
   -drive if=pflash,format=raw,readonly=on,file=/usr/share/edk2/ovmf/OVMF_CODE.fd \
   -drive if=pflash,format=qcow2,file="$VMDIR/OVMF_VARS.qcow2" \

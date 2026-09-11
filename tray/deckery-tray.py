@@ -61,6 +61,14 @@ _MAKIMA_SOCK        = os.path.join(
 )
 _CONFIG_DIR         = os.path.expanduser("~/.config/deckery")
 _SYSTEM_CONFIGS     = "/usr/share/deckery/configs"
+_DESKTOP_DIR        = os.path.expanduser("~/Desktop")
+# Desktop file: RPM installs to /usr/share/applications/; source install lives
+# two levels up from this script (repo root).
+_DESKTOP_FILE_SYSTEM = "/usr/share/applications/deckery.desktop"
+_DESKTOP_FILE_REPO   = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    "deckery.desktop",
+)
 _GITHUB_DISCUSSIONS = "https://github.com/Plasma-Deckery/deckery/discussions"
 _KOFI_URL           = "https://ko-fi.com/phischdev"
 
@@ -281,8 +289,28 @@ class DeckeryTray:
         except Exception as e:
             log.error("failed to seed config dir: %s", e)
 
+    def _seed_desktop_icon(self):
+        if not os.path.isdir(_DESKTOP_DIR):
+            return
+        dst = os.path.join(_DESKTOP_DIR, "deckery.desktop")
+        if os.path.exists(dst):
+            return
+        src = _DESKTOP_FILE_SYSTEM if os.path.isfile(_DESKTOP_FILE_SYSTEM) else (
+              _DESKTOP_FILE_REPO   if os.path.isfile(_DESKTOP_FILE_REPO)   else None)
+        if src is None:
+            log.warning("desktop file not found — skipping Desktop icon")
+            return
+        try:
+            import shutil
+            shutil.copy2(src, dst)
+            os.chmod(dst, 0o755)
+            log.info("desktop icon created: %s", dst)
+        except Exception as e:
+            log.error("failed to create desktop icon: %s", e)
+
     def __init__(self):
         self._seed_config_dir()
+        self._seed_desktop_icon()
 
         # ── Status dot pixbufs for menu (12 px circles, no D-pad shape) ──
         self._pb = {
