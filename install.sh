@@ -252,7 +252,9 @@ echo "── Installing Deckery Tray ──────────────�
 mkdir -p "$BIN_DIR"
 
 TRAY_PACKAGES="python python-gobject python-cairo gtk3 libayatana-appindicator librsvg git"
-distrobox enter deckery -- sudo pacman -S --needed --noconfirm $TRAY_PACKAGES
+if ! distrobox enter deckery -- pacman -Q $TRAY_PACKAGES &>/dev/null; then
+    distrobox enter deckery -- sudo pacman -S --needed --noconfirm $TRAY_PACKAGES
+fi
 echo "Installed: tray packages"
 
 TRAY_LAUNCH="$DECKERY_DIR/deckery-tray-launch"
