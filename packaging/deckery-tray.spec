@@ -1,6 +1,6 @@
 Name:           deckery-tray
-Version:        0.3.0
-Release:        2%{?dist}
+Version:        0.4.0
+Release:        1%{?dist}
 Summary:        Deckery system tray — service monitor and control for KDE Plasma
 
 License:        GPL-3.0-only
@@ -75,6 +75,9 @@ install -Dm644 packaging/deckery-tray.service \
 %{_userunitdir}/deckery-tray.service
 
 %changelog
+* Thu Sep 11 2026 Philipp Schimmelfennig <philipp@plasma-deckery.dev> - 0.4.0-1
+- Minor version bump to 0.4.0
+
 * Sat Aug 16 2026 Philipp Schimmelfennig <philipp@plasma-deckery.dev> - 0.3.0-1
 - Initial RPM packaging
 - GTK3 system tray applet with Ayatana AppIndicator
