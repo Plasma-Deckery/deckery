@@ -52,11 +52,12 @@ L5 = ["KEY_LEFTMETA"]
 R4 = ["KEY_LEFTALT"]
 R5 = ["KEY_LEFTCTRL"]
 
-# --- L1 layer: Copy/Paste, Undo/Redo ---
-L1-X = { keys = ["KEY_LEFTCTRL", "KEY_C"], label = "Copy" }
-L1-Y = { keys = ["KEY_LEFTCTRL", "KEY_V"], label = "Paste" }
-L1-B = { keys = ["KEY_LEFTCTRL", "KEY_Z"], label = "Undo" }
-L1-A = { keys = ["KEY_LEFTCTRL", "KEY_LEFTSHIFT", "KEY_Z"], label = "Redo" }
+# --- L1 layer: Copy/Paste, Undo/Redo, Select All ---
+L1-X  = { keys = ["KEY_LEFTCTRL", "KEY_C"], label = "Copy" }
+L1-Y  = { keys = ["KEY_LEFTCTRL", "KEY_V"], label = "Paste" }
+L1-B  = { keys = ["KEY_LEFTCTRL", "KEY_Z"], label = "Undo" }
+L1-A  = { keys = ["KEY_LEFTCTRL", "KEY_LEFTSHIFT", "KEY_Z"], label = "Redo" }
+L1-L4 = { keys = ["KEY_LEFTCTRL", "KEY_A"], label = "Select All" }
 
 # --- Steam layer: makima stays out of the way, Steam Input handles both ---
 Steam-X = { keys = [], label = "(Steam Keyboard)" }

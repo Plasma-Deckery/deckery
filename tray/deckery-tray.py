@@ -15,11 +15,13 @@ from gi.repository import Gtk, GdkPixbuf, AyatanaAppIndicator3, GLib, Gio
 import json
 import logging
 import os
+import shutil
 import socket
 import subprocess
 import sys
 import textwrap
 import threading
+import time
 from typing import NamedTuple
 
 log = logging.getLogger("deckery-tray")
@@ -479,14 +481,26 @@ class DeckeryTray:
     # ── State-file watcher ────────────────────────────────────────────────────
 
     def _watch_state_file(self):
-        f = Gio.File.new_for_path(_STATE_JSON)
-        self._monitor = f.monitor_file(Gio.FileMonitorFlags.WATCH_MOVES, None)
+        # Monitor the parent directory rather than the file itself.
+        # makima writes state.json atomically (write .tmp → rename), which
+        # replaces the inode; a file-level monitor loses track after the first
+        # rename and never fires again. A directory monitor survives renames
+        # because it watches the directory's inode, not the file's.
+        d = Gio.File.new_for_path(os.path.dirname(_STATE_JSON))
+        self._monitor = d.monitor_directory(Gio.FileMonitorFlags.WATCH_MOVES, None)
         self._monitor.connect("changed", self._on_state_changed)
 
     def _on_state_changed(self, _monitor, _file, _other, event):
+        # For MOVED_IN / RENAMED the destination is in _other; for everything
+        # else the affected file is _file. Accept the event only when state.json
+        # is the target so unrelated /tmp activity is ignored.
+        target = (_other or _file)
+        if not target or target.get_path() != _STATE_JSON:
+            return
         if event not in (Gio.FileMonitorEvent.CHANGED,
                          Gio.FileMonitorEvent.CREATED,
-                         Gio.FileMonitorEvent.RENAMED):
+                         Gio.FileMonitorEvent.RENAMED,
+                         Gio.FileMonitorEvent.MOVED_IN):
             return
         if self._state_timeout_id:
             GLib.source_remove(self._state_timeout_id)
@@ -677,47 +691,31 @@ class DeckeryTray:
             threading.Thread(target=self._apply_steam_bridge, daemon=True).start()
 
     def _apply_steam_bridge(self):
+        self._shutdown_steam()
         ok = steam_bridge.apply()
         if ok:
-            self._open_steam_restart_terminal()
             GLib.idle_add(self._on_steam_applied)
         else:
             self._steam_applying = False
 
-    def _open_steam_restart_terminal(self):
-        script = "\n".join([
-            "echo ''",
-            "echo '  ╔══════════════════════════════════════╗'",
-            "echo '  ║     DECKERY — Steam Input Config     ║'",
-            "echo '  ╚══════════════════════════════════════╝'",
-            "echo ''",
-            "echo '  Steam Input bindings for the Desktop have been disabled.'",
-            "echo '  Deckery now handles all input on the Desktop instead.'",
-            "echo ''",
-            "if pgrep -x steam > /dev/null; then",
-            "    echo '  Steam is currently running. It should be restarted for'",
-            "    echo '  this change to take effect.'",
-            "    echo ''",
-            "    read -p '  Restart Steam now? [Y/n] ' ans",
-            "    ans=${ans:-Y}",
-            "    if [[ \"$ans\" =~ ^[Yy]$ ]]; then",
-            "        steam -shutdown",
-            "        while pgrep -x steam > /dev/null; do",
-            "            echo '  Waiting for Steam to close...'",
-            "            sleep 2",
-            "        done",
-            "        echo '  Starting Steam...'",
-            "        setsid steam &>/dev/null &",
-            "        disown",
-            "    fi",
-            "    echo ''",
-            "fi",
-            "read -p '  Press Enter to close...'",
-        ])
-        subprocess.Popen([
-            "distrobox-host-exec", "konsole",
-            "-e", "bash", "-c", script,
-        ])
+    def _shutdown_steam(self):
+        prefix = ["distrobox-host-exec"] if "CONTAINER_ID" in os.environ else []
+        subprocess.Popen(
+            prefix + ["steam", "-shutdown"],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        )
+        for _ in range(5):
+            time.sleep(1)
+            r = subprocess.run(
+                prefix + ["pgrep", "-x", "steam"],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            )
+            if r.returncode != 0:
+                return
+        subprocess.run(
+            prefix + ["pkill", "steam"],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        )
 
     def _on_steam_applied(self):
         self._steam_state    = steam_bridge.SteamState.OK
