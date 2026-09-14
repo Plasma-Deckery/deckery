@@ -1,17 +1,16 @@
 [Unit]
 Description=Deckery system tray — service monitor and control
-After=plasma-core.target
-BindsTo=plasma-core.target
+After=graphical-session.target
+BindsTo=graphical-session.target
 
 [Service]
 Type=simple
-ExecCondition=/bin/bash -c 'systemctl --user is-active plasma-plasmashell.service'
+ExecCondition=/bin/bash -c '! systemctl --user list-units --state=active "gamescope-session*" 2>/dev/null | grep -q gamescope-session'
 ExecStartPre=/usr/bin/podman start deckery
 ExecStart=%h/.local/bin/deckery-tray
 Restart=on-failure
 RestartSec=3
 Environment=XDG_SESSION_TYPE=wayland
-Environment=XDG_CURRENT_DESKTOP=KDE
 
 [Install]
-WantedBy=plasma-core.target
+WantedBy=graphical-session.target
