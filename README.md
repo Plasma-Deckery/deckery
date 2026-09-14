@@ -34,7 +34,8 @@ Deckery remaps controller buttons to keyboard keys, shortcuts, and actions — w
 | **HUD overlay** | ✅ wlr-layer-shell | ✅ wlr-layer-shell | ✅ wlr-layer-shell | ❌ | ❓ untested ² |
 | **Tray icon** | ✅ | ✅ | ✅ | — | — |
 | **Trackpad + haptics** | ✅ | ✅ | ✅ | — | — |
-| **Gaming Mode guard** | ✅ `plasma-core.target` | ✅ `plasma-core.target` | ⚠️ untested | — | ❌ |
+| **Gaming Mode detection** (game in Desktop) | ✅ | ❓ untested | ❓ untested | ❌ | ❌ not implemented |
+| **Gamescope session guard** | ✅ | ✅ | ⚠️ untested | — | — |
 
 ¹ Planned: native Hyprland IPC socket (`activewindow` events on `.socket2.sock`). `zwlr_foreign_toplevel_manager_v1` has known reliability issues on Hyprland (app_id unreliable). A PoC exists in `tools/foreign-toplevel-test/` but is untested on a real Hyprland system. Tracked in [makima-deckery#36](https://github.com/Plasma-Deckery/makima-deckery/issues/36).  
 ² `zwlr_layer_shell_v1` is documented as supported by Hyprland — untested in practice.
