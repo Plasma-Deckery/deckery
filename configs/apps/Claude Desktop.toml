@@ -1,0 +1,36 @@
+# Claude Desktop — overrides on top of the base config.
+#
+# Two window classes: Wayland native uses the app_id from the community
+# packaging (io.github.aaddrick.claude-desktop-debian); X11 compatibility
+# mode reports resourceClass "Claude" (capital C) instead.
+
+[module]
+match_window_class = ["io.github.aaddrick.claude-desktop-debian", "Claude"]
+
+[remap]
+# --- R1 + DPad ---
+R1-Left  = { keys = ["KEY_LEFTALT", "KEY_LEFT"],  label = "Back" }
+R1-Right = { keys = ["KEY_LEFTALT", "KEY_RIGHT"], label = "Forward" }
+R1-Up    = { keys = ["KEY_LEFTCTRL", "KEY_LEFTSHIFT", "KEY_K"], label = "Search / Jump to Chat" }
+R1-Down  = { keys = ["KEY_LEFTCTRL", "KEY_B"], label = "Toggle Sidebar" }
+
+# --- R1 + Face ---
+R1-A = { keys = ["KEY_LEFTCTRL", "KEY_N"], label = "New Chat" }
+R1-B = { keys = ["KEY_LEFTCTRL", "KEY_COMMA"], label = "Open Settings" }
+R1-X = { keys = ["KEY_LEFTCTRL", "KEY_F"], label = "Find in Page" }
+R1-Y = { keys = ["KEY_LEFTCTRL", "KEY_LEFTSHIFT", "KEY_M"], label = "Change Mode" }
+
+# --- L1 layer ---
+L1-B = { keys = ["KEY_LEFTCTRL", "KEY_Z"], label = "Undo" }
+L1-A = { keys = ["KEY_LEFTCTRL", "KEY_LEFTSHIFT", "KEY_Z"], label = "Redo" }
+
+# --- R1 + hamburger / Select → Zoom ---
+R1-Start  = { keys = ["KEY_LEFTCTRL", "KEY_EQUAL"], label = "Zoom In" }
+R1-Select = { keys = ["KEY_LEFTCTRL", "KEY_MINUS"], label = "Zoom Out" }
+
+[hints]
+KEY_ENTER = "Enter (Send Message)"
+KEY_ESC   = "Esc (Abort)"
+
+KEY_LEFTCTRL-KEY_UP   = "(Jump to Top)"
+KEY_LEFTCTRL-KEY_DOWN = "(Jump to Bottom)"
