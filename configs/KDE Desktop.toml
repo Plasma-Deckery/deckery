@@ -32,11 +32,12 @@ L1-Down  = { run = ["qdbus org.kde.KWin /KWin nextDesktop"], label = "Next Deskt
 L1-Left  = { run = ["qdbus org.kde.ActivityManager /ActivityManager/Activities org.kde.ActivityManager.Activities.PreviousActivity"], label = "Previous Activity" }
 L1-Right = { run = ["qdbus org.kde.ActivityManager /ActivityManager/Activities org.kde.ActivityManager.Activities.NextActivity"], label = "Next Activity" }
 
-# --- L1+R1+DPad → Move window to another virtual desktop ---
+# --- L1+R1+DPad → Move window to another virtual desktop / activity ---
 L1-R1-Up    = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Window One Desktop Up'"],   label = "Window to Previous Desktop" }
 L1-R1-Down  = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Window One Desktop Down'"], label = "Window to Next Desktop" }
-L1-R1-Right = { run = ["bash -c 'N=$(qdbus org.kde.KWin /KWin numberOfDesktops); for i in $(seq $(qdbus org.kde.KWin /KWin currentDesktop) $((N-1))); do qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut \"Window One Desktop to the Right\"; done'"], label = "Window to Last Desktop" }
-L1-R1-Select = { run = ["/var/home/philipp/Programming/makima-deckery/tools/next-on-last-desktop.sh"], label = "Next window on last desktop" }
+L1-R1-Left   = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Move Window to Previous Activity'"], label = "Window to Previous Activity" }
+L1-R1-Right  = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Move Window to Next Activity'"],     label = "Window to Next Activity" }
+L1-R1-Select = { run = ["bash -c 'N=$(qdbus org.kde.KWin /KWin numberOfDesktops); for i in $(seq $(qdbus org.kde.KWin /KWin currentDesktop) $((N-1))); do qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut \"Window One Desktop to the Right\"; done'"], label = "Window to Last Desktop" }
 
 [hints]
 KEY_LEFTALT-KEY_TAB = "Tab (Switch Windows)"
