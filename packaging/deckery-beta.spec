@@ -6,7 +6,6 @@ Summary:        Steam Deck input stack for KDE Plasma — meta-package (beta)
 # Beta channel: Version and Release are injected by .copr/Makefile at build time.
 # Version = last stable git tag; Release = 0.YYYYMMDD.gHASH
 # Stable release (Release: 1) always wins over beta (Release: 0.*).
-%global next_minor 0.5
 
 License:        GPL-3.0-only
 URL:            https://github.com/Plasma-Deckery/deckery
@@ -15,12 +14,10 @@ Source0:        %{url}/archive/v%{version}/%{name}-%{version}.tar.gz
 
 BuildArch:      noarch
 
-Requires:       makima-deckery >= %{version}
-Requires:       makima-deckery <  %{next_minor}
-Requires:       deckery-hud    >= %{version}
-Requires:       deckery-hud    <  %{next_minor}
-Requires:       deckery-tray   >= %{version}
-Requires:       deckery-tray   <  %{next_minor}
+# Beta channel: no version pinning — always pull latest available components.
+Requires:       makima-deckery
+Requires:       deckery-hud
+Requires:       deckery-tray
 
 %description
 Deckery is a Steam Deck input stack for running KDE Plasma as a desktop
