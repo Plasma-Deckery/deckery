@@ -1,35 +1,35 @@
 # App Config
 
-Config files live in `~/.config/deckery/`. The base config `Steam Deck.toml` defines the default button layout. App-specific configs override only what differs — everything else is inherited from the base config at runtime.
+An app config applies while a matching window is focused, on top of everything else. It overrides only what differs — every other button keeps whatever the base config and the modules gave it.
 
-See [Configuration](../../configuration.md) for the general config setup and file locations.
+See [Configuration](../../configuration.md) for config directories, the override model, and how a file's role is determined.
 
-## Naming convention
+## What a file is called does not matter
 
-| File | When it loads |
-|---|---|
-| `Steam Deck.toml` | Always — the base config |
-| `Steam Deck::org.mozilla.firefox.toml` | When Firefox is the focused window |
-| `Steam Deck::dolphin.toml` | When Dolphin is the focused window |
+There is no naming convention. An app config is any file that declares a window class:
 
-The window class comes from the focused window's `resourceClass` property in KWin.
+```toml
+# apps/Firefox.toml
+[module]
+match_window_class = ["firefox", "org.mozilla.firefox"]
+
+[remap]
+R1-Left  = { keys = ["KEY_LEFTALT", "KEY_LEFT"],  label = "Back" }
+R1-Right = { keys = ["KEY_LEFTALT", "KEY_RIGHT"], label = "Forward" }
+R1-Up    = { keys = ["KEY_LEFTCTRL", "KEY_R"],    label = "Reload" }
+```
+
+The window class comes from the focused window's `resourceClass` property in KWin. Several classes can be listed — Wayland and X11 often report different ones for the same application.
 
 ## Config inheritance
 
-App-specific configs only need to declare the bindings that differ from the base config. Everything else is merged from `Steam Deck.toml` at runtime via `merge_base()`. No duplication required.
+Only the bindings listed in the app config are overridden; all other buttons continue to use the layers below it. The full merge order, lowest first:
 
-```toml
-# Steam Deck::org.mozilla.firefox.toml
-[remap]
-BTN_TL-BTN_DPAD_LEFT  = ["KEY_LEFTALT", "KEY_LEFT"]   # L1+← → Back
-BTN_TL-BTN_DPAD_RIGHT = ["KEY_LEFTALT", "KEY_RIGHT"]  # L1+→ → Forward
-BTN_TL-BTN_DPAD_UP    = ["KEY_LEFTCTRL", "KEY_R"]     # L1+↑ → Reload
+1. Plain modules, in name order — `Steam Deck Bindings`, `Steam Deck Trackpad`, `KDE Desktop`, …
+2. The base config (`Steam Deck.toml`), which declares the device
+3. The app config for the focused window
 
-[settings]
-CUSTOM_MODIFIERS = "BTN_TL-BTN_MODE"
-```
-
-Only the bindings listed here are overridden. All other buttons continue to use the base config.
+The hardware configuration is itself split across several modules, so an app config inherits bindings, settings and trackpad behaviour from different files without knowing about any of them.
 
 ## Event-driven window focus
 
@@ -39,15 +39,15 @@ This replaces the previous approach of spawning a `kdotool` subprocess on every 
 
 ## Enabling and disabling configs
 
-App-specific configs can be toggled at runtime without restarting makima. The base config (`Steam Deck.toml`) is always active and cannot be toggled.
+App configs and modules can be toggled at runtime without restarting makima. The base config (`Steam Deck.toml`) is always active and cannot be toggled.
 
 Via the tray's **Controller Bindings** submenu — check or uncheck a config entry. The tray sends the IPC command and the change takes effect immediately.
 
-Via IPC directly:
+Via IPC directly, using the file's base name:
 
 ```bash
-echo "config enable Steam Deck::org.mozilla.firefox"  | socat - UNIX-CONNECT:$XDG_RUNTIME_DIR/makima-control.sock
-echo "config disable Steam Deck::org.mozilla.firefox" | socat - UNIX-CONNECT:$XDG_RUNTIME_DIR/makima-control.sock
+echo "config enable Firefox"  | socat - UNIX-CONNECT:$XDG_RUNTIME_DIR/makima-control.sock
+echo "config disable Firefox" | socat - UNIX-CONNECT:$XDG_RUNTIME_DIR/makima-control.sock
 ```
 
 The enabled state is persisted across makima restarts and reflected in `state.json` under `configs[].enabled`.

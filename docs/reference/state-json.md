@@ -32,9 +32,10 @@ done
     "base_config": "parse error in Steam Deck.toml line 12: unexpected token"
   },
   "configs": [
-    { "name": "Steam Deck",                    "enabled": true,  "status": "ok",      "errors": [] },
-    { "name": "Steam Deck::org.mozilla.firefox","enabled": true,  "status": "warning", "errors": [] },
-    { "name": "Steam Deck::org.kde.konsole",   "enabled": false, "status": "ok",      "errors": [] }
+    { "name": "Steam Deck",          "enabled": true,  "status": "ok",      "errors": [] },
+    { "name": "Steam Deck Bindings", "enabled": true,  "status": "ok",      "errors": [] },
+    { "name": "Firefox",             "enabled": true,  "status": "warning", "errors": [] },
+    { "name": "Konsole",             "enabled": false, "status": "ok",      "errors": [] }
   ],
   "context": {
     "active_app": "org.mozilla.firefox",
@@ -155,7 +156,7 @@ Object mapping error slot names to human-readable error strings. Empty `{}` when
 
 | Key | When present |
 |---|---|
-| `"base_config"` | The base config (`Steam Deck.toml`) failed to parse — all remapping is suspended |
+| `"base_config"` | A config file failed to parse — escalated to a top-level error so the tray shows red, not just a marker in the submenu |
 | `"no_device"` | No compatible input device was found — makima is waiting for one to appear |
 
 When any key is present the tray shows a red icon, regardless of service state.
@@ -170,8 +171,8 @@ Each entry:
 
 | Field | Type | Meaning |
 |---|---|---|
-| `name` | `string` | Config identifier — base configs use the device name (e.g. `"Steam Deck"`); app overrides use `"Device::app.class"` (e.g. `"Steam Deck::org.mozilla.firefox"`) |
-| `enabled` | `bool` | Whether this config is active. Base configs (`"::"` absent) are always enabled and cannot be toggled by the user. |
+| `name` | `string` | Config identifier — the file base name without `.toml` (e.g. `"Steam Deck"`, `"Steam Deck Bindings"`, `"Firefox"`). There is no naming convention to decode |
+| `enabled` | `bool` | Whether this config is active. The base config (the one declaring `[device]`) is always enabled and cannot be toggled by the user. |
 | `status` | `string` | `"ok"`, `"warning"`, or `"error"` — `"error"` means the config could not be parsed and its slot in `errors` is populated |
 | `errors` | `[{severity, message}]` | Parse or load errors for this config; empty when `status != "error"`. Each entry: `{ "severity": "error" \| "warning", "message": "..." }` |
 

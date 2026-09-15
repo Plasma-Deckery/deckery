@@ -213,7 +213,7 @@ class TestSeparatorVisibility:
 
 class TestRuntimeSlotCreation:
     def test_new_config_gets_a_slot(self, sub):
-        new_cfg = "Steam Deck::org.kde.dolphin"
+        new_cfg = "Dolphin"
         assert new_cfg not in sub._slots
 
         sub.refresh([_cfg(new_cfg)])
@@ -221,7 +221,7 @@ class TestRuntimeSlotCreation:
         assert new_cfg in sub._slots
 
     def test_new_slot_is_shown(self, sub):
-        new_cfg = "Steam Deck::org.kde.dolphin"
+        new_cfg = "Dolphin"
         sub.refresh([_cfg(new_cfg)])
         sub._slots[new_cfg].check.show.assert_called()
 

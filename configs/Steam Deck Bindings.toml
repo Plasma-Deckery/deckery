@@ -1,0 +1,52 @@
+# Deckery — Steam Deck Base Bindings
+#
+# What every button does when no app override and no other module claims it.
+# Desktop-environment actions are not here: those live in KDE Desktop.toml and
+# its counterparts, because what "next desktop" should mean depends on the
+# compositor.
+
+[remap]
+# --- Mouse clicks (triggers as buttons) ---
+L2 = { keys = ["BTN_RIGHT"], no_pause = true, silent = true }
+R2 = { keys = ["BTN_LEFT"],  no_pause = true, silent = true }
+
+# --- Basic navigation ---
+Up     = ["KEY_UP"]
+Down   = ["KEY_DOWN"]
+Left   = ["KEY_LEFT"]
+Right  = ["KEY_RIGHT"]
+A      = ["KEY_ENTER"]
+B      = ["KEY_ESC"]
+X      = ["KEY_BACKSPACE"]
+Y      = ["KEY_SPACE"]
+Start  = ["KEY_F10"]   # three-stripes button → menu bar
+Select = ["KEY_TAB"]
+
+# Not redundant: a modifier that is held and released without any combo firing
+# taps its raw button through to the virtual gamepad. The empty output is what
+# suppresses that, so L1/R1 stay pure layer keys.
+L1 = []
+R1 = []
+
+# --- Right stick ---
+R3 = ["BTN_LEFT"]
+
+# --- Back paddles ---
+L4 = ["KEY_LEFTSHIFT"]
+L5 = ["KEY_LEFTMETA"]
+R4 = ["KEY_LEFTALT"]
+R5 = ["KEY_LEFTCTRL"]
+
+# --- L1 layer: Copy/Paste, Undo/Redo, Select All ---
+L1-X  = { keys = ["KEY_LEFTCTRL", "KEY_C"], label = "Copy" }
+L1-Y  = { keys = ["KEY_LEFTCTRL", "KEY_V"], label = "Paste" }
+L1-B  = { keys = ["KEY_LEFTCTRL", "KEY_Z"], label = "Undo" }
+L1-A  = { keys = ["KEY_LEFTCTRL", "KEY_LEFTSHIFT", "KEY_Z"], label = "Redo" }
+L1-L4 = { keys = ["KEY_LEFTCTRL", "KEY_A"], label = "Select All" }
+
+# --- Steam layer: makima stays out of the way, Steam Input handles both ---
+Steam-X = { keys = [], label = "(Steam Keyboard)" }
+Steam-B = { keys = [], label = "(Handheld Daemon)" }
+
+[commands]
+L3 = { run = ["deckery-hud-toggle"], no_pause = true, silent = true, label = "Toggle HUD" }

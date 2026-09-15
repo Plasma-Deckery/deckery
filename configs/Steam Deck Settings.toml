@@ -1,0 +1,18 @@
+# Deckery — Steam Deck Input Settings
+#
+# Stick behaviour and axis handling. Separate from the bindings so that tuning
+# your deadzone does not mean owning a copy of every button mapping.
+
+[settings]
+# Buttons that act as layer modifiers. Left empty on purpose: any button used
+# on the left side of a combo (L1-X, Steam-B, ...) is registered automatically.
+# This setting is only needed to declare a modifier that appears in no combo.
+CUSTOM_MODIFIERS = ""
+
+# Right stick → mouse (makima takes over, Steam group 25 inactive)
+RSTICK = "cursor"
+RSTICK_SENSITIVITY = "4"   # Polling interval in ms (4 = 250Hz)
+RSTICK_DEADZONE = "15"     # Deadzone against stick drift (value * 200 = raw threshold)
+LSTICK_DEADZONE = "15"     # Same drift threshold for the left stick
+
+16_BIT_AXIS = "true"   # Steam Deck uses 16-bit axis values like Xbox

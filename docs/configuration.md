@@ -29,9 +29,27 @@ A file's role follows from its content — there is no type field and no include
 | `[module] layout = N` | **Layout module.** Applied while layout N is active. |
 | None of the above | **Plain module.** Merged into every base config. |
 
+## The shipped files
+
+The Steam Deck configuration is deliberately spread over several files, so that customising one concern does not mean taking ownership of all of them:
+
+| File | Contains |
+|---|---|
+| `Steam Deck.toml` | `[device]`, button aliases, `[gaming_mode]` — the hardware descriptor |
+| `Steam Deck Bindings.toml` | `[remap]` — base buttons and the L1 layer |
+| `Steam Deck Settings.toml` | `[settings]` — stick mode, sensitivity, deadzones |
+| `Steam Deck Trackpad.toml` | `[trackpad]` — pad modes, haptics, KDE input settings |
+| `KDE Desktop.toml`, `Hyprland Desktop.toml` | Window and workspace control, gated per compositor |
+| `Voice Control.toml` | Push-to-talk binding |
+| `apps/*.toml` | Per-application overrides |
+
+To retune your trackpad haptics you copy `Steam Deck Trackpad.toml` into `~/.config/deckery/` and edit that one file. Everything else keeps receiving updates.
+
+Gaming Mode stays in `Steam Deck.toml` rather than getting its own file: it is a device-level concern, and the merge treats the base config as the sole authority for it — Gaming Mode set in a module would be discarded silently.
+
 ### Plain modules
 
-A plain module — `KDE Desktop.toml`, `Voice Control.toml` — is merged into every base config automatically, just by being in the directory. Delete the file, or switch it off in the tray, and its bindings go with it.
+A plain module — `KDE Desktop.toml`, `Voice Control.toml`, `Steam Deck Bindings.toml` — is merged into every base config automatically, just by being in the directory. Delete the file, or switch it off in the tray, and its bindings go with it.
 
 The base config sits on top of the stack: anything it binds wins over every module. Among the modules themselves the alphabetically last one wins, and any two modules binding the same button produce a warning — that overlap is a config bug, not a feature.
 

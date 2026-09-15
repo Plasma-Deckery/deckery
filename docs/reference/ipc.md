@@ -12,7 +12,7 @@ Makima-deckery exposes a Unix socket at `$XDG_RUNTIME_DIR/makima-control.sock` f
 | `resume` | Resume normal remapping |
 | `gaming_mode enable` | Enable Gaming Mode — suppresses all remaps, passes raw input to the OS |
 | `gaming_mode disable` | Disable Gaming Mode — returns to normal remapping |
-| `config enable <name>` | Enable the named app-specific config (e.g. `Steam Deck::org.mozilla.firefox`) — reflected immediately in `state.json` `configs[].enabled` |
+| `config enable <name>` | Enable the named config, using its file base name (e.g. `Firefox`) — reflected immediately in `state.json` `configs[].enabled` |
 | `config disable <name>` | Disable the named app-specific config — the base config remains active |
 | `analog-state-export on` | Write analog axis values (sticks, trackpads) into `state.json` on every change |
 | `analog-state-export off` | Stop writing analog values (default — reduces write frequency) |
@@ -24,8 +24,8 @@ echo "pause"                                        | socat - UNIX-CONNECT:$XDG_
 echo "resume"                                       | socat - UNIX-CONNECT:$XDG_RUNTIME_DIR/makima-control.sock
 echo "gaming_mode enable"                           | socat - UNIX-CONNECT:$XDG_RUNTIME_DIR/makima-control.sock
 echo "gaming_mode disable"                          | socat - UNIX-CONNECT:$XDG_RUNTIME_DIR/makima-control.sock
-echo "config enable Steam Deck::org.mozilla.firefox"  | socat - UNIX-CONNECT:$XDG_RUNTIME_DIR/makima-control.sock
-echo "config disable Steam Deck::org.mozilla.firefox" | socat - UNIX-CONNECT:$XDG_RUNTIME_DIR/makima-control.sock
+echo "config enable Firefox"  | socat - UNIX-CONNECT:$XDG_RUNTIME_DIR/makima-control.sock
+echo "config disable Firefox" | socat - UNIX-CONNECT:$XDG_RUNTIME_DIR/makima-control.sock
 echo "analog-state-export on"                       | socat - UNIX-CONNECT:$XDG_RUNTIME_DIR/makima-control.sock
 echo "analog-state-export off"                      | socat - UNIX-CONNECT:$XDG_RUNTIME_DIR/makima-control.sock
 ```

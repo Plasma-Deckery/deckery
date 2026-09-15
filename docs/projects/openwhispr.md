@@ -11,7 +11,7 @@ On a handheld without a physical keyboard, voice input is the most practical tex
 
 ## Setup
 
-OpenWhispr can be triggered by a makima binding. Map a button (e.g. the right trackpad click) to the OpenWhispr hotkey in your `Steam Deck.toml`.
+OpenWhispr can be triggered by a makima binding. Map a button (e.g. the right trackpad click) to the OpenWhispr hotkey. The shipped `Voice Control.toml` does exactly that.
 
 ## Noise suppression
 
