@@ -1,7 +1,15 @@
 NAME    := deckery
-VERSION := $(shell awk '/^Version:/{print $$2; exit}' $(CURDIR)/packaging/deckery-tray.spec)
 outdir  ?= $(CURDIR)/outdir
+
+# Beta channel: BETA=1 make srpm  →  uses date-based release, builds from main.
+# Stable channel: make srpm        →  uses Release: 1, builds from tag archive.
+ifdef BETA
+spec    ?= packaging/deckery-tray-beta.spec
+else
 spec    ?= packaging/deckery-tray.spec
+endif
+
+VERSION := $(shell awk '/^Version:/{print $$2; exit}' $(spec))
 
 .PHONY: srpm builddeps clean
 
