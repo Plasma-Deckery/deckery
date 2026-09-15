@@ -1,0 +1,33 @@
+# Dolphin — file manager overrides on top of the base config.
+
+[module]
+match_window_class = ["dolphin", "org.kde.dolphin"]
+
+[remap]
+# --- R1 + DPad → navigation (mirrors Firefox pattern) ---
+R1-Left  = { keys = ["KEY_LEFTALT", "KEY_LEFT"],  label = "Back" }
+R1-Right = { keys = ["KEY_LEFTALT", "KEY_RIGHT"], label = "Forward" }
+R1-Up    = { keys = ["KEY_LEFTALT", "KEY_UP"],    label = "Up / Parent" }
+R1-Down  = { keys = ["KEY_LEFTCTRL", "KEY_F"],    label = "Search" }
+
+# --- R1 + Face → file operations ---
+R1-A = { keys = ["KEY_LEFTCTRL", "KEY_LEFTSHIFT", "KEY_N"], label = "New Folder" }
+R1-B = { keys = ["KEY_DELETE"],                              label = "Move to Trash" }
+R1-X = { keys = ["KEY_F2"],                                  label = "Rename" }
+R1-Y = { keys = ["KEY_LEFTCTRL", "KEY_LEFTALT", "KEY_C"], label = "Copy Location" }
+
+# --- R1 + Start → view toggle ---
+R1-Start = { keys = ["KEY_LEFTCTRL", "KEY_H"], label = "Toggle Hidden Files" }
+
+# --- R1 + Paddles → view / terminal ---
+R1-R4 = { keys = ["KEY_F4"],                        label = "Open Terminal Here" }
+R1-R5 = { keys = ["KEY_F3"],                        label = "Split View" }
+R1-L4 = { keys = ["KEY_LEFTCTRL", "KEY_T"],         label = "New Tab" }
+R1-L5 = { keys = ["KEY_LEFTCTRL", "KEY_W"],         label = "Close Tab" }
+
+[hints]
+# Navigation — already works via R4 (Alt) + DPad
+KEY_LEFTALT-KEY_LEFT  = "(Back)"
+KEY_LEFTALT-KEY_RIGHT = "(Forward)"
+KEY_LEFTALT-KEY_UP    = "(Up / Parent)"
+KEY_LEFTALT-KEY_ENTER = "(Properties)"

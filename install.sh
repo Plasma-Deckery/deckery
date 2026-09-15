@@ -239,9 +239,11 @@ done < <(find "$CFG_DIR" -name "*.toml.old")
 # installer puts in the user directory, and only when it is not there yet: from
 # then on it belongs to the user and no update writes to it again.
 #
-# It ships empty of choices on purpose. An absent entry means "use the shipped
-# default", so a later release can change that default and have it take effect;
-# baking today's defaults in would freeze them at install time.
+# Only the exclusive-group defaults are written in. A group must resolve to
+# exactly one member, and the registry's fallback — alphabetically first — is a
+# safety net, not a statement of intent: it cannot know that Horizontal is the
+# arrangement KDE and Bazzite ship. Plain on/off modules get no entry, so a
+# later release can still change their default and have it take effect.
 if [ ! -e "$CFG_DIR/preferences.toml" ]; then
     cat > "$CFG_DIR/preferences.toml" <<'PREFS'
 # Deckery — which controller bindings are switched on.
@@ -252,7 +254,9 @@ if [ ! -e "$CFG_DIR/preferences.toml" ]; then
 
 # The chosen member of each set of mutually exclusive modules.
 [exclusive_groups]
-# kde-desktop-layout = "KDE Desktop Layout Vertical"
+# Horizontal matches the single-row desktop arrangement KDE ships by default.
+# Switch to "KDE Desktop Layout Vertical" or "... Grid" here or in the tray.
+kde-desktop-layout = "KDE Desktop Layout Horizontal"
 
 [modules]
 # Modules switched off. Everything else is on.

@@ -1,0 +1,27 @@
+# KDE Desktop Layout — Horizontal (the shipped default)
+#
+# Virtual desktops arranged in a single row, which is what KDE and Bazzite set
+# up out of the box: L1 + Left/Right walks along them, L1 + Up/Down is free for
+# Activities.
+#
+# One of three mutually exclusive layouts. Switching desktops and moving a
+# window to another desktop belong to the same file because they are the same
+# gesture in two registers — a layout where you page sideways but throw windows
+# upwards would be incoherent.
+
+[module]
+requires_compositor = "KDE"
+exclusive_group = "kde-desktop-layout"
+
+[commands]
+# --- L1 + DPad → switch desktop / activity ---
+L1-Left  = { run = ["qdbus org.kde.KWin /KWin previousDesktop"], label = "Previous Desktop" }
+L1-Right = { run = ["qdbus org.kde.KWin /KWin nextDesktop"], label = "Next Desktop" }
+L1-Up    = { run = ["qdbus org.kde.ActivityManager /ActivityManager/Activities org.kde.ActivityManager.Activities.PreviousActivity"], label = "Previous Activity" }
+L1-Down  = { run = ["qdbus org.kde.ActivityManager /ActivityManager/Activities org.kde.ActivityManager.Activities.NextActivity"], label = "Next Activity" }
+
+# --- L1+R1+DPad → move the window along the same axes ---
+L1-R1-Left  = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Window to Previous Desktop'"], label = "Window to Previous Desktop" }
+L1-R1-Right = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Window to Next Desktop'"], label = "Window to Next Desktop" }
+L1-R1-Up    = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'deckery-move-window-to-prev-activity'"], label = "Window to Previous Activity" }
+L1-R1-Down  = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'deckery-move-window-to-next-activity'"], label = "Window to Next Activity" }

@@ -39,7 +39,8 @@ The Steam Deck configuration is deliberately spread over several files, so that 
 | `Steam Deck Bindings.toml` | `[remap]` — base buttons and the L1 layer |
 | `Steam Deck Settings.toml` | `[settings]` — stick mode, sensitivity, deadzones |
 | `Steam Deck Trackpad.toml` | `[trackpad]` — pad modes, haptics, KDE input settings |
-| `KDE Desktop.toml`, `Hyprland Desktop.toml` | Window and workspace control, gated per compositor |
+| `KDE Desktop.toml`, `Hyprland Desktop.toml` | Window control, gated per compositor |
+| `KDE Desktop Layout *.toml` | Virtual-desktop navigation — Horizontal, Vertical or Grid, exactly one active |
 | `Voice Control.toml` | Push-to-talk binding |
 | `apps/*.toml` | Per-application overrides |
 
@@ -74,11 +75,26 @@ exclusive_group = "kde-desktop-layout"
 
 Switching one member on switches its siblings off in the same step, so the group
 can never end up with two active members or none. The tray draws the members as
-radio buttons rather than checkboxes.
+radio buttons rather than checkboxes. Two members binding the same button is not
+a conflict — that is the whole point of the group.
 
-If you have never chosen, the alphabetically first member of the group is the
-one that runs. Shipped groups are named so that the intended default sorts
-first.
+The one shipped group is `kde-desktop-layout`, which decides how `L1` + the DPad
+moves between virtual desktops:
+
+| Module | `L1` + DPad | `L1`+`R1` + DPad |
+|---|---|---|
+| **KDE Desktop Layout Horizontal** (default) | Left/Right switch desktop, Up/Down switch Activity | moves the window along the same axes |
+| **KDE Desktop Layout Vertical** | Up/Down switch desktop, Left/Right switch Activity | moves the window along the same axes |
+| **KDE Desktop Layout Grid** | all four directions move across the desktop grid | carries the window across the grid |
+
+Horizontal is the default because it matches the single-row desktop arrangement
+KDE and Bazzite ship. Grid expects you to have configured rows under **System
+Settings → Virtual Desktops**, and spends all four directions on the grid, so it
+has no Activity bindings.
+
+Everything that does not depend on the arrangement — maximize, close, window
+menu, the desktop overview — stays in `KDE Desktop.toml` and is unaffected by
+the choice.
 
 ### Remembering your choices
 
@@ -88,7 +104,7 @@ whether it happens to be running.
 
 ```toml
 [exclusive_groups]
-kde-desktop-layout = "KDE Desktop Layout Vertical"
+kde-desktop-layout = "KDE Desktop Layout Horizontal"
 
 [modules]
 disabled = ["Voice Control"]
@@ -100,7 +116,13 @@ that appears nowhere in the file is on, which is what lets a newly shipped
 module arrive already active.
 
 The installer creates the file once, at first installation, and never touches it
-again — it sits in your config directory, which updates do not write to.
+again — it sits in your config directory, which updates do not write to. It is
+written with the shipped group defaults filled in; on/off modules are left out,
+so a release that changes one of those defaults still reaches you.
+
+If a group has no recorded choice at all, the alphabetically first member runs.
+That is a safety net against an empty group, not a statement of intent — the
+intended default is the one the installer wrote.
 
 ### App overrides
 
