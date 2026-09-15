@@ -5,8 +5,8 @@
 # desktop model, not on the two halves independently. A Hyprland port is a
 # re-think of this file, not a translation of it.
 #
-# Plain module: names no device and no window class, so it only ever runs
-# because a base config lists it under [modules] include.
+# Plain module: names no device and no window class, so it is merged into every
+# base config automatically — gated only by requires_compositor below.
 #
 # Note: KrohnkiteToggleFloat needs the Krohnkite KWin script installed.
 # Everything else here uses stock KWin shortcuts.

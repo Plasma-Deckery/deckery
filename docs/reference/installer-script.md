@@ -18,7 +18,7 @@
 
 7. **Remove the legacy Steam Input file** — deletes `~/.config/deckery/desktop_neptune.vdf` if it is present from a previous install.
 
-8. **Update the default makima config** — symlinks `configs/Steam Deck.toml` to `~/.config/deckery/Steam Deck.toml`. App-specific configs (e.g. `Steam Deck::org.kde.konsole.toml`) are copied from the repo on every run; the previous version is backed up as `.old` (e.g. `Steam Deck::org.kde.konsole.toml.old`) so your customisations are preserved and can be merged back manually.
+8. **Prepare the user config directory** — creates `~/.config/deckery/` if it is missing. Nothing is copied or symlinked: makima reads the shipped configs straight out of the repo and treats a user file of the same name as an override (see [Configuration](../configuration.md)). Leftovers from the previous copy-and-backup scheme — copies of shipped configs and their `.old` backups — are removed, because as overrides they would shadow the shipped file and make every later update look like it did nothing.
 
 After step 8, the script runs two interactive prompts (skipped in non-interactive mode):
 

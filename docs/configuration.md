@@ -1,66 +1,74 @@
 # Configuration
 
-Deckery's behaviour is controlled entirely through TOML config files that live in `~/.config/deckery/`. These files tell makima which buttons do what, and can vary per application.
+Deckery's behaviour is controlled entirely through TOML config files. Every `.toml` file in a config directory is picked up automatically — nothing has to be registered anywhere.
 
-## Config files
+## The two config directories
 
-### Base config: `Steam Deck.toml`
+Configs are read from two places:
 
-The main config file for the Steam Deck. It defines the default button layout that applies whenever no app-specific config matches.
+| Directory | What lives there |
+|---|---|
+| `~/.local/share/deckery/deckery/configs/` (git install)<br>`/usr/share/deckery/configs/` (RPM) | The configs Deckery ships. Replaced on every update. |
+| `~/.config/deckery/` | Your own configs and overrides. Never touched by an update. |
 
-This file is symlinked from the deckery repo into place:
+Both directories are scanned, along with their `apps/` subdirectory. A file is identified by its base name, so **a file in your directory replaces the shipped file of the same name entirely**. To customise `KDE Desktop.toml`, copy it into `~/.config/deckery/` and edit the copy — the shipped version is then ignored, and updates leave your version alone.
 
+To open your config folder, use **Open config folder** in the Deckery tray menu.
+
+!!! warning "An override is a full replacement, not a patch"
+    Because your file replaces the shipped one wholesale, improvements made to the shipped version in later releases will not reach you. Override only the files you actually need to change.
+
+## What each file is
+
+A file's role follows from its content — there is no type field and no include list:
+
+| Content | Role |
+|---|---|
+| `[device]` section | **Base config.** Names the physical device it drives. |
+| `[module] match_window_class` | **App override.** Applied while a matching window is focused. |
+| `[module] layout = N` | **Layout module.** Applied while layout N is active. |
+| None of the above | **Plain module.** Merged into every base config. |
+
+### Plain modules
+
+A plain module — `KDE Desktop.toml`, `Voice Control.toml` — is merged into every base config automatically, just by being in the directory. Delete the file, or switch it off in the tray, and its bindings go with it.
+
+The base config sits on top of the stack: anything it binds wins over every module. Among the modules themselves the alphabetically last one wins, and any two modules binding the same button produce a warning — that overlap is a config bug, not a feature.
+
+A module can declare `requires_compositor` to restrict itself to one desktop environment:
+
+```toml
+[module]
+requires_compositor = "KDE"
 ```
-~/.config/deckery/Steam Deck.toml
-    → ~/.local/share/deckery/deckery/configs/Steam Deck.toml
+
+Modules gated to different compositors never load together, so identical bindings in `KDE Desktop.toml` and `Hyprland Desktop.toml` are not a conflict.
+
+### App overrides
+
+An app override is applied on top of the base config while a matching window is focused. The shipped ones live in `apps/`:
+
+```toml
+# ~/.config/deckery/apps/Firefox.toml
+[module]
+match_window_class = ["firefox", "org.mozilla.firefox"]
+
+[remap]
+R1-Left  = { keys = ["KEY_LEFTALT", "KEY_LEFT"],  label = "Back" }
+R1-Right = { keys = ["KEY_LEFTALT", "KEY_RIGHT"], label = "Forward" }
 ```
-
-Because it's a symlink into a git repo, any edits you make here are version-controlled. To customise your base layout, edit the file directly — changes are tracked automatically.
-
-!!! warning "Customised base config requires manual merge on updates"
-    When you run `git pull` to update Deckery, changes to `Steam Deck.toml` in the repo may conflict with your local edits. Git will flag these as merge conflicts that you need to resolve manually before the update can complete. This is standard git workflow, but worth being aware of before making extensive changes to the base config.
-
-### App-specific configs: `Steam Deck::AppName.toml`
-
-When a window belonging to a specific application is focused, makima loads the matching app config on top of the base config. These files follow the naming pattern:
-
-```
-~/.config/deckery/Steam Deck::Firefox.toml
-~/.config/deckery/Steam Deck::Dolphin.toml
-```
-
-App-specific configs are **not** symlinked into the repo — they live directly in `~/.config/deckery/` and are yours to create and edit freely. The installer updates bundled app configs on every run: before writing the new version, it backs up your existing file as `.old` (e.g. `Steam Deck::org.kde.konsole.toml.old`). Your customisations are preserved in `.old` and can be merged back manually after an update.
 
 ## Config format
 
-Configs are written in TOML. A minimal example:
+Button names come from the `aliases` table in the base config, so bindings read as `L1-Up` rather than `BTN_TL-BTN_DPAD_UP`. Kernel names keep working alongside them; combos join with `-`.
 
 ```toml
-[device]
-name = "Steam Deck"
+[remap]
+A       = ["KEY_ENTER"]
+R1-A    = { keys = ["KEY_LEFTCTRL", "KEY_N"], label = "New Chat" }
 
-[[bindings]]
-key = "BTN_SOUTH"      # A button
-action = "KEY_ENTER"
-
-[[bindings]]
-key = "BTN_NORTH"      # Y button
-action = "KEY_F5"
-
-[[bindings]]
-key = "BTN_TL"         # L1
-modifiers = []
-action = { type = "command", value = "dbus-send ... Toggle" }
+[commands]
+L1-Right = { run = ["qdbus org.kde.KWin /KWin nextDesktop"], label = "Next Desktop" }
 ```
 
-Refer to the [makima-deckery](https://github.com/Plasma-Deckery/makima-deckery) README for the full config reference including modifiers, layouts, and context switching.
-
-## Where to find the files
-
-| File | Location |
-|---|---|
-| Base config | `~/.config/deckery/Steam Deck.toml` |
-| App-specific configs | `~/.config/deckery/Steam Deck::*.toml` |
-| Versioned source | `~/.local/share/deckery/deckery/configs/` |
-
-To open the config folder directly, use the **Open config folder** entry in the Deckery tray menu.
+`label` is what the HUD overlay shows for that button. Refer to the [makima-deckery](https://github.com/Plasma-Deckery/makima-deckery) README for the full reference including layouts, trackpad modes, and gaming mode.

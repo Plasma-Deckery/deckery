@@ -202,43 +202,38 @@ if ! distrobox list 2>/dev/null | grep -q "| deckery "; then
 fi
 echo ""
 
-# ── 3. Link default config ────────────────────────────────────────────────────
-# Done before any service is started so makima always boots with a full config.
+# ── 3. Config directories ─────────────────────────────────────────────────────
+# Nothing is copied. makima reads the shipped configs straight out of the
+# checkout and the user's own out of ~/.config/deckery, where a file of the same
+# name replaces the shipped one. That is the whole override mechanism, so the
+# installer only has to make sure the user directory exists.
 
 echo "── Config ───────────────────────────────────────────────────────────────"
 
-# Migrate from the old ~/.config/makima/ path if needed.
-_OLD_CFG="$HOME/.config/makima"
-if [ -d "$_OLD_CFG" ] && [ ! -d "$CFG_DIR" ]; then
-    mv "$_OLD_CFG" "$CFG_DIR"
-    echo "Migrated: ~/.config/makima → ~/.config/deckery"
-fi
-
 mkdir -p "$CFG_DIR"
 
-BASE_SRC="$DECKERY_DIR/configs/Steam Deck.toml"
-BASE_DST="$CFG_DIR/Steam Deck.toml"
-if [ -e "$BASE_DST" ] || [ -L "$BASE_DST" ]; then
-    mv -f "$BASE_DST" "$BASE_DST.old"
-    echo "Backed up: Steam Deck.toml → Steam Deck.toml.old"
-fi
-ln -sf "$BASE_SRC" "$BASE_DST"
-echo "Linked: Steam Deck.toml"
-
-# Install all non-base configs recursively (modules, app overrides, subdirs).
-# Skips Steam Deck.toml (already linked above) and the base config itself.
+# Clean up after the old copy-and-backup scheme, which put a copy of every
+# shipped config into the user directory. Under the new model those copies are
+# overrides: they would shadow the shipped file forever and freeze it at its
+# installed-at version, so every update would appear to do nothing. They are
+# removed rather than migrated — a user file that happens to carry the name of
+# a shipped config cannot be told apart from the copy the installer left there.
 while IFS= read -r src; do
     rel="${src#$DECKERY_DIR/configs/}"
-    [ "$rel" = "Steam Deck.toml" ] && continue
     dst="$CFG_DIR/$rel"
-    mkdir -p "$(dirname "$dst")"
-    if [ -e "$dst" ]; then
-        mv -f "$dst" "$dst.old"
-        echo "Backed up: $rel → $rel.old"
+    if [ -e "$dst" ] || [ -L "$dst" ]; then
+        rm -f "$dst"
+        echo "Removed leftover copy: $rel"
     fi
-    cp "$src" "$dst"
-    echo "Installed: $rel"
 done < <(find "$DECKERY_DIR/configs" -name "*.toml" | sort)
+
+while IFS= read -r old; do
+    rm -f "$old"
+    echo "Removed backup: ${old#$CFG_DIR/}"
+done < <(find "$CFG_DIR" -name "*.toml.old")
+
+# Files the user added under their own names are untouched — they were never
+# part of the copy scheme and keep working as plain modules or app overrides.
 
 echo ""
 

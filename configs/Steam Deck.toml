@@ -10,15 +10,11 @@ names = ["Steam Deck", "Valve Software Steam Controller"]
 # Paddles L4/R4 are the top pair, L5/R5 the bottom pair.
 aliases = { A = "BTN_SOUTH", B = "BTN_EAST", X = "BTN_WEST", Y = "BTN_NORTH", L1 = "BTN_TL", R1 = "BTN_TR", L2 = "BTN_TL2", R2 = "BTN_TR2", L3 = "BTN_THUMBL", R3 = "BTN_THUMBR", L4 = "BTN_GRIPL", L5 = "BTN_GRIPL2", R4 = "BTN_GRIPR", R5 = "BTN_GRIPR2", Up = "BTN_DPAD_UP", Down = "BTN_DPAD_DOWN", Left = "BTN_DPAD_LEFT", Right = "BTN_DPAD_RIGHT", Select = "BTN_SELECT", Start = "BTN_START", Steam = "BTN_MODE" }
 
-# A stack: every module sits below this file, so anything bound here wins over
-# all of them. Among the modules themselves the last entry outranks the earlier
-# ones — general layers first, specific opt-ins last.
-[modules]
-include = [
-  "KDE Desktop",
-  "Hyprland Desktop",
-  "Voice Control",
-]
+# Modules are not listed here. Every .toml in the config directories that has
+# neither a [device] section nor a window-class/layout condition is a module and
+# is merged in automatically. This file sits on top of the stack, so anything
+# bound here wins over all of them; among the modules themselves the
+# alphabetically last one wins, and any overlap is reported as a warning.
 
 [remap]
 # --- Mouse clicks (triggers as buttons) ---

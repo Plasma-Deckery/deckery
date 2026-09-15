@@ -56,8 +56,9 @@ install -Dm644 tray/icons/tray-ok.svg \
 install -Dm644 deckery.desktop \
     %{buildroot}%{_datadir}/applications/deckery.desktop
 
-# Default configs — installed to system path; deckery-tray seeds
-# ~/.config/deckery/ from here on first run.
+# Shipped configs — read in place, never copied. makima scans this directory
+# and ~/.config/deckery/, where a file of the same name overrides the one
+# shipped here.
 install -dm755 %{buildroot}%{_datadir}/deckery/configs/apps
 find configs -name "*.toml" | while read f; do
     rel="${f#configs/}"

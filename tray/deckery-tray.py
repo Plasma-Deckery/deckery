@@ -62,7 +62,6 @@ _MAKIMA_SOCK        = os.path.join(
     "makima-control.sock",
 )
 _CONFIG_DIR         = os.path.expanduser("~/.config/deckery")
-_SYSTEM_CONFIGS     = "/usr/share/deckery/configs"
 _DESKTOP_DIR        = os.path.expanduser("~/Desktop")
 # Desktop file: RPM installs to /usr/share/applications/; source install lives
 # two levels up from this script (repo root).
@@ -277,20 +276,6 @@ def _hud_dbus(method: str) -> None:
 # ── Tray App ──────────────────────────────────────────────────────────────────
 
 class DeckeryTray:
-    def _seed_config_dir(self):
-        if os.path.isdir(_CONFIG_DIR):
-            return
-        if not os.path.isdir(_SYSTEM_CONFIGS):
-            log.warning("config dir %s not found and no system default at %s", _CONFIG_DIR, _SYSTEM_CONFIGS)
-            return
-        log.info("config dir %s not found — seeding from %s", _CONFIG_DIR, _SYSTEM_CONFIGS)
-        try:
-            import shutil
-            shutil.copytree(_SYSTEM_CONFIGS, _CONFIG_DIR)
-            log.info("config dir seeded successfully")
-        except Exception as e:
-            log.error("failed to seed config dir: %s", e)
-
     def _seed_desktop_icon(self):
         if not os.path.isdir(_DESKTOP_DIR):
             return
@@ -311,7 +296,6 @@ class DeckeryTray:
             log.error("failed to create desktop icon: %s", e)
 
     def __init__(self):
-        self._seed_config_dir()
         self._seed_desktop_icon()
 
         # ── Status dot pixbufs for menu (12 px circles, no D-pad shape) ──

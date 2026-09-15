@@ -6,10 +6,10 @@
 #   - Installed binaries and symlinks in ~/.local/bin/
 #   - The deckery distrobox container
 #   - Icon and .desktop launcher
-#   - The Steam Deck.toml config symlink (not custom app configs or user edits)
+#   - Config symlinks into the repo left by installs predating auto-discovery
 #
 # What this does NOT remove:
-#   - App-specific config files in ~/.config/deckery/
+#   - Your own config files in ~/.config/deckery/
 #   - Steam Input configset entry (413080 block removed from configset_controller_neptune.vdf)
 #
 # Pass --yes to skip the confirmation prompt.
@@ -19,7 +19,6 @@ set -e
 BIN_DIR="$HOME/.local/bin"
 SYSTEMD_DIR="$HOME/.config/systemd/user"
 CFG_DIR="$HOME/.config/deckery"
-CFG_DIR_LEGACY="$HOME/.config/makima"
 SHARE_DIR="$HOME/.local/share/deckery"
 ICON_DIR="$HOME/.local/share/icons/hicolor/scalable/apps"
 APPS_DIR="$HOME/.local/share/applications"
@@ -91,20 +90,19 @@ rm -f "$APPS_DIR/deckery.desktop"   && echo "Removed: deckery.desktop" || true
 gtk-update-icon-cache -f -t "$HOME/.local/share/icons/hicolor" 2>/dev/null || true
 echo ""
 
-# ── 7. Remove config symlink ─────────────────────────────────────────────────
+# ── 7. Remove dangling config links ──────────────────────────────────────────
 #
-# Check both the current path (~/.config/deckery) and the legacy path
-# (~/.config/makima) so uninstall works on installs that were never migrated.
+# Current installs put no links here — configs are read from the repo in place.
+# An install predating that still has symlinks into the repo, and step 8 is
+# about to delete what they point at, so they would be left dangling.
 
-echo "── Removing config symlink ──────────────────────────────────────────────"
-_removed_symlink=0
-for _dir in "$CFG_DIR" "$CFG_DIR_LEGACY"; do
-    if [ -L "$_dir/Steam Deck.toml" ]; then
-        rm "$_dir/Steam Deck.toml" && echo "Removed: $_dir/Steam Deck.toml symlink"
-        _removed_symlink=1
-    fi
-done
-[ "$_removed_symlink" -eq 0 ] && echo "Skipped: Steam Deck.toml (not a symlink — keeping user file)"
+echo "── Removing dangling config links ───────────────────────────────────────"
+_removed=0
+while IFS= read -r link; do
+    rm -f "$link" && echo "Removed: ${link#$CFG_DIR/}"
+    _removed=1
+done < <(find "$CFG_DIR" -type l -name "*.toml" 2>/dev/null)
+[ "$_removed" -eq 0 ] && echo "Skipped: no config links (your own config files are untouched)"
 echo ""
 
 # ── 8. Remove cloned repos ───────────────────────────────────────────────────
