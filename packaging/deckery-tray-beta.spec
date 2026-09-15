@@ -1,10 +1,11 @@
 Name:           deckery-tray
-Version:        0.4.1
-Release:        0.%(date +%%Y%%m%%d)%{?dist}
+Version:        %{git_version}
+Release:        %{beta_release}%{?dist}
 Summary:        Deckery system tray — service monitor and control for KDE Plasma (beta)
 
-# Beta channel: builds from main on every push.
-# Release format 0.YYYYMMDD ensures stable release (Release: 1) always wins.
+# Beta channel: Version and Release are injected by .copr/Makefile at build time.
+# Version = last stable git tag; Release = 0.YYYYMMDD.gHASH
+# Stable release (Release: 1) always wins over beta (Release: 0.*).
 
 License:        GPL-3.0-only
 URL:            https://github.com/Plasma-Deckery/deckery

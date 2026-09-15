@@ -1,11 +1,11 @@
 Name:           deckery
-Version:        0.4.1
-Release:        0.%(date +%%Y%%m%%d)%{?dist}
+Version:        %{git_version}
+Release:        %{beta_release}%{?dist}
 Summary:        Steam Deck input stack for KDE Plasma — meta-package (beta)
 
-# Beta channel: builds from main on every push.
-# Release format 0.YYYYMMDD ensures stable release (Release: 1) always wins.
-# After tagging a stable release, bump Version to the next planned release.
+# Beta channel: Version and Release are injected by .copr/Makefile at build time.
+# Version = last stable git tag; Release = 0.YYYYMMDD.gHASH
+# Stable release (Release: 1) always wins over beta (Release: 0.*).
 %global next_minor 0.5
 
 License:        GPL-3.0-only
