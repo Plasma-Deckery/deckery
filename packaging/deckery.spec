@@ -1,5 +1,5 @@
 Name:           deckery
-Version:        0.4.0
+Version:        0.4.1
 Release:        1%{?dist}
 Summary:        Steam Deck input stack for KDE Plasma — meta-package
 
@@ -72,6 +72,11 @@ done
 %{_datadir}/deckery/
 
 %changelog
+* Mon Sep 15 2026 Philipp Schimmelfennig <philipp@plasma-deckery.dev> - 0.4.1-1
+- Add L1-L4 = Ctrl+A (Select All) to default Steam Deck config
+- DE-agnostic tray service: graphical-session.target + gamescope-session* guard
+- Fix Steam Input setup: Steam is shut down before config is applied
+
 * Thu Sep 11 2026 Philipp Schimmelfennig <philipp@plasma-deckery.dev> - 0.4.0-1
 - Minor version bump: 0.3.0 → 0.4.0
 - All component constraints updated: >= 0.4.0, < 0.5
