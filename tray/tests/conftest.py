@@ -32,6 +32,7 @@ _repository = MagicMock()
 # config and row type, and assertions must be able to tell them apart.
 _repository.Gtk.MenuItem.side_effect      = lambda *a, **kw: MagicMock()
 _repository.Gtk.CheckMenuItem.side_effect = lambda *a, **kw: MagicMock()
+_repository.Gtk.RadioMenuItem.side_effect = lambda *a, **kw: MagicMock()
 
 sys.modules.setdefault("gi",                                    MagicMock())
 sys.modules["gi.repository"]                                    = _repository

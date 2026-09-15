@@ -5,10 +5,13 @@ Each config gets exactly one dedicated slot (CheckMenuItem + MenuItem pair)
 identified by name.  Slots are never reused for a different config — they
 stay in the submenu permanently (hidden when their config is absent).
 
-Rows are grouped: each base config, its included modules indented beneath it,
-then an "Apps" heading with the per-application overrides. Grouping comes from
-the "kind" and "parent" fields makima writes into state.json — the tray never
+Rows are grouped: each base config, its modules indented beneath it, then an
+"Apps" heading with the per-application overrides. Grouping comes from the
+"kind" and "parent" fields makima writes into state.json — the tray never
 inspects config files itself.
+
+Modules sharing an "exclusive_group" are drawn as radio items and kept adjacent,
+so the choice reads as one selector rather than a run of unrelated ticks.
 
 Update strategy:
   - Same set of configs   → update slots in-place (label, active, visible)
@@ -52,9 +55,13 @@ def display_rows(configs: list) -> list[Row]:
     Pure — no GTK, no I/O. Grouping comes entirely from the "kind" and "parent"
     fields; a config missing them lands in the top-level group.
     """
+    def sort_key(c: dict) -> tuple:
+        # Members of an exclusive group sort under the group's name, which puts
+        # them next to each other even when their own names do not adjoin.
+        return ((c.get("exclusive_group") or c["name"]).lower(), c["name"].lower())
+
     def group(kind: str) -> list:
-        return sorted((c for c in configs if c.get("kind") == kind),
-                      key=lambda c: c["name"].lower())
+        return sorted((c for c in configs if c.get("kind") == kind), key=sort_key)
 
     def nest(entries: list) -> list[Row]:
         last = len(entries) - 1
@@ -119,6 +126,7 @@ class ConfigSubmenu:
         self._ipc        = ipc
         self._config_dir = config_dir
         self._slots:     dict[str, _ConfigSlot] = {}   # name → slot
+        self._radio_leaders: dict[str, object] = {}    # exclusive group → first item
         self._last:      list | None = None
         self._layout:    list | None = None            # last rendered row order
 
@@ -158,11 +166,24 @@ class ConfigSubmenu:
 
     # ── Private ───────────────────────────────────────────────────────────────
 
-    def _create_slot(self, name: str) -> _ConfigSlot:
+    def _create_slot(self, name: str, exclusive_group: str | None = None) -> _ConfigSlot:
         """Create the widget pair for *name*. Placement is done by _relayout."""
-        chk = Gtk.CheckMenuItem(label="")
-        def _on_toggle(widget, n=name):
-            self._ipc(f"config {'enable' if widget.get_active() else 'disable'} {n}")
+        if exclusive_group:
+            chk = Gtk.RadioMenuItem(label="")
+            leader = self._radio_leaders.setdefault(exclusive_group, chk)
+            if leader is not chk:
+                chk.join_group(leader)
+        else:
+            chk = Gtk.CheckMenuItem(label="")
+
+        def _on_toggle(widget, n=name, grouped=bool(exclusive_group)):
+            active = widget.get_active()
+            # Selecting a radio item also deactivates the previous one. makima
+            # switches the siblings off itself, so forwarding that deactivation
+            # would race the activation and could undo it.
+            if grouped and not active:
+                return
+            self._ipc(f"config {'enable' if active else 'disable'} {n}")
         toggle_id = chk.connect("toggled", _on_toggle)
 
         err = Gtk.MenuItem(label="")
@@ -195,7 +216,7 @@ class ConfigSubmenu:
 
         for row in rows:
             if not row.heading and row.name not in self._slots:
-                self._create_slot(row.name)
+                self._create_slot(row.name, config_map[row.name].get("exclusive_group"))
 
         layout = [(r.heading, r.name, r.prefix) for r in rows]
         if layout != self._layout:

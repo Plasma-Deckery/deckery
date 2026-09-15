@@ -173,10 +173,11 @@ Each entry:
 |---|---|---|
 | `name` | `string` | Config identifier — the file base name without `.toml` (e.g. `"Steam Deck"`, `"Steam Deck Bindings"`, `"Firefox"`). There is no naming convention to decode |
 | `enabled` | `bool` | Whether this config is active. The base config (the one declaring `[device]`) is always enabled and cannot be toggled by the user. |
+| `exclusive_group` | `string \| null` | Set when this config belongs to a set of mutually exclusive modules. Exactly one member of a group is enabled at a time; the tray draws them as radio buttons |
 | `status` | `string` | `"ok"`, `"warning"`, or `"error"` — `"error"` means the config could not be parsed and its slot in `errors` is populated |
 | `errors` | `[{severity, message}]` | Parse or load errors for this config; empty when `status != "error"`. Each entry: `{ "severity": "error" \| "warning", "message": "..." }` |
 
-The tray's **Controller Bindings** submenu is driven directly from this array. Toggling a config via the tray sends a `config enable/disable <name>` IPC command, which updates `enabled` and rewrites this field.
+The tray's **Controller Bindings** submenu is driven directly from this array. Toggling a config via the tray sends a `config enable/disable <name>` IPC command, which updates `enabled` and rewrites this field. Enabling a member of an `exclusive_group` disables its siblings in the same step. The resulting state is persisted to `~/.config/deckery/preferences.toml`, which is re-read on every reload — so a restart and a reload always agree about what is active.
 
 ---
 

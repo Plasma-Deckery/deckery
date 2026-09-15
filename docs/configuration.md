@@ -62,6 +62,46 @@ requires_compositor = "KDE"
 
 Modules gated to different compositors never load together, so identical bindings in `KDE Desktop.toml` and `Hyprland Desktop.toml` are not a conflict.
 
+### Exclusive groups
+
+Some modules are alternatives to one another — three desktop layouts, say, where
+exactly one should be live. A module joins such a set by naming it:
+
+```toml
+[module]
+exclusive_group = "kde-desktop-layout"
+```
+
+Switching one member on switches its siblings off in the same step, so the group
+can never end up with two active members or none. The tray draws the members as
+radio buttons rather than checkboxes.
+
+If you have never chosen, the alphabetically first member of the group is the
+one that runs. Shipped groups are named so that the intended default sorts
+first.
+
+### Remembering your choices
+
+Which modules you switched on lives in `~/.config/deckery/preferences.toml`,
+not in the module files themselves — those describe what a module *does*, never
+whether it happens to be running.
+
+```toml
+[exclusive_groups]
+kde-desktop-layout = "KDE Desktop Layout Vertical"
+
+[modules]
+disabled = ["Voice Control"]
+```
+
+Deckery rewrites the file whenever you toggle something in the tray, and reads
+it at startup and on every reload. Only your deviations are recorded: a module
+that appears nowhere in the file is on, which is what lets a newly shipped
+module arrive already active.
+
+The installer creates the file once, at first installation, and never touches it
+again — it sits in your config directory, which updates do not write to.
+
 ### App overrides
 
 An app override is applied on top of the base config while a matching window is focused. The shipped ones live in `apps/`:

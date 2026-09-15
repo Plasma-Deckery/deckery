@@ -235,6 +235,32 @@ done < <(find "$CFG_DIR" -name "*.toml.old")
 # Files the user added under their own names are untouched — they were never
 # part of the copy scheme and keep working as plain modules or app overrides.
 
+# preferences.toml records which modules are switched on. It is the one file the
+# installer puts in the user directory, and only when it is not there yet: from
+# then on it belongs to the user and no update writes to it again.
+#
+# It ships empty of choices on purpose. An absent entry means "use the shipped
+# default", so a later release can change that default and have it take effect;
+# baking today's defaults in would freeze them at install time.
+if [ ! -e "$CFG_DIR/preferences.toml" ]; then
+    cat > "$CFG_DIR/preferences.toml" <<'PREFS'
+# Deckery — which controller bindings are switched on.
+#
+# Written by Deckery when you toggle a config in the tray. Safe to edit by hand.
+# Anything not listed here uses the shipped default, so a release that changes a
+# default still reaches you.
+
+# The chosen member of each set of mutually exclusive modules.
+[exclusive_groups]
+# kde-desktop-layout = "KDE Desktop Layout Vertical"
+
+[modules]
+# Modules switched off. Everything else is on.
+disabled = []
+PREFS
+    echo "Created preferences.toml"
+fi
+
 echo ""
 
 # ── 4. Install Deckery Tray ───────────────────────────────────────────────────

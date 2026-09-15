@@ -248,3 +248,63 @@ class TestIpcOnToggle:
         toggle_handler = slot.check.connect.call_args[0][1]
         toggle_handler(slot.check)
         ipc.assert_called_with(f"config disable {APP_CFG}")
+
+
+# ── exclusive groups ──────────────────────────────────────────────────────────
+
+def _grouped(name, group, enabled=False, parent=BASE_CFG):
+    cfg = _cfg(name, enabled=enabled, kind="module", parent=parent)
+    cfg["exclusive_group"] = group
+    return cfg
+
+
+class TestExclusiveGroups:
+    def test_group_members_are_radio_items(self, sub):
+        sub.refresh([
+            _cfg(BASE_CFG, kind="base"),
+            _grouped("Layout Horizontal", "layout", enabled=True),
+        ])
+        cm.Gtk.RadioMenuItem.assert_called()
+
+    def test_group_members_are_drawn_adjacently(self):
+        rows = cm.display_rows([
+            _cfg(BASE_CFG, kind="base"),
+            _grouped("Layout Zulu",  "layout"),
+            _grouped("Layout Alpha", "layout"),
+            _cfg("Manual", kind="module", parent=BASE_CFG),
+        ])
+        names = [r.name for r in rows]
+        assert abs(names.index("Layout Zulu") - names.index("Layout Alpha")) == 1
+
+    def test_selecting_a_member_sends_only_enable(self, sub, ipc):
+        sub.refresh([
+            _cfg(BASE_CFG, kind="base"),
+            _grouped("Layout Horizontal", "layout", enabled=True),
+            _grouped("Layout Vertical",   "layout"),
+        ])
+        ipc.reset_mock()
+        slot = sub._slots["Layout Vertical"]
+        slot.check.get_active.return_value = True
+        slot.check.connect.call_args[0][1](slot.check)
+        ipc.assert_called_once_with("config enable Layout Vertical")
+
+    def test_deselecting_a_member_sends_nothing(self, sub, ipc):
+        """GTK deactivates the previous radio item; makima already did that."""
+        sub.refresh([
+            _cfg(BASE_CFG, kind="base"),
+            _grouped("Layout Horizontal", "layout", enabled=True),
+            _grouped("Layout Vertical",   "layout"),
+        ])
+        ipc.reset_mock()
+        slot = sub._slots["Layout Horizontal"]
+        slot.check.get_active.return_value = False
+        slot.check.connect.call_args[0][1](slot.check)
+        ipc.assert_not_called()
+
+    def test_ungrouped_module_still_sends_disable(self, sub, ipc):
+        sub.refresh([_cfg(BASE_CFG, kind="base"), _cfg("Voice Control", kind="module", parent=BASE_CFG)])
+        ipc.reset_mock()
+        slot = sub._slots["Voice Control"]
+        slot.check.get_active.return_value = False
+        slot.check.connect.call_args[0][1](slot.check)
+        ipc.assert_called_once_with("config disable Voice Control")
