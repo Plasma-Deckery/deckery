@@ -1,10 +1,17 @@
-# Deckery — Steam Deck Hardware Descriptor
+# Deckery — Steam Deck
 #
-# This file answers "what device is this", nothing else. Bindings, settings and
-# trackpad configuration live in their own modules next to it, so customising
-# any one of them does not mean taking ownership of all of them: an override
-# replaces a whole file, and the files you did not override keep receiving
-# updates.
+# The device, its button names, and what those buttons do when nothing else
+# claims them. These belong together: a Steam Deck without a button layout is a
+# dead controller, so there is nothing to gain from being able to switch the
+# layout off separately.
+#
+# What *is* separate: Steam Deck Trackpads.toml, because "off" is a real answer
+# there, and KDE Desktop.toml and its counterparts, because what "next desktop"
+# should mean depends on the compositor.
+#
+# To change a single binding you do not need to copy this file. Put a small
+# .toml of your own into ~/.config/deckery/ with just the lines you want
+# different — a file from your directory outranks every file shipped here.
 
 [device]
 class = "hid-steam"
@@ -17,9 +24,9 @@ names = ["Steam Deck", "Valve Software Steam Controller"]
 aliases = { A = "BTN_SOUTH", B = "BTN_EAST", X = "BTN_WEST", Y = "BTN_NORTH", L1 = "BTN_TL", R1 = "BTN_TR", L2 = "BTN_TL2", R2 = "BTN_TR2", L3 = "BTN_THUMBL", R3 = "BTN_THUMBR", L4 = "BTN_GRIPL", L5 = "BTN_GRIPL2", R4 = "BTN_GRIPR", R5 = "BTN_GRIPR2", Up = "BTN_DPAD_UP", Down = "BTN_DPAD_DOWN", Left = "BTN_DPAD_LEFT", Right = "BTN_DPAD_RIGHT", Select = "BTN_SELECT", Start = "BTN_START", Steam = "BTN_MODE" }
 
 # ── Gaming Mode ───────────────────────────────────────────────────────────────
-# Stays here rather than in a module of its own: it is a device-level concern
-# like [device] itself, and the merge treats the base config as the authority
-# for it — Gaming Mode set in a module would be discarded without a word.
+# A device-level concern like [device] itself, and the merge treats the base
+# config as the authority for it — Gaming Mode set in a module would be
+# discarded without a word.
 #
 # Both values below are the built-in defaults, written out so it is visible that
 # the knob exists. Deleting the whole section changes nothing.
@@ -31,3 +38,67 @@ trigger = { key = "BTN_BASE", ms = 400 }   # QAM (···)
 
 # Also enable Gaming Mode on its own when a Steam game or Big Picture is focused.
 auto_detect_steam_games = true
+
+# ── Buttons ───────────────────────────────────────────────────────────────────
+
+[remap]
+# --- Mouse clicks (triggers as buttons) ---
+L2 = { keys = ["BTN_RIGHT"], no_pause = true, silent = true }
+R2 = { keys = ["BTN_LEFT"],  no_pause = true, silent = true }
+
+# --- Basic navigation ---
+Up     = ["KEY_UP"]
+Down   = ["KEY_DOWN"]
+Left   = ["KEY_LEFT"]
+Right  = ["KEY_RIGHT"]
+A      = ["KEY_ENTER"]
+B      = ["KEY_ESC"]
+X      = ["KEY_BACKSPACE"]
+Y      = ["KEY_SPACE"]
+Start  = ["KEY_F10"]   # three-stripes button → menu bar
+Select = ["KEY_TAB"]
+
+# Not redundant: a modifier that is held and released without any combo firing
+# taps its raw button through to the virtual gamepad. The empty output is what
+# suppresses that, so L1/R1 stay pure layer keys.
+L1 = []
+R1 = []
+
+# --- Right stick ---
+R3 = ["BTN_LEFT"]
+
+# --- Back paddles ---
+L4 = ["KEY_LEFTSHIFT"]
+L5 = ["KEY_LEFTMETA"]
+R4 = ["KEY_LEFTALT"]
+R5 = ["KEY_LEFTCTRL"]
+
+# --- L1 layer: Copy/Paste, Undo/Redo, Select All ---
+L1-X  = { keys = ["KEY_LEFTCTRL", "KEY_C"], label = "Copy" }
+L1-Y  = { keys = ["KEY_LEFTCTRL", "KEY_V"], label = "Paste" }
+L1-B  = { keys = ["KEY_LEFTCTRL", "KEY_Z"], label = "Undo" }
+L1-A  = { keys = ["KEY_LEFTCTRL", "KEY_LEFTSHIFT", "KEY_Z"], label = "Redo" }
+L1-L4 = { keys = ["KEY_LEFTCTRL", "KEY_A"], label = "Select All" }
+
+# --- Steam layer: makima stays out of the way, Steam Input handles both ---
+Steam-X = { keys = [], label = "(Steam Keyboard)" }
+Steam-B = { keys = [], label = "(Handheld Daemon)" }
+
+[commands]
+L3 = { run = ["deckery-hud-toggle"], no_pause = true, silent = true, label = "Toggle HUD" }
+
+# ── Sticks and axis handling ──────────────────────────────────────────────────
+
+[settings]
+# Buttons that act as layer modifiers. Left empty on purpose: any button used
+# on the left side of a combo (L1-X, Steam-B, ...) is registered automatically.
+# This setting is only needed to declare a modifier that appears in no combo.
+CUSTOM_MODIFIERS = ""
+
+# Right stick → mouse (makima takes over, Steam group 25 inactive)
+RSTICK = "cursor"
+RSTICK_SENSITIVITY = "4"   # Polling interval in ms (4 = 250Hz)
+RSTICK_DEADZONE = "15"     # Deadzone against stick drift (value * 200 = raw threshold)
+LSTICK_DEADZONE = "15"     # Same drift threshold for the left stick
+
+16_BIT_AXIS = "true"   # Steam Deck uses 16-bit axis values like Xbox

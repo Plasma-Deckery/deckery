@@ -33,7 +33,7 @@ done
   },
   "configs": [
     { "name": "Steam Deck",          "enabled": true,  "status": "ok",      "errors": [] },
-    { "name": "Steam Deck Buttons", "enabled": true,  "status": "ok",      "errors": [] },
+    { "name": "Steam Deck Trackpads", "enabled": true, "status": "ok",    "errors": [] },
     { "name": "Firefox",             "enabled": true,  "status": "warning", "errors": [] },
     { "name": "Konsole",             "enabled": false, "status": "ok",      "errors": [] }
   ],
@@ -175,7 +175,7 @@ Each entry:
 
 | Field | Type | Meaning |
 |---|---|---|
-| `name` | `string` | Config identifier — the file base name without `.toml` (e.g. `"Steam Deck"`, `"Steam Deck Buttons"`, `"Firefox"`). There is no naming convention to decode |
+| `name` | `string` | Config identifier — the file base name without `.toml` (e.g. `"Steam Deck"`, `"Steam Deck Trackpads"`, `"Firefox"`). There is no naming convention to decode |
 | `enabled` | `bool` | Whether this config is active. The base config (the one declaring `[device]`) is always enabled and cannot be toggled by the user. |
 | `exclusive_group` | `string \| null` | Set when this config belongs to a set of mutually exclusive modules. Exactly one member of a group is enabled at a time; the tray draws them as radio buttons |
 | `status` | `string` | `"ok"`, `"warning"`, or `"error"` — `"error"` means the config could not be parsed and its slot in `errors` is populated |

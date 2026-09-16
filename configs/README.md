@@ -18,11 +18,29 @@ There are two folders, and both are read on every start:
 
 Both folders are scanned, along with their `apps/` subfolder. A config is
 identified by its **file name**, so a file here replaces the shipped file of the
-same name *entirely* — it is not merged into it, and it is not a patch. To change
-one thing about the trackpads, copy `Steam Deck Trackpads.toml` here and edit the
-copy; everything you did not copy keeps receiving updates.
+same name *entirely* — it is not merged into it.
 
 The tray has an item for opening either folder, under **Controller Bindings**.
+
+## Changing one binding
+
+You almost never want to copy a whole file. Instead put a small `.toml` of your
+own here with just the lines you want different:
+
+```toml
+# ~/.config/deckery/My Tweaks.toml
+[remap]
+Y = ["KEY_TAB"]
+```
+
+That file is a plain module, so it is merged into the controller's config like
+any other — and **a file from this folder beats every file from the shipped
+folder**, whatever the two are called and whichever kind of config they are.
+Only when two files *here* claim the same button does the name decide, and
+Deckery warns you about that in the tray.
+
+Copy a whole shipped file here only when you want to own it: from that moment it
+stops receiving updates.
 
 ## What each file is
 
@@ -43,9 +61,7 @@ it again. Deckery notices either within a second, without a restart.
 
 | File | Contains |
 |---|---|
-| `Steam Deck.toml` | `[device]`, button aliases, `[gaming_mode]` — the hardware descriptor |
-| `Steam Deck Buttons.toml` | `[remap]` — what every button does, plus the L1 layer |
-| `Steam Deck Sticks.toml` | `[settings]` — stick mode, sensitivity, deadzones |
+| `Steam Deck.toml` | The controller: `[device]`, button aliases, `[gaming_mode]`, `[remap]`, `[settings]` |
 | `Steam Deck Trackpads.toml` | `[trackpad]` — pad modes, haptics, KDE input settings |
 | `KDE Desktop.toml`, `Hyprland Desktop.toml` | Window control, one per compositor |
 | `KDE Desktop Layout *.toml` | Virtual-desktop navigation — exactly one is active |
@@ -54,10 +70,16 @@ it again. Deckery notices either within a second, without a restart.
 
 ## Who wins
 
-The base config sits on top: anything it binds beats every module. Among the
-modules the alphabetically last one wins — but two modules binding the same
-button is treated as a **config bug**, not a feature, and Deckery warns about it
-in the tray rather than picking a winner quietly.
+Configs are layered by who wrote them:
+
+```text
+shipped modules  <  shipped base config  <  your files (modules first, base last)
+```
+
+Within one layer the alphabetically last name wins — but two shipped modules
+binding the same button is treated as a **config bug**, not a feature, and
+Deckery warns about it in the tray rather than picking a winner quietly. A file
+of yours winning against a shipped one never warns.
 
 Modules gated to different compositors (`requires_compositor`) never load
 together, so the same binding in `KDE Desktop.toml` and `Hyprland Desktop.toml`

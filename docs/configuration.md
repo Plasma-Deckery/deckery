@@ -17,8 +17,30 @@ Both folders open from the tray, under **Controller Bindings** — **Open my con
 
 Deckery also keeps a `README.md` in your folder covering this page in short, so the folder explains itself — to you, or to an assistant you point at it. It is rewritten from the shipped copy on every start, which is why it is the one file there that an update touches: nothing you wrote can be in it.
 
-!!! warning "An override is a full replacement, not a patch"
-    Because your file replaces the shipped one wholesale, improvements made to the shipped version in later releases will not reach you. Override only the files you actually need to change.
+!!! warning "Same name means full replacement, not a patch"
+    Because a file of the same name replaces the shipped one wholesale, improvements made to the shipped version in later releases will not reach you. Take over a file only when you want to own it — for a single binding, write your own small module instead.
+
+## Changing one binding
+
+Copying a whole file to change one line is a bad trade, and it is not necessary. Put a small `.toml` of your own in `~/.config/deckery/`, with nothing in it but the lines you want different:
+
+```toml
+# ~/.config/deckery/My Tweaks.toml
+[remap]
+Y = ["KEY_TAB"]
+```
+
+It is a plain module, so it is merged into the controller's config like any other. What makes it reliable is that configs are layered by **who wrote them**, not by what kind of file they are:
+
+```text
+shipped modules  <  shipped base config  <  your own files
+```
+
+A file named `My Tweaks.toml` wins against `Steam Deck.toml` for the same reason `Zebra.toml` would — not because of where it sits in the alphabet, but because of which folder it sits in. Your module sits above the shipped base config on purpose: the bindings you are most likely to want moved are declared there, and having to adopt that whole file to change one of them is exactly the trade this avoids.
+
+The alphabet only settles ties inside one layer, and two of *your* files claiming the same button still produces a warning. Your file beating a shipped one does not: that is the mechanism working.
+
+The one exception is a base config you took over yourself. Once `Steam Deck.toml` is your file too, nothing distinguishes the two by authorship any more, and the base config — the more specific statement, the one that names the device — gets the last word again.
 
 ## What each file is
 
@@ -33,28 +55,26 @@ A file's role follows from its content — there is no type field and no include
 
 ## The shipped files
 
-The Steam Deck configuration is deliberately spread over several files, so that customising one concern does not mean taking ownership of all of them:
+The Steam Deck configuration is split where the split buys something. Buttons, sticks and Gaming Mode sit in the base config together, because a controller without a button layout is a dead controller — there is nothing to gain from switching them off separately. Trackpads and the desktop bindings are their own modules, because "off" is a real answer for both:
 
 | File | Contains |
 |---|---|
-| `Steam Deck.toml` | `[device]`, button aliases, `[gaming_mode]` — the hardware descriptor |
-| `Steam Deck Buttons.toml` | `[remap]` — base buttons and the L1 layer |
-| `Steam Deck Sticks.toml` | `[settings]` — stick mode, sensitivity, deadzones |
+| `Steam Deck.toml` | The controller — `[device]`, aliases, `[gaming_mode]`, `[remap]`, `[settings]` |
 | `Steam Deck Trackpads.toml` | `[trackpad]` — pad modes, haptics, KDE input settings |
 | `KDE Desktop.toml`, `Hyprland Desktop.toml` | Window control, gated per compositor |
 | `KDE Desktop Layout *.toml` | Virtual-desktop navigation — Horizontal, Vertical or Grid, exactly one active |
 | `Voice Control.toml` | Push-to-talk binding |
 | `apps/*.toml` | Per-application overrides |
 
-To retune your trackpad haptics you copy `Steam Deck Trackpads.toml` into `~/.config/deckery/` and edit that one file. Everything else keeps receiving updates.
+To retune your trackpad haptics you copy `Steam Deck Trackpads.toml` into `~/.config/deckery/` and edit that one file — it is the most-tuned config Deckery ships, and the one where owning the whole file is a fair price.
 
-Gaming Mode stays in `Steam Deck.toml` rather than getting its own file: it is a device-level concern, and the merge treats the base config as the sole authority for it — Gaming Mode set in a module would be discarded silently.
+Gaming Mode has to live in `Steam Deck.toml`: the merge treats the base config as the sole authority for it, so Gaming Mode set in a module would be discarded silently.
 
 ### Plain modules
 
-A plain module — `KDE Desktop.toml`, `Voice Control.toml`, `Steam Deck Buttons.toml` — is merged into every base config automatically, just by being in the directory. Delete the file, or switch it off in the tray, and its bindings go with it.
+A plain module — `KDE Desktop.toml`, `Voice Control.toml`, `Steam Deck Trackpads.toml` — is merged into every base config automatically, just by being in the directory. Delete the file, or switch it off in the tray, and its bindings go with it.
 
-The base config sits on top of the stack: anything it binds wins over every module. Among the modules themselves the alphabetically last one wins, and any two modules binding the same button produce a warning — that overlap is a config bug, not a feature.
+The shipped base config sits above the shipped modules: anything it binds wins over what they provide. Your own modules sit above both, as described under [Changing one binding](#changing-one-binding). Within one of those layers the alphabetically last name wins, and two shipped modules binding the same button produce a warning — that overlap is a config bug, not a feature.
 
 A module can declare `requires_compositor` to restrict itself to one desktop environment:
 
