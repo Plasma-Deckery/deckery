@@ -11,9 +11,10 @@ Rows are grouped: each base config, its modules indented beneath it, then an
 inspects config files itself.
 
 Modules sharing an "exclusive_group" are drawn as radio items, kept adjacent and
-bracketed with box-drawing glyphs. The bracket is not decoration: whether a
-DBusMenu host draws a radio item differently from a checkbox is up to the host,
-so the only thing guaranteed to say "pick exactly one of these" is the text.
+hung under a heading on a brace of box-drawing glyphs. The brace is not
+decoration: whether a DBusMenu host draws a radio item differently from a
+checkbox is up to the host, so the only thing guaranteed to say "pick exactly
+one of these" is the text.
 
 A module's own label drops the base config's name, since the row is already
 nested under it — "Steam Deck Trackpads" reads as "Trackpads".
@@ -98,14 +99,13 @@ def _drop_prefix(name: str, prefix: str) -> str:
 
 
 def _bracket(index: int, total: int) -> str:
-    """The glyph that puts row *index* of an exclusive group inside a brace."""
-    if total == 1:
-        return "╶"      # nothing to bracket together, but still one of a set
-    if index == 0:
-        return "╭"
-    if index == total - 1:
-        return "╰"
-    return "├"
+    """The glyph that puts row *index* of an exclusive group inside a brace.
+
+    The brace hangs off the group heading instead of starting at the first
+    member, so even the first row is a T-piece: the line arrives from the row
+    above, and that row is the heading naming what the choice is about.
+    """
+    return "╰" if index == total - 1 else "├"
 
 
 def display_rows(configs: list) -> list[Row]:
@@ -152,9 +152,10 @@ def display_rows(configs: list) -> list[Row]:
                             label=_drop_prefix(shared or slug, parent)))
             # The heading carries the tree glyph; the members sit one level in,
             # inside a brace that survives a host drawing radio items as ticks.
-            stem = "   " if trailing else "│  "
+            # No stem runs down the left of them: two vertical lines side by side
+            # read as two nestings, and the members are one.
             for n, m in enumerate(members):
-                rows.append(Row(m["name"], f"{stem}{_bracket(n, len(members))} ",
+                rows.append(Row(m["name"], f"   {_bracket(n, len(members))} ",
                                 label=_drop_prefix(m["name"], shared)))
         return rows
 

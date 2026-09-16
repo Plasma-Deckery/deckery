@@ -423,24 +423,29 @@ class TestGroupBracket:
             [_grouped(n, "layout") for n in members])
         return {r.name: r.prefix for r in rows if not r.heading}
 
-    def test_three_members_are_braced_top_middle_bottom(self):
+    def test_three_members_hang_off_the_heading(self):
+        # The first member is a T-piece, not a corner: the brace comes down out
+        # of the heading above it rather than beginning at the member.
         prefixes = self._prefixes(["Alpha", "Bravo", "Charlie"])
-        assert prefixes["Alpha"].endswith("╭ ")
+        assert prefixes["Alpha"].endswith("├ ")
         assert prefixes["Bravo"].endswith("├ ")
         assert prefixes["Charlie"].endswith("╰ ")
 
-    def test_two_members_open_and_close(self):
+    def test_two_members_hang_and_close(self):
         prefixes = self._prefixes(["Alpha", "Bravo"])
-        assert prefixes["Alpha"].endswith("╭ ")
+        assert prefixes["Alpha"].endswith("├ ")
         assert prefixes["Bravo"].endswith("╰ ")
 
     def test_a_lone_member_is_still_marked_as_one_of_a_set(self):
         # A group can shrink to one when its siblings fail to parse. Drawing it
         # as a plain row would invite a click that cannot switch it off.
         prefixes = self._prefixes(["Alpha"])
-        assert prefixes["Alpha"].endswith("╶ ")
+        assert prefixes["Alpha"].endswith("╰ ")
 
-    def test_members_stay_under_the_stem_of_the_base(self):
+    def test_no_stem_runs_down_the_left_of_the_members(self):
+        # Zulu follows, so the base's own stem would otherwise continue past the
+        # group — but two vertical lines side by side read as two nestings, and
+        # the members are one. The indent alone keeps them in place.
         rows = cm.display_rows([
             _cfg(BASE_CFG, kind="base"),
             _grouped("Alpha", "layout"),
@@ -448,19 +453,18 @@ class TestGroupBracket:
             _cfg("Zulu", kind="module", parent=BASE_CFG),
         ])
         prefixes = {r.name: r.prefix for r in rows if not r.heading}
-        # Zulu follows, so the group is not the last child — its members hang
-        # off a stem that has to continue past them.
-        assert prefixes["Alpha"].startswith("│")
-        assert prefixes["Bravo"].startswith("│")
+        assert prefixes["Alpha"] == "   ├ "
+        assert prefixes["Bravo"] == "   ╰ "
 
-    def test_the_stem_ends_with_the_last_group(self):
+    def test_members_are_indented_past_their_heading(self):
         rows = cm.display_rows([
             _cfg(BASE_CFG, kind="base"),
             _grouped("Alpha", "layout"),
             _grouped("Bravo", "layout"),
         ])
-        prefixes = {r.name: r.prefix for r in rows if not r.heading}
-        assert not prefixes["Alpha"].startswith("│")
+        heading = next(r for r in rows if r.heading)
+        members = [r for r in rows if not r.heading and r.name in ("Alpha", "Bravo")]
+        assert all(len(m.prefix) > len(heading.prefix) for m in members)
 
 
 class TestParentPrefix:
