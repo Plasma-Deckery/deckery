@@ -10,8 +10,13 @@ Rows are grouped: each base config, its modules indented beneath it, then an
 "kind" and "parent" fields makima writes into state.json — the tray never
 inspects config files itself.
 
-Modules sharing an "exclusive_group" are drawn as radio items and kept adjacent,
-so the choice reads as one selector rather than a run of unrelated ticks.
+Modules sharing an "exclusive_group" are drawn as radio items, kept adjacent and
+bracketed with box-drawing glyphs. The bracket is not decoration: whether a
+DBusMenu host draws a radio item differently from a checkbox is up to the host,
+so the only thing guaranteed to say "pick exactly one of these" is the text.
+
+A module's own label drops the base config's name, since the row is already
+nested under it — "Steam Deck Trackpads" reads as "Trackpads".
 
 Update strategy:
   - Same set of configs   → update slots in-place (label, active, visible)
@@ -81,6 +86,28 @@ def _shared_prefix(names: list[str]) -> str:
     return " ".join(shared)
 
 
+def _drop_prefix(name: str, prefix: str) -> str:
+    """*name* without a leading *prefix*, on a word boundary.
+
+    Returns *name* unchanged when the prefix is absent or is the whole name —
+    a row labelled with the empty string would be worse than a redundant one.
+    """
+    if not prefix or not name.startswith(prefix + " "):
+        return name
+    return name[len(prefix):].strip() or name
+
+
+def _bracket(index: int, total: int) -> str:
+    """The glyph that puts row *index* of an exclusive group inside a brace."""
+    if total == 1:
+        return "╶"      # nothing to bracket together, but still one of a set
+    if index == 0:
+        return "╭"
+    if index == total - 1:
+        return "╰"
+    return "├"
+
+
 def display_rows(configs: list) -> list[Row]:
     """Order configs for display: each base, its modules beneath it, then apps.
 
@@ -95,7 +122,7 @@ def display_rows(configs: list) -> list[Row]:
     def group(kind: str) -> list:
         return sorted((c for c in configs if c.get("kind") == kind), key=sort_key)
 
-    def nest(entries: list) -> list[Row]:
+    def nest(entries: list, parent: str = "") -> list[Row]:
         """Indent entries under their base, each exclusive group under a heading.
 
         Members of one group are contiguous after ``sort_key``, so a group is a
@@ -107,7 +134,9 @@ def display_rows(configs: list) -> list[Row]:
         while i < total:
             slug = entries[i].get("exclusive_group")
             if not slug:
-                rows.append(Row(entries[i]["name"], "└─ " if i == total - 1 else "├─ "))
+                name = entries[i]["name"]
+                rows.append(Row(name, "└─ " if i == total - 1 else "├─ ",
+                                label=_drop_prefix(name, parent)))
                 i += 1
                 continue
 
@@ -119,14 +148,14 @@ def display_rows(configs: list) -> list[Row]:
             trailing = i == total
             names  = [m["name"] for m in members]
             shared = _shared_prefix(names)
-            rows.append(Row(slug, "└─ " if trailing else "├─ ",
-                            heading=True, label=shared or slug))
-            # The heading carries the tree glyph; members sit one level in under
-            # it. Their radio bullet is drawn by GTK, so no glyph of their own.
-            indent = "     " if trailing else "│    "
-            for m in members:
-                rows.append(Row(m["name"], indent,
-                                label=m["name"][len(shared):].strip() or m["name"]))
+            rows.append(Row(slug, "└─ " if trailing else "├─ ", heading=True,
+                            label=_drop_prefix(shared or slug, parent)))
+            # The heading carries the tree glyph; the members sit one level in,
+            # inside a brace that survives a host drawing radio items as ticks.
+            stem = "   " if trailing else "│  "
+            for n, m in enumerate(members):
+                rows.append(Row(m["name"], f"{stem}{_bracket(n, len(members))} ",
+                                label=_drop_prefix(m["name"], shared)))
         return rows
 
     bases   = group("base")
@@ -137,7 +166,8 @@ def display_rows(configs: list) -> list[Row]:
     rows: list[Row] = []
     for base in bases:
         rows.append(Row(base["name"]))
-        rows += nest([m for m in modules if m.get("parent") == base["name"]])
+        rows += nest([m for m in modules if m.get("parent") == base["name"]],
+                     parent=base["name"])
 
     # A module whose parent is gone, or a file that would not parse: neither can
     # be nested, but both still need a row — that row is where the error shows.
@@ -184,12 +214,14 @@ class ConfigSubmenu:
     ipc:
         Callable that sends a makima IPC command string, e.g. _makima_ipc.
     config_dir:
-        Path opened by the "Open config folder" item.
+        The user's config directory. Used until makima reports the roots it
+        actually resolved, which it only can once it is running.
     """
 
     def __init__(self, initial_configs: list, ipc: callable, config_dir: str):
         self._ipc        = ipc
         self._config_dir = config_dir
+        self._roots:     dict = {}
         self._slots:     dict[str, _ConfigSlot] = {}   # name → slot
         self._radio_leaders: dict[str, object] = {}    # exclusive group → first item
         self._last:      list | None = None
@@ -206,8 +238,13 @@ class ConfigSubmenu:
         self._sep.set_no_show_all(True)
         self._sep.hide()
 
-        self._open_cfg = _icon_item("Open config folder", "folder")
-        self._open_cfg.connect("activate", lambda _: subprocess.Popen(["xdg-open", self._config_dir]))
+        # Two folders, because a surgical override means copying a file from one
+        # into the other — and the shipped one is where you go to read what the
+        # file you are about to copy currently does.
+        self._open_user = _icon_item("Open my configs", "folder")
+        self._open_user.connect("activate", lambda _: self._open(self.user_root))
+        self._open_system = _icon_item("Open shipped configs", "folder-templates")
+        self._open_system.connect("activate", lambda _: self._open(self.system_root))
 
         self._apply(initial_configs)
 
@@ -218,18 +255,38 @@ class ConfigSubmenu:
         """The 'Controller Bindings' MenuItem — append this to the root menu."""
         return self._parent
 
-    def refresh(self, configs: list) -> None:
+    @property
+    def user_root(self) -> str:
+        """The user's config directory — makima's answer, or the assumed one."""
+        return self._roots.get("user") or self._config_dir
+
+    @property
+    def system_root(self) -> str:
+        """The shipped config directory, or "" while makima has not said."""
+        return self._roots.get("system") or ""
+
+    def refresh(self, configs: list, config_roots: dict | None = None) -> None:
         """Update submenu contents if configs changed.
 
         Idempotent: safe to call on every poll cycle.  Does nothing when the
         config list is identical to the last rendered state.
         """
+        if config_roots:
+            self._roots = config_roots
+            # Only reachable once, when makima first reports: the roots are
+            # fixed for its lifetime, so this cannot flip back and forth.
+            self._open_system.set_visible(bool(self.system_root))
         if configs == self._last:
             return
         self._last = configs
         self._apply(configs)
 
     # ── Private ───────────────────────────────────────────────────────────────
+
+    @staticmethod
+    def _open(path: str) -> None:
+        if path:
+            subprocess.Popen(["xdg-open", path])
 
     def _create_slot(self, name: str, exclusive_group: str | None = None) -> _ConfigSlot:
         """Create the widget pair for *name*. Placement is done by _relayout."""
@@ -283,8 +340,13 @@ class ConfigSubmenu:
             self._submenu.append(slot.check)
             self._submenu.append(slot.error)
         self._submenu.append(self._sep)
-        self._submenu.append(self._open_cfg)
+        self._submenu.append(self._open_user)
+        self._submenu.append(self._open_system)
         self._submenu.show_all()
+        # show_all() has just made every child visible, including the item for a
+        # folder whose path is not known yet.
+        if not self.system_root:
+            self._open_system.hide()
 
     def _apply(self, configs: list) -> None:
         config_map = {c["name"]: c for c in configs}

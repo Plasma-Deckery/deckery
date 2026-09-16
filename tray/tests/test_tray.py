@@ -221,3 +221,53 @@ class TestTrayState:
             base_config_error=True, reinitializing=True,
         ) == "err"
 
+
+
+# ── _makima_state ─────────────────────────────────────────────────────────────
+
+class TestMakimaStateConfigs:
+    """Everything the submenu needs has to survive the read of state.json."""
+
+    def _state(self, tray_mod, tmp_path, monkeypatch, document):
+        import json
+        path = tmp_path / "makima-state.json"
+        path.write_text(json.dumps(document))
+        monkeypatch.setattr(tray_mod, "_STATE_JSON", str(path))
+        return tray_mod._makima_state()
+
+    def test_exclusive_group_reaches_the_submenu(self, tray_mod, tmp_path, monkeypatch):
+        # Dropping this field once made every group render as loose checkboxes:
+        # display_rows() reads it, and absent means "not in a group".
+        state = self._state(tray_mod, tmp_path, monkeypatch, {
+            "lifecycle": "ready",
+            "configs": [{"name": "KDE Desktop Layout Grid", "kind": "module",
+                         "exclusive_group": "kde-desktop-layout", "enabled": False}],
+        })
+        assert state.configs[0]["exclusive_group"] == "kde-desktop-layout"
+
+    def test_a_config_without_a_group_reports_none(self, tray_mod, tmp_path, monkeypatch):
+        state = self._state(tray_mod, tmp_path, monkeypatch, {
+            "lifecycle": "ready",
+            "configs": [{"name": "Voice Control", "kind": "module", "enabled": True}],
+        })
+        assert state.configs[0]["exclusive_group"] is None
+
+    def test_config_roots_are_passed_through(self, tray_mod, tmp_path, monkeypatch):
+        state = self._state(tray_mod, tmp_path, monkeypatch, {
+            "lifecycle": "ready", "configs": [],
+            "config_roots": {"system": "/usr/share/deckery/configs",
+                             "user":   "/home/u/.config/deckery"},
+        })
+        assert state.config_roots["system"] == "/usr/share/deckery/configs"
+
+    def test_missing_config_roots_are_an_empty_mapping(self, tray_mod, tmp_path, monkeypatch):
+        # An older makima, or one that has not finished starting. The submenu
+        # falls back to the assumed user path and hides the shipped folder.
+        state = self._state(tray_mod, tmp_path, monkeypatch, {
+            "lifecycle": "starting", "configs": [], "config_roots": None,
+        })
+        assert state.config_roots == {}
+
+    def test_an_absent_state_file_yields_empty_roots(self, tray_mod, tmp_path, monkeypatch):
+        monkeypatch.setattr(tray_mod, "_STATE_JSON", str(tmp_path / "gone.json"))
+        assert tray_mod._makima_state().config_roots == {}

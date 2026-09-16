@@ -1,4 +1,4 @@
-# Deckery — Steam Deck Base Bindings
+# Deckery — Steam Deck Buttons
 #
 # What every button does when no app override and no other module claims it.
 # Desktop-environment actions are not here: those live in KDE Desktop.toml and

@@ -1,7 +1,11 @@
-# Deckery — Steam Deck Input Settings
+# Deckery — Steam Deck Sticks
 #
-# Stick behaviour and axis handling. Separate from the bindings so that tuning
+# Stick behaviour and axis handling. Separate from the buttons so that tuning
 # your deadzone does not mean owning a copy of every button mapping.
+#
+# CUSTOM_MODIFIERS lives here too rather than earning a file of its own: it is
+# a declaration about the hardware's input handling, like the axis width, and
+# it is empty in every shipped configuration.
 
 [settings]
 # Buttons that act as layer modifiers. Left empty on purpose: any button used

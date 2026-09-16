@@ -409,3 +409,131 @@ class TestGroupMembershipChanges:
                      _grouped("Layout Alpha", "layout", enabled=False)])
 
         assert sub._slots["Layout Alpha"].check is before
+
+
+class TestGroupBracket:
+    """Whether a host draws a radio item as a bullet is the host's business.
+
+    The bracket is what says "one of these" regardless of how it is drawn.
+    """
+
+    def _prefixes(self, members):
+        rows = cm.display_rows(
+            [_cfg(BASE_CFG, kind="base")] +
+            [_grouped(n, "layout") for n in members])
+        return {r.name: r.prefix for r in rows if not r.heading}
+
+    def test_three_members_are_braced_top_middle_bottom(self):
+        prefixes = self._prefixes(["Alpha", "Bravo", "Charlie"])
+        assert prefixes["Alpha"].endswith("╭ ")
+        assert prefixes["Bravo"].endswith("├ ")
+        assert prefixes["Charlie"].endswith("╰ ")
+
+    def test_two_members_open_and_close(self):
+        prefixes = self._prefixes(["Alpha", "Bravo"])
+        assert prefixes["Alpha"].endswith("╭ ")
+        assert prefixes["Bravo"].endswith("╰ ")
+
+    def test_a_lone_member_is_still_marked_as_one_of_a_set(self):
+        # A group can shrink to one when its siblings fail to parse. Drawing it
+        # as a plain row would invite a click that cannot switch it off.
+        prefixes = self._prefixes(["Alpha"])
+        assert prefixes["Alpha"].endswith("╶ ")
+
+    def test_members_stay_under_the_stem_of_the_base(self):
+        rows = cm.display_rows([
+            _cfg(BASE_CFG, kind="base"),
+            _grouped("Alpha", "layout"),
+            _grouped("Bravo", "layout"),
+            _cfg("Zulu", kind="module", parent=BASE_CFG),
+        ])
+        prefixes = {r.name: r.prefix for r in rows if not r.heading}
+        # Zulu follows, so the group is not the last child — its members hang
+        # off a stem that has to continue past them.
+        assert prefixes["Alpha"].startswith("│")
+        assert prefixes["Bravo"].startswith("│")
+
+    def test_the_stem_ends_with_the_last_group(self):
+        rows = cm.display_rows([
+            _cfg(BASE_CFG, kind="base"),
+            _grouped("Alpha", "layout"),
+            _grouped("Bravo", "layout"),
+        ])
+        prefixes = {r.name: r.prefix for r in rows if not r.heading}
+        assert not prefixes["Alpha"].startswith("│")
+
+
+class TestParentPrefix:
+    """A module is already nested under its base — repeating its name is noise."""
+
+    def test_a_module_drops_the_name_of_its_base(self):
+        rows = cm.display_rows([
+            _cfg(BASE_CFG, kind="base"),
+            _cfg("Steam Deck Trackpads", kind="module", parent=BASE_CFG),
+        ])
+        labels = {r.name: r.text for r in rows if not r.heading}
+        assert labels["Steam Deck Trackpads"] == "Trackpads"
+
+    def test_an_unrelated_module_keeps_its_name(self):
+        rows = cm.display_rows([
+            _cfg(BASE_CFG, kind="base"),
+            _cfg("KDE Desktop", kind="module", parent=BASE_CFG),
+        ])
+        labels = {r.name: r.text for r in rows if not r.heading}
+        assert labels["KDE Desktop"] == "KDE Desktop"
+
+    def test_a_module_named_exactly_like_its_base_keeps_its_name(self):
+        # Stripping would leave an empty label, which is worse than a repeat.
+        assert cm._drop_prefix("Steam Deck", "Steam Deck") == "Steam Deck"
+
+    def test_the_prefix_has_to_end_on_a_word_boundary(self):
+        assert cm._drop_prefix("Steam Decker", "Steam Deck") == "Steam Decker"
+
+    def test_a_group_heading_drops_the_base_name_too(self):
+        rows = cm.display_rows([
+            _cfg(BASE_CFG, kind="base"),
+            _grouped("Steam Deck Layout Alpha", "layout"),
+            _grouped("Steam Deck Layout Bravo", "layout"),
+        ])
+        heading = next(r for r in rows if r.heading)
+        assert heading.text == "Layout"
+
+    def test_the_apps_group_is_not_affected(self):
+        rows = cm.display_rows([
+            _cfg(BASE_CFG, kind="base"),
+            _cfg("Steam Deck Companion", kind="app"),
+        ])
+        labels = {r.name: r.text for r in rows if not r.heading}
+        assert labels["Steam Deck Companion"] == "Steam Deck Companion"
+
+
+class TestConfigFolders:
+    """Two folders: the user's own, and the shipped one they copy from."""
+
+    def test_the_user_root_falls_back_to_the_assumed_path(self, sub):
+        assert sub.user_root == "/tmp/cfg"
+
+    def test_the_shipped_folder_is_hidden_until_makima_reports_it(self, sub):
+        assert sub.system_root == ""
+        sub._open_system.hide.assert_called()
+
+    def test_reported_roots_win_over_the_assumed_one(self, sub):
+        sub.refresh([_cfg(APP_CFG)],
+                    {"system": "/usr/share/deckery/configs", "user": "/home/u/.config/deckery"})
+        assert sub.user_root   == "/home/u/.config/deckery"
+        assert sub.system_root == "/usr/share/deckery/configs"
+        sub._open_system.set_visible.assert_called_with(True)
+
+    def test_opening_a_folder_hands_the_path_to_xdg_open(self, sub, monkeypatch):
+        popen = MagicMock()
+        monkeypatch.setattr(cm.subprocess, "Popen", popen)
+        sub.refresh([_cfg(APP_CFG)], {"system": "/shipped", "user": "/mine"})
+        sub._open(sub.system_root)
+        popen.assert_called_once_with(["xdg-open", "/shipped"])
+
+    def test_an_unknown_folder_is_never_opened(self, sub, monkeypatch):
+        # Better nothing than xdg-open on the empty string, which opens $HOME.
+        popen = MagicMock()
+        monkeypatch.setattr(cm.subprocess, "Popen", popen)
+        sub._open(sub.system_root)
+        popen.assert_not_called()

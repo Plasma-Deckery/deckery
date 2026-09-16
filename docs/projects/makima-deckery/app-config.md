@@ -25,7 +25,7 @@ The window class comes from the focused window's `resourceClass` property in KWi
 
 Only the bindings listed in the app config are overridden; all other buttons continue to use the layers below it. The full merge order, lowest first:
 
-1. Plain modules, in name order — `Steam Deck Bindings`, `Steam Deck Trackpad`, `KDE Desktop`, …
+1. Plain modules, in name order — `Steam Deck Buttons`, `Steam Deck Trackpads`, `KDE Desktop`, …
 2. The base config (`Steam Deck.toml`), which declares the device
 3. The app config for the focused window
 

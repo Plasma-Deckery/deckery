@@ -33,10 +33,14 @@ done
   },
   "configs": [
     { "name": "Steam Deck",          "enabled": true,  "status": "ok",      "errors": [] },
-    { "name": "Steam Deck Bindings", "enabled": true,  "status": "ok",      "errors": [] },
+    { "name": "Steam Deck Buttons", "enabled": true,  "status": "ok",      "errors": [] },
     { "name": "Firefox",             "enabled": true,  "status": "warning", "errors": [] },
     { "name": "Konsole",             "enabled": false, "status": "ok",      "errors": [] }
   ],
+  "config_roots": {
+    "system": "/usr/share/deckery/configs",
+    "user": "/home/user/.config/deckery"
+  },
   "context": {
     "active_app": "org.mozilla.firefox",
     "config_stack": ["Steam Deck", "org.mozilla.firefox"],
@@ -171,13 +175,26 @@ Each entry:
 
 | Field | Type | Meaning |
 |---|---|---|
-| `name` | `string` | Config identifier — the file base name without `.toml` (e.g. `"Steam Deck"`, `"Steam Deck Bindings"`, `"Firefox"`). There is no naming convention to decode |
+| `name` | `string` | Config identifier — the file base name without `.toml` (e.g. `"Steam Deck"`, `"Steam Deck Buttons"`, `"Firefox"`). There is no naming convention to decode |
 | `enabled` | `bool` | Whether this config is active. The base config (the one declaring `[device]`) is always enabled and cannot be toggled by the user. |
 | `exclusive_group` | `string \| null` | Set when this config belongs to a set of mutually exclusive modules. Exactly one member of a group is enabled at a time; the tray draws them as radio buttons |
 | `status` | `string` | `"ok"`, `"warning"`, or `"error"` — `"error"` means the config could not be parsed and its slot in `errors` is populated |
 | `errors` | `[{severity, message}]` | Parse or load errors for this config; empty when `status != "error"`. Each entry: `{ "severity": "error" \| "warning", "message": "..." }` |
 
 The tray's **Controller Bindings** submenu is driven directly from this array. Toggling a config via the tray sends a `config enable/disable <name>` IPC command, which updates `enabled` and rewrites this field. Enabling a member of an `exclusive_group` disables its siblings in the same step. The resulting state is persisted to `~/.config/deckery/preferences.toml`, which is re-read on every reload — so a restart and a reload always agree about what is active.
+
+---
+
+### `config_roots`
+
+The two directories the configs above were read from. Written once at startup and unchanged for the rest of the process; `null` until then.
+
+| Field | Type | Meaning |
+|---|---|---|
+| `system` | `string` | The shipped configs — `/usr/share/deckery/configs` for an RPM install, the checkout's `configs/` for a git install, or whatever `DECKERY_SYSTEM_CONFIG` names |
+| `user` | `string` | The user's own configs, normally `~/.config/deckery` |
+
+Published so a frontend can offer to open either folder without re-deriving the resolution rules — which depend on the install method and on two environment variables, and would drift the moment either changes. The tray hides its **Open shipped configs** item while this field is `null` rather than opening a guessed path.
 
 ---
 

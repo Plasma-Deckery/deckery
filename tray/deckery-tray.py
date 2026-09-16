@@ -199,6 +199,7 @@ class MakimaState(NamedTuple):
     no_device:         bool  # True when errors["no_device"] is present
     base_config_error: bool  # True when errors["base_config"] is present
     configs:           list  # list of {"name": str, "enabled": bool, "status": str}
+    config_roots:      dict  # {"system": str, "user": str}; empty until reported
 
 def _makima_state() -> MakimaState:
     try:
@@ -214,6 +215,9 @@ def _makima_state() -> MakimaState:
                 "name":    c.get("name", ""),
                 "kind":    c.get("kind", "base"),
                 "parent":  c.get("parent"),
+                # Drives radio items and the bracket in the submenu. Dropping it
+                # here once made every group render as unrelated checkboxes.
+                "exclusive_group": c.get("exclusive_group"),
                 "enabled": bool(c.get("enabled", True)),
                 "status":  c.get("status", "ok"),
                 "errors":  c.get("errors", []),
@@ -228,12 +232,20 @@ def _makima_state() -> MakimaState:
             no_device         = no_device,
             base_config_error = base_config_error,
             configs           = configs,
+            config_roots      = data.get("config_roots") or {},
         )
     except FileNotFoundError:
-        return MakimaState(paused=False, gaming_mode=False, lifecycle="", no_device=False, base_config_error=False, configs=[])
+        return _no_makima_state()
     except Exception:
         log.warning("Failed to read %s", _STATE_JSON, exc_info=True)
-        return MakimaState(paused=False, gaming_mode=False, lifecycle="", no_device=False, base_config_error=False, configs=[])
+        return _no_makima_state()
+
+
+def _no_makima_state() -> MakimaState:
+    """The state of a makima that is not running, or not readable."""
+    return MakimaState(paused=False, gaming_mode=False, lifecycle="",
+                       no_device=False, base_config_error=False,
+                       configs=[], config_roots={})
 
 
 def _git_dirty_files(repo_dir: str) -> list[str]:
@@ -321,7 +333,7 @@ class DeckeryTray:
         self._statuses: dict   = {}   # last known service statuses from poll
         self._paused           = False
         self._gaming_mode      = False
-        self._makima           = MakimaState(paused=False, gaming_mode=False, lifecycle="", no_device=False, base_config_error=False, configs=[])
+        self._makima           = _no_makima_state()
         self._poll_running     = False
         self._state_timeout_id = None
         self._updater           = Updater(on_state_change=self._on_update_state_changed)
@@ -570,7 +582,7 @@ class DeckeryTray:
         self._items["quit_gaming"].set_visible(makima_active and gaming)
 
         # ── Configs submenu ───────────────────────────────────────────────
-        self._config_submenu.refresh(makima.configs)
+        self._config_submenu.refresh(makima.configs, makima.config_roots)
 
         # ── Tray icon ─────────────────────────────────────────────────────
         self._refresh_tray_icon()

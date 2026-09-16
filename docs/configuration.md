@@ -9,11 +9,13 @@ Configs are read from two places:
 | Directory | What lives there |
 |---|---|
 | `~/.local/share/deckery/deckery/configs/` (git install)<br>`/usr/share/deckery/configs/` (RPM) | The configs Deckery ships. Replaced on every update. |
-| `~/.config/deckery/` | Your own configs and overrides. Never touched by an update. |
+| `~/.config/deckery/` | Your own configs and overrides. Never touched by an update, apart from the README described below. |
 
 Both directories are scanned, along with their `apps/` subdirectory. A file is identified by its base name, so **a file in your directory replaces the shipped file of the same name entirely**. To customise `KDE Desktop.toml`, copy it into `~/.config/deckery/` and edit the copy — the shipped version is then ignored, and updates leave your version alone.
 
-To open your config folder, use **Open config folder** in the Deckery tray menu.
+Both folders open from the tray, under **Controller Bindings** — **Open my configs** and **Open shipped configs**. Customising means copying a file from the second into the first, so both are one click away.
+
+Deckery also keeps a `README.md` in your folder covering this page in short, so the folder explains itself — to you, or to an assistant you point at it. It is rewritten from the shipped copy on every start, which is why it is the one file there that an update touches: nothing you wrote can be in it.
 
 !!! warning "An override is a full replacement, not a patch"
     Because your file replaces the shipped one wholesale, improvements made to the shipped version in later releases will not reach you. Override only the files you actually need to change.
@@ -36,21 +38,21 @@ The Steam Deck configuration is deliberately spread over several files, so that 
 | File | Contains |
 |---|---|
 | `Steam Deck.toml` | `[device]`, button aliases, `[gaming_mode]` — the hardware descriptor |
-| `Steam Deck Bindings.toml` | `[remap]` — base buttons and the L1 layer |
-| `Steam Deck Settings.toml` | `[settings]` — stick mode, sensitivity, deadzones |
-| `Steam Deck Trackpad.toml` | `[trackpad]` — pad modes, haptics, KDE input settings |
+| `Steam Deck Buttons.toml` | `[remap]` — base buttons and the L1 layer |
+| `Steam Deck Sticks.toml` | `[settings]` — stick mode, sensitivity, deadzones |
+| `Steam Deck Trackpads.toml` | `[trackpad]` — pad modes, haptics, KDE input settings |
 | `KDE Desktop.toml`, `Hyprland Desktop.toml` | Window control, gated per compositor |
 | `KDE Desktop Layout *.toml` | Virtual-desktop navigation — Horizontal, Vertical or Grid, exactly one active |
 | `Voice Control.toml` | Push-to-talk binding |
 | `apps/*.toml` | Per-application overrides |
 
-To retune your trackpad haptics you copy `Steam Deck Trackpad.toml` into `~/.config/deckery/` and edit that one file. Everything else keeps receiving updates.
+To retune your trackpad haptics you copy `Steam Deck Trackpads.toml` into `~/.config/deckery/` and edit that one file. Everything else keeps receiving updates.
 
 Gaming Mode stays in `Steam Deck.toml` rather than getting its own file: it is a device-level concern, and the merge treats the base config as the sole authority for it — Gaming Mode set in a module would be discarded silently.
 
 ### Plain modules
 
-A plain module — `KDE Desktop.toml`, `Voice Control.toml`, `Steam Deck Bindings.toml` — is merged into every base config automatically, just by being in the directory. Delete the file, or switch it off in the tray, and its bindings go with it.
+A plain module — `KDE Desktop.toml`, `Voice Control.toml`, `Steam Deck Buttons.toml` — is merged into every base config automatically, just by being in the directory. Delete the file, or switch it off in the tray, and its bindings go with it.
 
 The base config sits on top of the stack: anything it binds wins over every module. Among the modules themselves the alphabetically last one wins, and any two modules binding the same button produce a warning — that overlap is a config bug, not a feature.
 
