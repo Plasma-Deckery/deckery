@@ -308,3 +308,104 @@ class TestExclusiveGroups:
         slot.check.get_active.return_value = False
         slot.check.connect.call_args[0][1](slot.check)
         ipc.assert_called_once_with("config disable Voice Control")
+
+
+class TestGroupHeadings:
+    """A group is drawn as a named cluster, not a run of unrelated radio ticks."""
+
+    def test_a_heading_row_precedes_the_members(self):
+        rows = cm.display_rows([
+            _cfg(BASE_CFG, kind="base"),
+            _grouped("KDE Desktop Layout Horizontal", "kde-desktop-layout"),
+            _grouped("KDE Desktop Layout Vertical",   "kde-desktop-layout"),
+        ])
+        names = [r.name for r in rows]
+        heading = names.index("kde-desktop-layout")
+        assert rows[heading].heading
+        assert heading < names.index("KDE Desktop Layout Horizontal")
+
+    def test_the_heading_is_named_after_its_members(self):
+        rows = cm.display_rows([
+            _cfg(BASE_CFG, kind="base"),
+            _grouped("KDE Desktop Layout Horizontal", "kde-desktop-layout"),
+            _grouped("KDE Desktop Layout Vertical",   "kde-desktop-layout"),
+        ])
+        heading = next(r for r in rows if r.heading)
+        # The slug is an identifier, not something to put in front of a user.
+        assert heading.text == "KDE Desktop Layout"
+
+    def test_members_drop_what_the_heading_already_says(self):
+        rows = cm.display_rows([
+            _cfg(BASE_CFG, kind="base"),
+            _grouped("KDE Desktop Layout Horizontal", "kde-desktop-layout"),
+            _grouped("KDE Desktop Layout Vertical",   "kde-desktop-layout"),
+        ])
+        labels = {r.name: r.text for r in rows if not r.heading}
+        assert labels["KDE Desktop Layout Horizontal"] == "Horizontal"
+        assert labels["KDE Desktop Layout Vertical"]   == "Vertical"
+
+    def test_members_without_a_shared_prefix_keep_their_names(self):
+        rows = cm.display_rows([
+            _cfg(BASE_CFG, kind="base"),
+            _grouped("Alpha", "layout"),
+            _grouped("Beta",  "layout"),
+        ])
+        heading = next(r for r in rows if r.heading)
+        labels  = {r.name: r.text for r in rows if not r.heading}
+        assert heading.text == "layout"
+        assert labels["Alpha"] == "Alpha"
+        assert labels["Beta"]  == "Beta"
+
+    def test_a_shared_prefix_is_whole_words_only(self):
+        # "Layout H" is a shared character run, not a shared name.
+        assert cm._shared_prefix(["Layout Horizontal", "Layout Hyprland"]) == "Layout"
+
+    def test_a_lone_member_keeps_its_full_name(self):
+        # Nothing to factor out, and the heading must not swallow the only label.
+        assert cm._shared_prefix(["KDE Desktop Layout Grid"]) == ""
+
+    def test_the_apps_heading_still_works(self, sub):
+        sub.refresh([_cfg(BASE_CFG, kind="base"), _cfg("Firefox", kind="app")])
+        rows = cm.display_rows([_cfg(BASE_CFG, kind="base"), _cfg("Firefox", kind="app")])
+        assert any(r.heading and r.name == "Apps" for r in rows)
+
+
+class TestGroupMembershipChanges:
+    """A module can gain or lose a group across an update."""
+
+    def test_gaining_a_group_replaces_the_checkbox_with_a_radio(self, sub):
+        sub.refresh([_cfg(BASE_CFG, kind="base"),
+                     _cfg("Layout Alpha", kind="module", parent=BASE_CFG)])
+        assert sub._slots["Layout Alpha"].group is None
+        before = sub._slots["Layout Alpha"].check
+
+        sub.refresh([_cfg(BASE_CFG, kind="base"),
+                     _grouped("Layout Alpha", "layout")])
+
+        slot = sub._slots["Layout Alpha"]
+        assert slot.group == "layout"
+        # A new widget, not the old one relabelled — the toggle handler on the
+        # old checkbox would still send "disable", which makima now refuses.
+        assert slot.check is not before
+
+    def test_losing_a_group_replaces_the_radio_with_a_checkbox(self, sub):
+        sub.refresh([_cfg(BASE_CFG, kind="base"),
+                     _grouped("Layout Alpha", "layout")])
+        before = sub._slots["Layout Alpha"].check
+
+        sub.refresh([_cfg(BASE_CFG, kind="base"),
+                     _cfg("Layout Alpha", kind="module", parent=BASE_CFG)])
+
+        slot = sub._slots["Layout Alpha"]
+        assert slot.group is None
+        assert slot.check is not before
+
+    def test_an_unchanged_group_keeps_its_widgets(self, sub):
+        sub.refresh([_cfg(BASE_CFG, kind="base"),
+                     _grouped("Layout Alpha", "layout", enabled=True)])
+        before = sub._slots["Layout Alpha"].check
+
+        sub.refresh([_cfg(BASE_CFG, kind="base"),
+                     _grouped("Layout Alpha", "layout", enabled=False)])
+
+        assert sub._slots["Layout Alpha"].check is before

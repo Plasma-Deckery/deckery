@@ -115,14 +115,19 @@ it at startup and on every reload. Only your deviations are recorded: a module
 that appears nowhere in the file is on, which is what lets a newly shipped
 module arrive already active.
 
-The installer creates the file once, at first installation, and never touches it
-again — it sits in your config directory, which updates do not write to. It is
-written with the shipped group defaults filled in; on/off modules are left out,
-so a release that changes one of those defaults still reaches you.
+Deckery creates the file at the first start that does not find one, by copying
+the shipped `preferences.toml` into your config directory. After that it is
+yours — updates never write to that directory, so your choices survive them
+untouched. The copying happens in Deckery rather than in `install.sh` because an
+RPM install never runs that script, and those users would otherwise start with
+no recorded defaults at all.
+
+The shipped copy fills in the exclusive-group defaults only. On/off modules are
+left out, so a release that changes one of those defaults still reaches you.
 
 If a group has no recorded choice at all, the alphabetically first member runs.
 That is a safety net against an empty group, not a statement of intent — the
-intended default is the one the installer wrote.
+intended default is the one the shipped file names.
 
 ### App overrides
 

@@ -221,6 +221,10 @@ mkdir -p "$CFG_DIR"
 while IFS= read -r src; do
     rel="${src#$DECKERY_DIR/configs/}"
     dst="$CFG_DIR/$rel"
+    # preferences.toml is shipped under configs/ but is not a config — it is the
+    # user's own state, and their copy is the live one. It shares a name with a
+    # shipped file by design, so it has to be held out of this sweep explicitly.
+    [ "$rel" = "preferences.toml" ] && continue
     if [ -e "$dst" ] || [ -L "$dst" ]; then
         rm -f "$dst"
         echo "Removed leftover copy: $rel"
@@ -235,35 +239,9 @@ done < <(find "$CFG_DIR" -name "*.toml.old")
 # Files the user added under their own names are untouched — they were never
 # part of the copy scheme and keep working as plain modules or app overrides.
 
-# preferences.toml records which modules are switched on. It is the one file the
-# installer puts in the user directory, and only when it is not there yet: from
-# then on it belongs to the user and no update writes to it again.
-#
-# Only the exclusive-group defaults are written in. A group must resolve to
-# exactly one member, and the registry's fallback — alphabetically first — is a
-# safety net, not a statement of intent: it cannot know that Horizontal is the
-# arrangement KDE and Bazzite ship. Plain on/off modules get no entry, so a
-# later release can still change their default and have it take effect.
-if [ ! -e "$CFG_DIR/preferences.toml" ]; then
-    cat > "$CFG_DIR/preferences.toml" <<'PREFS'
-# Deckery — which controller bindings are switched on.
-#
-# Written by Deckery when you toggle a config in the tray. Safe to edit by hand.
-# Anything not listed here uses the shipped default, so a release that changes a
-# default still reaches you.
-
-# The chosen member of each set of mutually exclusive modules.
-[exclusive_groups]
-# Horizontal matches the single-row desktop arrangement KDE ships by default.
-# Switch to "KDE Desktop Layout Vertical" or "... Grid" here or in the tray.
-kde-desktop-layout = "KDE Desktop Layout Horizontal"
-
-[modules]
-# Modules switched off. Everything else is on.
-disabled = []
-PREFS
-    echo "Created preferences.toml"
-fi
+# preferences.toml is not created here. It ships as configs/preferences.toml and
+# is copied into the user directory by Deckery itself at first start, so that an
+# RPM install — which never runs this script — gets the same defaults.
 
 echo ""
 

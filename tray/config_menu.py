@@ -40,20 +40,52 @@ log = logging.getLogger("deckery-tray")
 
 @dataclass(frozen=True)
 class Row:
-    """One line in the submenu: either a config or the "Apps" heading.
+    """One line in the submenu: a config, the "Apps" heading, or a group heading.
 
+    ``name``   identifies the row — a config name, or the group slug for a group
+               heading. It is the key slots and heading widgets are stored under,
+               never the text drawn.
     ``prefix`` carries the tree glyph a nested entry is drawn with.
+    ``label``  the text to draw, when it differs from ``name``. Group members are
+               drawn without the part of their name the heading already says.
     """
     name:    str
     prefix:  str = ""
     heading: bool = False
+    label:   str = ""
+
+    @property
+    def text(self) -> str:
+        return self.label or self.name
+
+
+def _shared_prefix(names: list[str]) -> str:
+    """The leading words every name has in common, e.g. "KDE Desktop Layout".
+
+    Used to name an exclusive group after its members rather than after its slug.
+    Whole words only: "Layout Horizontal"/"Layout Hyprland" share the characters
+    of "Layout H", which is not something to put on screen.
+    """
+    if len(names) < 2:
+        return ""
+    words = [n.split() for n in names]
+    shared: list[str] = []
+    for column in zip(*words):
+        if len(set(column)) != 1:
+            break
+        shared.append(column[0])
+    # All words shared means the names are equal — then the prefix says
+    # everything and the members would be left with empty labels.
+    if len(shared) == min(len(w) for w in words):
+        return ""
+    return " ".join(shared)
 
 
 def display_rows(configs: list) -> list[Row]:
     """Order configs for display: each base, its modules beneath it, then apps.
 
-    Pure — no GTK, no I/O. Grouping comes entirely from the "kind" and "parent"
-    fields; a config missing them lands in the top-level group.
+    Pure — no GTK, no I/O. Grouping comes entirely from the "kind", "parent" and
+    "exclusive_group" fields; a config missing them lands in the top-level group.
     """
     def sort_key(c: dict) -> tuple:
         # Members of an exclusive group sort under the group's name, which puts
@@ -64,9 +96,38 @@ def display_rows(configs: list) -> list[Row]:
         return sorted((c for c in configs if c.get("kind") == kind), key=sort_key)
 
     def nest(entries: list) -> list[Row]:
-        last = len(entries) - 1
-        return [Row(c["name"], "└─ " if i == last else "├─ ")
-                for i, c in enumerate(entries)]
+        """Indent entries under their base, each exclusive group under a heading.
+
+        Members of one group are contiguous after ``sort_key``, so a group is a
+        run rather than something that has to be gathered.
+        """
+        rows: list[Row] = []
+        total = len(entries)
+        i = 0
+        while i < total:
+            slug = entries[i].get("exclusive_group")
+            if not slug:
+                rows.append(Row(entries[i]["name"], "└─ " if i == total - 1 else "├─ "))
+                i += 1
+                continue
+
+            members = []
+            while i < total and entries[i].get("exclusive_group") == slug:
+                members.append(entries[i])
+                i += 1
+
+            trailing = i == total
+            names  = [m["name"] for m in members]
+            shared = _shared_prefix(names)
+            rows.append(Row(slug, "└─ " if trailing else "├─ ",
+                            heading=True, label=shared or slug))
+            # The heading carries the tree glyph; members sit one level in under
+            # it. Their radio bullet is drawn by GTK, so no glyph of their own.
+            indent = "     " if trailing else "│    "
+            for m in members:
+                rows.append(Row(m["name"], indent,
+                                label=m["name"][len(shared):].strip() or m["name"]))
+        return rows
 
     bases   = group("base")
     modules = group("module")
@@ -106,6 +167,10 @@ class _ConfigSlot:
     error:      Gtk.MenuItem
     toggle_id:  int
     error_text: str = ""
+    # The exclusive group this slot was built for. A radio item and a checkbox
+    # are different widgets with different toggle semantics, so a config that
+    # changes group across an update needs a new slot, not an updated one.
+    group:      str | None = None
 
 
 class ConfigSubmenu:
@@ -134,8 +199,8 @@ class ConfigSubmenu:
         self._submenu = Gtk.Menu()
         self._parent.set_submenu(self._submenu)
 
-        self._apps_heading = Gtk.MenuItem(label="Apps")
-        self._apps_heading.set_sensitive(False)
+        # Heading widgets by row name: "Apps", plus one per exclusive group.
+        self._headings: dict[str, Gtk.MenuItem] = {}
 
         self._sep = Gtk.SeparatorMenuItem()
         self._sep.set_no_show_all(True)
@@ -191,9 +256,20 @@ class ConfigSubmenu:
             _show_error_dialog(n, self._slots[n].error_text)
         err.connect("activate", _on_error_click)
 
-        slot = _ConfigSlot(check=chk, error=err, toggle_id=toggle_id)
+        slot = _ConfigSlot(check=chk, error=err, toggle_id=toggle_id,
+                           group=exclusive_group)
         self._slots[name] = slot
         return slot
+
+    def _heading(self, row: Row) -> Gtk.MenuItem:
+        """The non-interactive label row for *row*, created on first use."""
+        item = self._headings.get(row.name)
+        if item is None:
+            item = Gtk.MenuItem(label="")
+            item.set_sensitive(False)
+            self._headings[row.name] = item
+        item.set_label(f"{row.prefix}{row.text}")
+        return item
 
     def _relayout(self, rows: list) -> None:
         """Re-append every item so the menu matches *rows* top to bottom."""
@@ -201,7 +277,7 @@ class ConfigSubmenu:
             self._submenu.remove(child)
         for row in rows:
             if row.heading:
-                self._submenu.append(self._apps_heading)
+                self._submenu.append(self._heading(row))
                 continue
             slot = self._slots[row.name]
             self._submenu.append(slot.check)
@@ -213,6 +289,18 @@ class ConfigSubmenu:
     def _apply(self, configs: list) -> None:
         config_map = {c["name"]: c for c in configs}
         rows       = display_rows(configs)
+
+        # A config that gained or lost an exclusive group needs a different
+        # widget type, and a radio item cannot be pulled out of a GTK group
+        # without leaving the remaining members pointing at it. So the whole set
+        # is rebuilt — that only happens when an update changes a module's
+        # metadata, where correctness is worth more than the saved widgets.
+        if any(not r.heading and self._slots[r.name].group
+               != config_map[r.name].get("exclusive_group")
+               for r in rows if not r.heading and r.name in self._slots):
+            self._slots.clear()
+            self._radio_leaders.clear()
+            self._layout = None
 
         for row in rows:
             if not row.heading and row.name not in self._slots:
@@ -230,7 +318,7 @@ class ConfigSubmenu:
             slot    = self._slots[row.name]
             status  = cfg.get("status", "ok")
             errors  = cfg.get("errors", [])
-            label   = f"{row.prefix}{row.name}"
+            label   = f"{row.prefix}{row.text}"
 
             slot.error_text = "\n\n".join(e.get("message", "") for e in errors) or "Unknown error"
 
