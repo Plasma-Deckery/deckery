@@ -117,10 +117,17 @@ class TestOkStatus:
         slot.check.hide.assert_called()
         slot.check.show.assert_not_called()
 
-    def test_healthy_base_is_not_clickable(self, sub):
-        # Nothing to report → no dialog to open.
+    def test_healthy_base_is_not_greyed_out(self, sub):
+        # It is the live config the whole menu hangs off. Insensitive text says
+        # "unavailable", which is the opposite of true here.
         sub.refresh([_cfg(BASE_CFG, kind="base")])
-        sub._slots[BASE_CFG].error.set_sensitive.assert_called_with(False)
+        sub._slots[BASE_CFG].error.set_sensitive.assert_called_with(True)
+
+    def test_healthy_base_has_nothing_to_report(self, sub):
+        # Clickable, but the click opens no dialog — that is what the empty
+        # error text is for.
+        sub.refresh([_cfg(BASE_CFG, kind="base")])
+        assert sub._slots[BASE_CFG].error_text == ""
 
 
 # ── warning status ────────────────────────────────────────────────────────────

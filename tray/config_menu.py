@@ -311,7 +311,12 @@ class ConfigSubmenu:
 
         err = Gtk.MenuItem(label="")
         def _on_error_click(widget, n=name):
-            _show_error_dialog(n, self._slots[n].error_text)
+            # This row also carries a healthy base config, which has nothing to
+            # report — it stays clickable so it does not read as broken, and a
+            # click on it does nothing.
+            text = self._slots[n].error_text
+            if text:
+                _show_error_dialog(n, text)
         err.connect("activate", _on_error_click)
 
         slot = _ConfigSlot(check=chk, error=err, toggle_id=toggle_id,
@@ -383,7 +388,11 @@ class ConfigSubmenu:
             errors  = cfg.get("errors", [])
             label   = f"{row.prefix}{row.text}"
 
-            slot.error_text = "\n\n".join(e.get("message", "") for e in errors) or "Unknown error"
+            # Empty only when the config is healthy — that is what tells the
+            # click handler there is no dialog to open. A bad status with no
+            # message still has something to say, even if it is only that.
+            messages = "\n\n".join(e.get("message", "") for e in errors)
+            slot.error_text = "" if status == "ok" else (messages or "Unknown error")
 
             label_text = f"⚠ {label}" if status == "warning" else label
 
@@ -396,10 +405,11 @@ class ConfigSubmenu:
                 # The base config is the device itself — switching it off would
                 # leave makima with nothing to apply. A tick that is always set
                 # and never clickable is noise, so the base is drawn as a plain
-                # row instead, greyed out like the "Apps" group. A warning makes
-                # it clickable, and the click opens the message dialog.
+                # row instead. Not greyed out, though: it is the live config the
+                # whole menu hangs off, and insensitive text says "unavailable".
+                # The click does nothing unless there is a warning to show.
                 slot.error.set_label(label_text)
-                slot.error.set_sensitive(bool(errors))
+                slot.error.set_sensitive(True)
                 slot.check.hide()
                 slot.error.show()
             else:
