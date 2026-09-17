@@ -242,7 +242,9 @@ class ConfigSubmenu:
         # file you are about to copy currently does.
         self._open_user = _icon_item("Open my configs", "folder")
         self._open_user.connect("activate", lambda _: self._open(self.user_root))
-        self._open_system = _icon_item("Open shipped configs", "folder-templates")
+        # A library, not a template folder: you go there to read what a config
+        # currently does, and copying one out is the exception.
+        self._open_system = _icon_item("Open shipped configs", "folder-library")
         self._open_system.connect("activate", lambda _: self._open(self.system_root))
 
         self._apply(initial_configs)
