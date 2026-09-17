@@ -27,7 +27,7 @@ def _cfg(name, enabled=True, status="ok", errors=None, kind="app", parent=None):
 
 
 APP_CFG  = "Firefox"
-BASE_CFG = "Steam Deck"
+BASE_CFG = "Steam Deck Base"
 # Nested rows carry a tree glyph; a lone entry in its group is the last one.
 APP_ROW  = f"└─ {APP_CFG}"
 
@@ -561,6 +561,18 @@ class TestParentPrefix:
         ])
         labels = {r.name: r.text for r in rows if not r.heading}
         assert labels["KDE Desktop"] == "KDE Desktop"
+
+    def test_the_base_name_does_not_have_to_be_a_full_prefix(self):
+        # "Steam Deck Trackpads" does not start with "Steam Deck Base" — only
+        # the words both of them share can be dropped. Tying the label to the
+        # base's whole name would make renaming the base config re-lengthen
+        # every module row under it.
+        rows = cm.display_rows([
+            _cfg("Steam Deck Base", kind="base"),
+            _cfg("Steam Deck Trackpads", kind="module", parent="Steam Deck Base"),
+        ])
+        labels = {r.name: r.text for r in rows if not r.heading}
+        assert labels["Steam Deck Trackpads"] == "Trackpads"
 
     def test_a_module_named_exactly_like_its_base_keeps_its_name(self):
         # Stripping would leave an empty label, which is worse than a repeat.

@@ -36,11 +36,11 @@ It is a plain module, so it is merged into the controller's config like any othe
 shipped modules  <  shipped base config  <  your own files
 ```
 
-A file named `My Tweaks.toml` wins against `Steam Deck.toml` for the same reason `Zebra.toml` would — not because of where it sits in the alphabet, but because of which folder it sits in. Your module sits above the shipped base config on purpose: the bindings you are most likely to want moved are declared there, and having to adopt that whole file to change one of them is exactly the trade this avoids.
+A file named `My Tweaks.toml` wins against `Steam Deck Base.toml` for the same reason `Zebra.toml` would — not because of where it sits in the alphabet, but because of which folder it sits in. Your module sits above the shipped base config on purpose: the bindings you are most likely to want moved are declared there, and having to adopt that whole file to change one of them is exactly the trade this avoids.
 
 The alphabet only settles ties inside one layer, and two of *your* files claiming the same button still produces a warning. Your file beating a shipped one does not: that is the mechanism working.
 
-The one exception is a base config you took over yourself. Once `Steam Deck.toml` is your file too, nothing distinguishes the two by authorship any more, and the base config — the more specific statement, the one that names the device — gets the last word again.
+The one exception is a base config you took over yourself. Once `Steam Deck Base.toml` is your file too, nothing distinguishes the two by authorship any more, and the base config — the more specific statement, the one that names the device — gets the last word again.
 
 ## What each file is
 
@@ -59,7 +59,7 @@ The Steam Deck configuration is split where the split buys something. Buttons, s
 
 | File | Contains |
 |---|---|
-| `Steam Deck.toml` | The controller — `[device]`, aliases, `[gaming_mode]`, `[remap]`, `[settings]` |
+| `Steam Deck Base.toml` | The controller — `[device]`, aliases, `[gaming_mode]`, `[remap]`, `[settings]` |
 | `Steam Deck Trackpads.toml` | `[trackpad]` — pad modes, haptics, KDE input settings |
 | `KDE Desktop.toml`, `Hyprland Desktop.toml` | Window control, gated per compositor |
 | `KDE Desktop Layout *.toml` | Virtual-desktop navigation — Horizontal, Vertical or Grid, at most one active |
@@ -68,7 +68,7 @@ The Steam Deck configuration is split where the split buys something. Buttons, s
 
 To retune your trackpad haptics you copy `Steam Deck Trackpads.toml` into `~/.config/deckery/` and edit that one file — it is the most-tuned config Deckery ships, and the one where owning the whole file is a fair price.
 
-Gaming Mode has to live in `Steam Deck.toml`: the merge treats the base config as the sole authority for it, so Gaming Mode set in a module would be discarded silently.
+Gaming Mode has to live in `Steam Deck Base.toml`: the merge treats the base config as the sole authority for it, so Gaming Mode set in a module would be discarded silently.
 
 ### Plain modules
 

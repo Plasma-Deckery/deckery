@@ -92,6 +92,18 @@ def _shared_prefix(names: list[str]) -> str:
     return " ".join(shared)
 
 
+def _drop_shared_prefix(name: str, sibling: str) -> str:
+    """*name* without the leading words it shares with *sibling*.
+
+    Used to shorten a module under its base. The two names rarely nest cleanly —
+    "Steam Deck Trackpads" under "Steam Deck Base" has no full-name prefix to
+    drop, only the "Steam Deck" both of them start with. Matching on that shared
+    run instead of on the base's whole name keeps the label at "Trackpads" no
+    matter what the base config is called.
+    """
+    return _drop_prefix(name, _shared_prefix([name, sibling]))
+
+
 def _drop_prefix(name: str, prefix: str) -> str:
     """*name* without a leading *prefix*, on a word boundary.
 
@@ -131,7 +143,7 @@ def display_rows(configs: list) -> list[Row]:
             if not slug:
                 name = entries[i]["name"]
                 rows.append(Row(name, "└─ " if i == total - 1 else "├─ ",
-                                label=_drop_prefix(name, parent)))
+                                label=_drop_shared_prefix(name, parent)))
                 i += 1
                 continue
 
@@ -144,7 +156,7 @@ def display_rows(configs: list) -> list[Row]:
             names  = [m["name"] for m in members]
             shared = _shared_prefix(names)
             rows.append(Row(slug, "└─ " if trailing else "├─ ", heading=True,
-                            label=_drop_prefix(shared or slug, parent)))
+                            label=_drop_shared_prefix(shared or slug, parent)))
             # The members go into a submenu of that heading. Exactly one of them
             # is active, so the heading can name the choice on its own line and
             # nothing is hidden by folding them away — which is why this is done

@@ -26,7 +26,7 @@ The window class comes from the focused window's `resourceClass` property in KWi
 Only the bindings listed in the app config are overridden; all other buttons continue to use the layers below it. The full merge order, lowest first:
 
 1. Plain modules — shipped ones first, then the user's own, each group in name order (`Steam Deck Trackpads`, `KDE Desktop`, …)
-2. The base config (`Steam Deck.toml`), which declares the device and what its buttons do
+2. The base config (`Steam Deck Base.toml`), which declares the device and what its buttons do
 3. The app config for the focused window
 
 An app config therefore inherits bindings, settings and trackpad behaviour from several files without knowing about any of them.
@@ -39,7 +39,7 @@ This replaces the previous approach of spawning a `kdotool` subprocess on every 
 
 ## Enabling and disabling configs
 
-App configs and modules can be toggled at runtime without restarting makima. The base config (`Steam Deck.toml`) is always active and cannot be toggled.
+App configs and modules can be toggled at runtime without restarting makima. The base config (`Steam Deck Base.toml`) is always active and cannot be toggled.
 
 Via the tray's **Controller Bindings** submenu — check or uncheck a config entry. The tray sends the IPC command and the change takes effect immediately.
 

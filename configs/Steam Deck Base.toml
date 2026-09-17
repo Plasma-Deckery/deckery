@@ -1,4 +1,8 @@
-# Deckery — Steam Deck
+# Deckery — Steam Deck Base
+#
+# The base config: the one file every other config here layers on top of.
+# "Base" says what the file is, not what the hardware is called — the device is
+# found through the `names` list below, never through this file's name.
 #
 # The device, its button names, and what those buttons do when nothing else
 # claims them. These belong together: a Steam Deck without a button layout is a

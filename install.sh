@@ -404,7 +404,7 @@ else
     echo ""
     echo "  Try it: press L3 (left stick click) — the HUD overlay should appear."
     echo ""
-    echo "  Your config: $DECKERY_DIR/configs/Steam Deck.toml"
+    echo "  Your config: $DECKERY_DIR/configs/Steam Deck Base.toml"
     echo "  Docs:        https://plasma-deckery.github.io/deckery/"
     echo ""
 fi

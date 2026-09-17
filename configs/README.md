@@ -61,7 +61,7 @@ it again. Deckery notices either within a second, without a restart.
 
 | File | Contains |
 |---|---|
-| `Steam Deck.toml` | The controller: `[device]`, button aliases, `[gaming_mode]`, `[remap]`, `[settings]` |
+| `Steam Deck Base.toml` | The controller: `[device]`, button aliases, `[gaming_mode]`, `[remap]`, `[settings]` |
 | `Steam Deck Trackpads.toml` | `[trackpad]` — pad modes, haptics, KDE input settings |
 | `KDE Desktop.toml`, `Hyprland Desktop.toml` | Window control, one per compositor |
 | `KDE Desktop Layout *.toml` | Virtual-desktop navigation — at most one is active |
