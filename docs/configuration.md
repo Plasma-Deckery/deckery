@@ -62,7 +62,7 @@ The Steam Deck configuration is split where the split buys something. Buttons, s
 | `Steam Deck.toml` | The controller — `[device]`, aliases, `[gaming_mode]`, `[remap]`, `[settings]` |
 | `Steam Deck Trackpads.toml` | `[trackpad]` — pad modes, haptics, KDE input settings |
 | `KDE Desktop.toml`, `Hyprland Desktop.toml` | Window control, gated per compositor |
-| `KDE Desktop Layout *.toml` | Virtual-desktop navigation — Horizontal, Vertical or Grid, exactly one active |
+| `KDE Desktop Layout *.toml` | Virtual-desktop navigation — Horizontal, Vertical or Grid, at most one active |
 | `Voice Control.toml` | Push-to-talk binding |
 | `apps/*.toml` | Per-application overrides |
 
@@ -96,9 +96,17 @@ exclusive_group = "kde-desktop-layout"
 ```
 
 Switching one member on switches its siblings off in the same step, so the group
-can never end up with two active members or none. The tray draws the members as
-radio buttons rather than checkboxes. Two members binding the same button is not
-a conflict — that is the whole point of the group.
+can never end up with two active members. The tray draws the members as radio
+buttons rather than checkboxes, inside a submenu named after the active one
+("KDE Desktop Layout: Vertical"). Two members binding the same button is not a
+conflict — that is the whole point of the group.
+
+A group can also be switched off entirely, through the **Enabled** item at the
+top of that submenu. This is deliberately not a member choice: the picked member
+is remembered while the group is off, so switching it back on returns there
+instead of resetting to the alphabetically first one. That preference is kept in
+`[groups] disabled` in `preferences.toml`, next to the `[exclusive_groups]` line
+that records the choice.
 
 The one shipped group is `kde-desktop-layout`, which decides how `L1` + the DPad
 moves between virtual desktops:

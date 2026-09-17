@@ -232,6 +232,9 @@ class ConfigSubmenu:
         self._headings: dict[str, Gtk.MenuItem] = {}
         # The submenu each exclusive group's members are drawn in, by slug.
         self._group_menus: dict[str, Gtk.Menu] = {}
+        # The "Enabled" check item at the top of each group submenu, by slug,
+        # paired with its handler id so its state can be set without firing it.
+        self._group_toggles: dict[str, tuple] = {}
 
         self._sep = Gtk.SeparatorMenuItem()
         self._sep.set_no_show_all(True)
@@ -347,7 +350,26 @@ class ConfigSubmenu:
             item.set_sensitive(True)
         for child in menu.get_children():
             menu.remove(child)
+        # The heading carries the group's own on/off state, but an item with a
+        # submenu draws no checkbox through DBusMenu — a click opens the submenu
+        # instead of toggling. So the switch lives inside, above its members.
+        toggle, _ = self._group_toggle(slug)
+        menu.append(toggle)
+        menu.append(Gtk.SeparatorMenuItem())
         return menu
+
+    def _group_toggle(self, slug: str) -> tuple:
+        """The "Enabled" check item for group *slug*, created on first use."""
+        pair = self._group_toggles.get(slug)
+        if pair is None:
+            item = Gtk.CheckMenuItem(label="Enabled")
+
+            def _on_toggle(widget, s=slug):
+                verb = "enable" if widget.get_active() else "disable"
+                self._ipc(f"config group {verb} {s}")
+            pair = (item, item.connect("toggled", _on_toggle))
+            self._group_toggles[slug] = pair
+        return pair
 
     def _relayout(self, rows: list) -> None:
         """Re-append every item so the menu matches *rows* top to bottom."""
@@ -449,7 +471,11 @@ class ConfigSubmenu:
         """Put the active member into its group heading: "Layout: Vertical".
 
         Folding the members into a submenu would otherwise cost the one thing
-        the flat list said at a glance — which of them is on.
+        the flat list said at a glance — which of them is on. A group that is
+        switched off has no member to name and reads as just its own name.
+
+        The group's "Enabled" item is set from the same fact, so no extra field
+        in state.json is needed: a group with no active member is a group off.
         """
         for row in rows:
             if not row.heading or row.name not in self._group_menus:
@@ -459,6 +485,13 @@ class ConfigSubmenu:
             heading = f"{row.prefix}{row.text}"
             self._headings[row.name].set_label(
                 f"{heading}: {active}" if active else heading)
+
+            toggle, handler = self._group_toggle(row.name)
+            GObject.signal_handler_block(toggle, handler)
+            try:
+                toggle.set_active(bool(active))
+            finally:
+                GObject.signal_handler_unblock(toggle, handler)
 
 
 # ── Module-level helpers ──────────────────────────────────────────────────────

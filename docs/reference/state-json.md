@@ -177,7 +177,7 @@ Each entry:
 |---|---|---|
 | `name` | `string` | Config identifier — the file base name without `.toml` (e.g. `"Steam Deck"`, `"Steam Deck Trackpads"`, `"Firefox"`). There is no naming convention to decode |
 | `enabled` | `bool` | Whether this config is active. The base config (the one declaring `[device]`) is always enabled and cannot be toggled by the user. |
-| `exclusive_group` | `string \| null` | Set when this config belongs to a set of mutually exclusive modules. Exactly one member of a group is enabled at a time; the tray draws them as radio buttons |
+| `exclusive_group` | `string \| null` | Set when this config belongs to a set of mutually exclusive modules. At most one member of a group is enabled at a time; the tray draws them as radio buttons. No member enabled means the whole group is switched off — there is no separate field for that |
 | `status` | `string` | `"ok"`, `"warning"`, or `"error"` — `"error"` means the config could not be parsed and its slot in `errors` is populated |
 | `errors` | `[{severity, message}]` | Parse or load errors for this config; empty when `status != "error"`. Each entry: `{ "severity": "error" \| "warning", "message": "..." }` |
 

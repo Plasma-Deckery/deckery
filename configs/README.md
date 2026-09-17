@@ -64,7 +64,7 @@ it again. Deckery notices either within a second, without a restart.
 | `Steam Deck.toml` | The controller: `[device]`, button aliases, `[gaming_mode]`, `[remap]`, `[settings]` |
 | `Steam Deck Trackpads.toml` | `[trackpad]` — pad modes, haptics, KDE input settings |
 | `KDE Desktop.toml`, `Hyprland Desktop.toml` | Window control, one per compositor |
-| `KDE Desktop Layout *.toml` | Virtual-desktop navigation — exactly one is active |
+| `KDE Desktop Layout *.toml` | Virtual-desktop navigation — at most one is active |
 | `Voice Control.toml` | Push-to-talk |
 | `apps/*.toml` | Per-application overrides |
 
@@ -94,9 +94,11 @@ Modules that are alternatives to one another name a shared group:
 exclusive_group = "kde-desktop-layout"
 ```
 
-Exactly one member is ever active. Switching one on switches its siblings off in
-the same step, and the tray draws the set as one choice rather than as separate
-switches.
+At most one member is active. Switching one on switches its siblings off in the
+same step, and the tray draws the set as one choice rather than as separate
+switches. The whole group can also be switched off, from the **Enabled** entry at
+the top of its submenu — your member choice is remembered while it is off, so
+switching it back on returns to the one you picked.
 
 ## preferences.toml
 
@@ -107,6 +109,9 @@ which modules you switched on, and nothing about what they do:
 [exclusive_groups]
 kde-desktop-layout = "KDE Desktop Layout Horizontal"
 
+[groups]
+disabled = []
+
 [modules]
 disabled = ["Voice Control"]
 ```
@@ -115,6 +120,10 @@ Deckery rewrites it whenever you toggle something in the tray. Only your
 deviations are recorded — a module that appears nowhere in the file is on, which
 is what lets a newly shipped module arrive already active. Editing it by hand
 works, but takes effect on the next restart rather than immediately.
+
+A group listed under `[groups] disabled` has no active member at all. Its line in
+`[exclusive_groups]` stays while it is off — that is the choice to restore when
+you switch it back on.
 
 ## Config format
 

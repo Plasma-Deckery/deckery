@@ -13,7 +13,9 @@ Makima-deckery exposes a Unix socket at `$XDG_RUNTIME_DIR/makima-control.sock` f
 | `gaming_mode enable` | Enable Gaming Mode — suppresses all remaps, passes raw input to the OS |
 | `gaming_mode disable` | Disable Gaming Mode — returns to normal remapping |
 | `config enable <name>` | Enable the named config, using its file base name (e.g. `Firefox`) — reflected immediately in `state.json` `configs[].enabled` |
-| `config disable <name>` | Disable the named app-specific config — the base config remains active |
+| `config disable <name>` | Disable the named app-specific config — the base config remains active. On the *active* member of an exclusive group this switches the whole group off; on an inactive member it does nothing |
+| `config group enable <slug>` | Switch a whole exclusive group on, restoring the member last chosen (e.g. `kde-desktop-layout`) |
+| `config group disable <slug>` | Switch a whole exclusive group off — no member stays active, and the remembered choice survives for the next enable |
 | `analog-state-export on` | Write analog axis values (sticks, trackpads) into `state.json` on every change |
 | `analog-state-export off` | Stop writing analog values (default — reduces write frequency) |
 
@@ -26,6 +28,8 @@ echo "gaming_mode enable"                           | socat - UNIX-CONNECT:$XDG_
 echo "gaming_mode disable"                          | socat - UNIX-CONNECT:$XDG_RUNTIME_DIR/makima-control.sock
 echo "config enable Firefox"  | socat - UNIX-CONNECT:$XDG_RUNTIME_DIR/makima-control.sock
 echo "config disable Firefox" | socat - UNIX-CONNECT:$XDG_RUNTIME_DIR/makima-control.sock
+echo "config group disable kde-desktop-layout"      | socat - UNIX-CONNECT:$XDG_RUNTIME_DIR/makima-control.sock
+echo "config group enable kde-desktop-layout"       | socat - UNIX-CONNECT:$XDG_RUNTIME_DIR/makima-control.sock
 echo "analog-state-export on"                       | socat - UNIX-CONNECT:$XDG_RUNTIME_DIR/makima-control.sock
 echo "analog-state-export off"                      | socat - UNIX-CONNECT:$XDG_RUNTIME_DIR/makima-control.sock
 ```

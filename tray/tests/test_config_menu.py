@@ -491,9 +491,46 @@ class TestGroupSubmenuWidgets:
         label = sub._headings["layout"].set_label.call_args.args[0]
         assert label.endswith(": Vertical")
 
+    def test_the_group_toggle_is_the_first_entry_of_the_submenu(self, ipc):
+        # A check item with a submenu draws no checkbox at all through
+        # DBusMenu, so the group's own switch has to live inside it.
+        sub = self._sub(ipc)
+        appended = [c.args[0] for c in sub._group_menus["layout"].append.call_args_list]
+        toggle, _ = sub._group_toggles["layout"]
+        assert appended[0] is toggle
+        assert appended.index(toggle) < appended.index(sub._slots["Layout Grid"].check)
+
+    def test_the_group_toggle_follows_the_active_member(self, ipc):
+        toggle, _ = self._sub(ipc)._group_toggles["layout"]
+        assert toggle.set_active.call_args.args[0] is True
+
+    def test_the_group_toggle_is_off_when_no_member_is_active(self, ipc):
+        sub = cm.ConfigSubmenu(
+            initial_configs=[
+                _cfg(BASE_CFG, kind="base"),
+                _grouped("Layout Grid", "layout", enabled=False),
+                _grouped("Layout Vertical", "layout", enabled=False),
+            ],
+            ipc=ipc, config_dir="/tmp/cfg")
+        toggle, _ = sub._group_toggles["layout"]
+        assert toggle.set_active.call_args.args[0] is False
+
+    def test_toggling_the_group_sends_a_group_command(self, ipc):
+        # Not a per-module command: switching the group off has to leave the
+        # remembered member alone so switching it back on lands there.
+        sub = self._sub(ipc)
+        toggle, _ = sub._group_toggles["layout"]
+        handler = toggle.connect.call_args.args[1]
+        toggle.get_active.return_value = False
+        handler(toggle)
+        assert ipc.call_args.args[0] == "config group disable layout"
+        toggle.get_active.return_value = True
+        handler(toggle)
+        assert ipc.call_args.args[0] == "config group enable layout"
+
     def test_the_heading_says_nothing_when_no_member_is_active(self, ipc):
-        # makima keeps exactly one member on, so this is a broken-config state:
-        # better a bare heading than a trailing colon.
+        # A group switched off entirely: no member to name, so the heading is
+        # its own name rather than one with a trailing colon.
         sub = cm.ConfigSubmenu(
             initial_configs=[
                 _cfg(BASE_CFG, kind="base"),
