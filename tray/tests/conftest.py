@@ -30,6 +30,7 @@ _repository = MagicMock()
 # through the sys.modules entries below — so widget factories are configured
 # here. Each call has to yield a fresh mock: ConfigSubmenu holds one widget per
 # config and row type, and assertions must be able to tell them apart.
+_repository.Gtk.Menu.side_effect          = lambda *a, **kw: MagicMock()
 _repository.Gtk.MenuItem.side_effect      = lambda *a, **kw: MagicMock()
 _repository.Gtk.CheckMenuItem.side_effect = lambda *a, **kw: MagicMock()
 _repository.Gtk.RadioMenuItem.side_effect = lambda *a, **kw: MagicMock()

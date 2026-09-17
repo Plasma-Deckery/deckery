@@ -10,11 +10,12 @@ Rows are grouped: each base config, its modules indented beneath it, then an
 "kind" and "parent" fields makima writes into state.json — the tray never
 inspects config files itself.
 
-Modules sharing an "exclusive_group" are drawn as radio items, kept adjacent and
-hung under a heading on a brace of box-drawing glyphs. The brace is not
-decoration: whether a DBusMenu host draws a radio item differently from a
-checkbox is up to the host, so the only thing guaranteed to say "pick exactly
-one of these" is the text.
+Modules sharing an "exclusive_group" are drawn as radio items in a submenu of
+their own, whose parent item names the active member: "Layout: Vertical". A
+submenu is what says "one choice" no matter how the host draws radio items —
+and since exactly one member is ever active, the parent's label loses nothing
+by folding the rest away. Independently switchable modules are never folded:
+there the label could not say what is on.
 
 A module's own label drops the base config's name, since the row is already
 nested under it — "Steam Deck Trackpads" reads as "Trackpads".
@@ -54,11 +55,15 @@ class Row:
     ``prefix`` carries the tree glyph a nested entry is drawn with.
     ``label``  the text to draw, when it differs from ``name``. Group members are
                drawn without the part of their name the heading already says.
+    ``group``  set on the members of an exclusive group: they are drawn in a
+               submenu of their heading rather than in the menu itself, so they
+               carry no tree glyph and no position in the top-level order.
     """
     name:    str
     prefix:  str = ""
     heading: bool = False
     label:   str = ""
+    group:   str = ""
 
     @property
     def text(self) -> str:
@@ -96,16 +101,6 @@ def _drop_prefix(name: str, prefix: str) -> str:
     if not prefix or not name.startswith(prefix + " "):
         return name
     return name[len(prefix):].strip() or name
-
-
-def _bracket(index: int, total: int) -> str:
-    """The glyph that puts row *index* of an exclusive group inside a brace.
-
-    The brace hangs off the group heading instead of starting at the first
-    member, so even the first row is a T-piece: the line arrives from the row
-    above, and that row is the heading naming what the choice is about.
-    """
-    return "╰" if index == total - 1 else "├"
 
 
 def display_rows(configs: list) -> list[Row]:
@@ -150,13 +145,14 @@ def display_rows(configs: list) -> list[Row]:
             shared = _shared_prefix(names)
             rows.append(Row(slug, "└─ " if trailing else "├─ ", heading=True,
                             label=_drop_prefix(shared or slug, parent)))
-            # The heading carries the tree glyph; the members sit one level in,
-            # inside a brace that survives a host drawing radio items as ticks.
-            # No stem runs down the left of them: two vertical lines side by side
-            # read as two nestings, and the members are one.
-            for n, m in enumerate(members):
-                rows.append(Row(m["name"], f"   {_bracket(n, len(members))} ",
-                                label=_drop_prefix(m["name"], shared)))
+            # The members go into a submenu of that heading. Exactly one of them
+            # is active, so the heading can name the choice on its own line and
+            # nothing is hidden by folding them away — which is why this is done
+            # for exclusive groups and not for the independently switchable
+            # modules around them.
+            for m in members:
+                rows.append(Row(m["name"], label=_drop_prefix(m["name"], shared),
+                                group=slug))
         return rows
 
     bases   = group("base")
@@ -234,6 +230,8 @@ class ConfigSubmenu:
 
         # Heading widgets by row name: "Apps", plus one per exclusive group.
         self._headings: dict[str, Gtk.MenuItem] = {}
+        # The submenu each exclusive group's members are drawn in, by slug.
+        self._group_menus: dict[str, Gtk.Menu] = {}
 
         self._sep = Gtk.SeparatorMenuItem()
         self._sep.set_no_show_all(True)
@@ -329,10 +327,25 @@ class ConfigSubmenu:
         item = self._headings.get(row.name)
         if item is None:
             item = Gtk.MenuItem(label="")
+            # A heading with a submenu has to stay sensitive to be openable;
+            # a bare one ("Apps") is a label and must not look clickable.
             item.set_sensitive(False)
             self._headings[row.name] = item
         item.set_label(f"{row.prefix}{row.text}")
         return item
+
+    def _group_menu(self, slug: str) -> Gtk.Menu:
+        """The submenu holding the members of exclusive group *slug*."""
+        menu = self._group_menus.get(slug)
+        if menu is None:
+            menu = Gtk.Menu()
+            self._group_menus[slug] = menu
+            item = self._headings[slug]
+            item.set_submenu(menu)
+            item.set_sensitive(True)
+        for child in menu.get_children():
+            menu.remove(child)
+        return menu
 
     def _relayout(self, rows: list) -> None:
         """Re-append every item so the menu matches *rows* top to bottom."""
@@ -340,11 +353,16 @@ class ConfigSubmenu:
             self._submenu.remove(child)
         for row in rows:
             if row.heading:
-                self._submenu.append(self._heading(row))
+                item = self._heading(row)
+                self._submenu.append(item)
+                # Create the group's submenu before its members are placed.
+                if any(r.group == row.name for r in rows):
+                    self._group_menu(row.name)
                 continue
             slot = self._slots[row.name]
-            self._submenu.append(slot.check)
-            self._submenu.append(slot.error)
+            target = self._group_menus[row.group] if row.group else self._submenu
+            target.append(slot.check)
+            target.append(slot.error)
         self._submenu.append(self._sep)
         self._submenu.append(self._open_user)
         self._submenu.append(self._open_system)
@@ -374,7 +392,7 @@ class ConfigSubmenu:
             if not row.heading and row.name not in self._slots:
                 self._create_slot(row.name, config_map[row.name].get("exclusive_group"))
 
-        layout = [(r.heading, r.name, r.prefix) for r in rows]
+        layout = [(r.heading, r.name, r.prefix, r.group) for r in rows]
         if layout != self._layout:
             self._layout = layout
             self._relayout(rows)
@@ -422,7 +440,23 @@ class ConfigSubmenu:
                 slot.error.hide()
                 slot.check.show()
 
+        self._name_groups_after_their_choice(rows, config_map)
         self._sep.show() if config_map else self._sep.hide()
+
+    def _name_groups_after_their_choice(self, rows: list, config_map: dict) -> None:
+        """Put the active member into its group heading: "Layout: Vertical".
+
+        Folding the members into a submenu would otherwise cost the one thing
+        the flat list said at a glance — which of them is on.
+        """
+        for row in rows:
+            if not row.heading or row.name not in self._group_menus:
+                continue
+            active = next((m.text for m in rows if m.group == row.name
+                           and config_map[m.name].get("enabled")), "")
+            heading = f"{row.prefix}{row.text}"
+            self._headings[row.name].set_label(
+                f"{heading}: {active}" if active else heading)
 
 
 # ── Module-level helpers ──────────────────────────────────────────────────────

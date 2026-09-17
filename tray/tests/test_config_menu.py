@@ -418,60 +418,92 @@ class TestGroupMembershipChanges:
         assert sub._slots["Layout Alpha"].check is before
 
 
-class TestGroupBracket:
-    """Whether a host draws a radio item as a bullet is the host's business.
+class TestGroupSubmenu:
+    """An exclusive group is a submenu of its heading, not a run of rows.
 
-    The bracket is what says "one of these" regardless of how it is drawn.
+    Exactly one member is active, so the choice fits on the heading's own line —
+    which is what makes folding the members away cost nothing.
     """
 
-    def _prefixes(self, members):
-        rows = cm.display_rows(
+    def _rows(self, members):
+        return cm.display_rows(
             [_cfg(BASE_CFG, kind="base")] +
             [_grouped(n, "layout") for n in members])
-        return {r.name: r.prefix for r in rows if not r.heading}
 
-    def test_three_members_hang_off_the_heading(self):
-        # The first member is a T-piece, not a corner: the brace comes down out
-        # of the heading above it rather than beginning at the member.
-        prefixes = self._prefixes(["Alpha", "Bravo", "Charlie"])
-        assert prefixes["Alpha"].endswith("├ ")
-        assert prefixes["Bravo"].endswith("├ ")
-        assert prefixes["Charlie"].endswith("╰ ")
+    def test_members_are_marked_as_belonging_to_their_group(self):
+        rows = {r.name: r for r in self._rows(["Alpha", "Bravo", "Charlie"])}
+        assert rows["Alpha"].group == "layout"
+        assert rows["Bravo"].group == "layout"
+        assert rows["Charlie"].group == "layout"
 
-    def test_two_members_hang_and_close(self):
-        prefixes = self._prefixes(["Alpha", "Bravo"])
-        assert prefixes["Alpha"].endswith("├ ")
-        assert prefixes["Bravo"].endswith("╰ ")
+    def test_members_carry_no_tree_glyph(self):
+        # They are drawn in a menu of their own, where there is no tree to hang
+        # off and no siblings to line up with.
+        rows = self._rows(["Alpha", "Bravo"])
+        assert all(r.prefix == "" for r in rows if r.group)
 
-    def test_a_lone_member_is_still_marked_as_one_of_a_set(self):
-        # A group can shrink to one when its siblings fail to parse. Drawing it
-        # as a plain row would invite a click that cannot switch it off.
-        prefixes = self._prefixes(["Alpha"])
-        assert prefixes["Alpha"].endswith("╰ ")
-
-    def test_no_stem_runs_down_the_left_of_the_members(self):
-        # Zulu follows, so the base's own stem would otherwise continue past the
-        # group — but two vertical lines side by side read as two nestings, and
-        # the members are one. The indent alone keeps them in place.
+    def test_the_heading_keeps_its_place_in_the_tree(self):
         rows = cm.display_rows([
             _cfg(BASE_CFG, kind="base"),
             _grouped("Alpha", "layout"),
             _grouped("Bravo", "layout"),
             _cfg("Zulu", kind="module", parent=BASE_CFG),
         ])
-        prefixes = {r.name: r.prefix for r in rows if not r.heading}
-        assert prefixes["Alpha"] == "   ├ "
-        assert prefixes["Bravo"] == "   ╰ "
-
-    def test_members_are_indented_past_their_heading(self):
-        rows = cm.display_rows([
-            _cfg(BASE_CFG, kind="base"),
-            _grouped("Alpha", "layout"),
-            _grouped("Bravo", "layout"),
-        ])
         heading = next(r for r in rows if r.heading)
-        members = [r for r in rows if not r.heading and r.name in ("Alpha", "Bravo")]
-        assert all(len(m.prefix) > len(heading.prefix) for m in members)
+        # Zulu follows, so the group is not the last child of the base.
+        assert heading.prefix == "├─ "
+
+    def test_a_lone_member_is_still_a_group(self):
+        # A group can shrink to one when its siblings fail to parse. Drawing it
+        # as a plain row would invite a click that cannot switch it off.
+        rows = {r.name: r for r in self._rows(["Alpha"])}
+        assert rows["Alpha"].group == "layout"
+
+
+class TestGroupSubmenuWidgets:
+    def _sub(self, ipc, active="Layout Vertical"):
+        return cm.ConfigSubmenu(
+            initial_configs=[
+                _cfg(BASE_CFG, kind="base"),
+                _grouped("Layout Grid",     "layout", enabled=False),
+                _grouped("Layout Vertical", "layout", enabled=(active == "Layout Vertical")),
+            ],
+            ipc=ipc, config_dir="/tmp/cfg")
+
+    def test_the_heading_becomes_an_openable_submenu(self, ipc):
+        sub = self._sub(ipc)
+        heading = sub._headings["layout"]
+        heading.set_submenu.assert_called_once_with(sub._group_menus["layout"])
+        # A heading that opens something must not be greyed out.
+        heading.set_sensitive.assert_called_with(True)
+
+    def test_members_land_in_the_group_menu_not_the_main_one(self, ipc):
+        sub = self._sub(ipc)
+        appended = [c.args[0] for c in sub._group_menus["layout"].append.call_args_list]
+        assert sub._slots["Layout Grid"].check in appended
+        assert sub._slots["Layout Vertical"].check in appended
+        top = [c.args[0] for c in sub._submenu.append.call_args_list]
+        assert sub._slots["Layout Grid"].check not in top
+
+    def test_the_heading_names_the_active_member(self, ipc):
+        # Folding the members away would otherwise hide which one is on.
+        sub = self._sub(ipc)
+        label = sub._headings["layout"].set_label.call_args.args[0]
+        assert label.endswith(": Vertical")
+
+    def test_the_heading_says_nothing_when_no_member_is_active(self, ipc):
+        # makima keeps exactly one member on, so this is a broken-config state:
+        # better a bare heading than a trailing colon.
+        sub = cm.ConfigSubmenu(
+            initial_configs=[
+                _cfg(BASE_CFG, kind="base"),
+                _grouped("Layout Grid", "layout", enabled=False),
+                _grouped("Layout Vertical", "layout", enabled=False),
+            ],
+            ipc=ipc, config_dir="/tmp/cfg")
+        label = sub._headings["layout"].set_label.call_args.args[0]
+        assert not label.endswith(":")
+        assert "Layout" in label
 
 
 class TestParentPrefix:
