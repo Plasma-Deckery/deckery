@@ -214,27 +214,67 @@ mkdir -p "$CFG_DIR"
 
 # Clean up after the old copy-and-backup scheme, which put a copy of every
 # shipped config into the user directory. Under the new model those copies are
-# overrides: they would shadow the shipped file forever and freeze it at its
-# installed-at version, so every update would appear to do nothing. They are
-# removed rather than migrated — a user file that happens to carry the name of
-# a shipped config cannot be told apart from the copy the installer left there.
-while IFS= read -r src; do
-    rel="${src#$DECKERY_DIR/configs/}"
-    dst="$CFG_DIR/$rel"
-    # preferences.toml is shipped under configs/ but is not a config — it is the
-    # user's own state, and their copy is the live one. It shares a name with a
-    # shipped file by design, so it has to be held out of this sweep explicitly.
-    [ "$rel" = "preferences.toml" ] && continue
-    if [ -e "$dst" ] || [ -L "$dst" ]; then
-        rm -f "$dst"
-        echo "Removed leftover copy: $rel"
-    fi
-done < <(find "$DECKERY_DIR/configs" -name "*.toml" | sort)
+# overrides: they would shadow the shipped file forever and freeze it at their
+# installed-at version, so every update would appear to do nothing.
+#
+# Two things make this dangerous, and both are guarded below.
+#
+# It cannot run on every install. A file in $CFG_DIR carrying the name of a
+# shipped config is exactly what the documentation tells people to create in
+# order to customise one — so a sweep that runs on every update deletes the
+# customisation it just told them to make. The stamp below turns this into a
+# one-time migration off the old scheme, which is all it was ever meant to be.
+#
+# And it cannot delete. A leftover copy and a deliberate override are
+# indistinguishable by then, so the ambiguity is resolved by keeping the file
+# and getting it out of the way instead of by guessing.
+MIGRATION_STAMP="$CFG_DIR/.copy-scheme-migrated"
+ATTIC="$CFG_DIR/replaced-by-update"
 
-while IFS= read -r old; do
-    rm -f "$old"
-    echo "Removed backup: ${old#$CFG_DIR/}"
-done < <(find "$CFG_DIR" -name "*.toml.old")
+if [ -e "$MIGRATION_STAMP" ]; then
+    echo "Skipped: config directory is yours alone (nothing is swept any more)"
+else
+    _moved=0
+    # _park <file> <path relative to CFG_DIR>. The relative path is kept inside
+    # the attic: apps/Firefox.toml and a top-level Firefox.toml are different
+    # files and must not land on top of each other on the way out.
+    _park() {
+        mkdir -p "$ATTIC/$(dirname "$2")"
+        mv -f "$1" "$ATTIC/$2"
+        echo "Moved aside: $2"
+        _moved=1
+    }
+
+    while IFS= read -r src; do
+        rel="${src#$DECKERY_DIR/configs/}"
+        dst="$CFG_DIR/$rel"
+        # preferences.toml is shipped under configs/ but is not a config — it is
+        # the user's own state, and their copy is the live one. It shares a name
+        # with a shipped file by design, so it is held out of the sweep.
+        [ "$rel" = "preferences.toml" ] && continue
+        # A symlink is never a leftover of the copy scheme, which copied. It is
+        # someone's dotfile manager pointing at its own store, and following it
+        # would move the target out from under them.
+        [ -L "$dst" ] && continue
+        [ -e "$dst" ] && _park "$dst" "$rel"
+    done < <(find "$DECKERY_DIR/configs" -name "*.toml" | sort)
+
+    # The old installer's own backups. Also the user's data — it backed up
+    # whatever was in the way, which may well have been hand-written.
+    while IFS= read -r old; do
+        _park "$old" "${old#$CFG_DIR/}"
+    done < <(find "$CFG_DIR" -path "$ATTIC" -prune -o -name "*.toml.old" -print)
+
+    touch "$MIGRATION_STAMP"
+    if [ "$_moved" -eq 1 ]; then
+        echo ""
+        echo "Those files are copies the old installer left behind. They now sit"
+        echo "in $ATTIC — delete it once you have checked that none of"
+        echo "them was yours. Nothing under $CFG_DIR is ever swept again."
+    else
+        echo "Nothing to migrate from the old copy scheme"
+    fi
+fi
 
 # Files the user added under their own names are untouched — they were never
 # part of the copy scheme and keep working as plain modules or app overrides.
