@@ -259,6 +259,22 @@ else
         [ -e "$dst" ] && _park "$dst" "$rel"
     done < <(find "$DECKERY_DIR/configs" -name "*.toml" | sort)
 
+    # Names that used to be shipped and are not any more. The loop above
+    # enumerates what ships *today*, so a leftover copy under a retired name
+    # would survive the migration — and the worst of them is a copy of the old
+    # base config, which still declares the same [device]. Two base configs
+    # claiming one controller is not a config the user can fix by hand: they
+    # would have to know that a file they never wrote is now competing with the
+    # shipped one.
+    for rel in "Steam Deck.toml" \
+               "Steam Deck Bindings.toml" "Steam Deck Buttons.toml" \
+               "Steam Deck Settings.toml" "Steam Deck Sticks.toml" \
+               "Steam Deck Trackpad.toml"; do
+        dst="$CFG_DIR/$rel"
+        [ -L "$dst" ] && continue
+        [ -e "$dst" ] && _park "$dst" "$rel"
+    done
+
     # The old installer's own backups. Also the user's data — it backed up
     # whatever was in the way, which may well have been hand-written.
     while IFS= read -r old; do

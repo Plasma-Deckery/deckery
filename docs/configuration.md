@@ -85,6 +85,12 @@ requires_compositor = "KDE"
 
 Modules gated to different compositors never load together, so identical bindings in `KDE Desktop.toml` and `Hyprland Desktop.toml` are not a conflict.
 
+### Two base configs for one controller
+
+Base configs do not layer. makima walks them and opens the first evdev device each one matches, so two declarations covering the same controller both find it — and which of them ends up driving it is not defined. The losing config's bindings are simply absent, with nothing in either file to explain why.
+
+Deckery reports that pair as a warning naming both files. The usual cause is a copy of a base config left in `~/.config/deckery/` under a name that is no longer shipped: it is still a valid base config and still names the same hardware. `install.sh` moves the retired names it knows about into `~/.config/deckery/replaced-by-update/`, once, as part of migrating off the old copy scheme — a base config you wrote and named yourself is yours to resolve.
+
 ### Exclusive groups
 
 Some modules are alternatives to one another — three desktop layouts, say, where

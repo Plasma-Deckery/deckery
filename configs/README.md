@@ -85,6 +85,11 @@ Modules gated to different compositors (`requires_compositor`) never load
 together, so the same binding in `KDE Desktop.toml` and `Hyprland Desktop.toml`
 is not a conflict. Neither are two members of the same exclusive group.
 
+Two **base configs** naming the same controller are a different matter. There is
+no layering there — only one of them drives the device, and which one is not
+defined. Deckery warns about that pair by name in the tray. The usual cause is a
+copy of a base config sitting here under a name Deckery has stopped shipping.
+
 ## Exclusive groups
 
 Modules that are alternatives to one another name a shared group:

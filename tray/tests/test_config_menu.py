@@ -515,6 +515,32 @@ class TestGroupSubmenuWidgets:
         toggle, _ = sub._group_toggles["layout"]
         assert toggle.set_active.call_args.args[0] is False
 
+    def test_a_group_with_nothing_active_parks_the_radio_dot_off_menu(self, ipc):
+        # GTK refuses to leave a radio group empty: set_active(False) on the one
+        # member that is on is silently ignored, so a group switched off would
+        # keep a member ticked. The off-menu item is where the dot goes instead.
+        sub = cm.ConfigSubmenu(
+            initial_configs=[
+                _cfg(BASE_CFG, kind="base"),
+                _grouped("Layout Grid", "layout", enabled=False),
+                _grouped("Layout Vertical", "layout", enabled=False),
+            ],
+            ipc=ipc, config_dir="/tmp/cfg")
+        off = sub._radio_off["layout"]
+        assert off.set_active.call_args.args[0] is True
+
+    def test_the_off_menu_radio_is_left_alone_while_a_member_is_active(self, ipc):
+        sub = self._sub(ipc)          # Vertical is on
+        off = sub._radio_off["layout"]
+        assert not off.set_active.called
+
+    def test_the_off_menu_radio_joins_its_group(self, ipc):
+        # Sharing the group is the whole mechanism — an item outside it would
+        # take the dot without taking it away from anyone.
+        sub = self._sub(ipc)
+        leader = sub._radio_leaders["layout"]
+        sub._radio_off["layout"].join_group.assert_called_once_with(leader)
+
     def test_toggling_the_group_sends_a_group_command(self, ipc):
         # Not a per-module command: switching the group off has to leave the
         # remembered member alone so switching it back on lands there.

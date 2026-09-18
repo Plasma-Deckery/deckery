@@ -233,6 +233,7 @@ class ConfigSubmenu:
         self._roots:     dict = {}
         self._slots:     dict[str, _ConfigSlot] = {}   # name → slot
         self._radio_leaders: dict[str, object] = {}    # exclusive group → first item
+        self._radio_off: dict[str, object] = {}        # exclusive group → "none" item
         self._last:      list | None = None
         self._layout:    list | None = None            # last rendered row order
 
@@ -311,6 +312,19 @@ class ConfigSubmenu:
             leader = self._radio_leaders.setdefault(exclusive_group, chk)
             if leader is not chk:
                 chk.join_group(leader)
+            # A radio item cannot be cleared: set_active(False) on the one that
+            # is on does nothing, because GTK will not leave a radio group with
+            # nothing selected. A group switched off would therefore keep
+            # showing a ticked member — and clicking that member emits no
+            # `toggled` either, so it could not even be switched back on there.
+            #
+            # The fix is to give the group somewhere to put the dot. This item
+            # belongs to the group but is never appended to any menu, so
+            # selecting it is invisible and clears every member.
+            if exclusive_group not in self._radio_off:
+                off = Gtk.RadioMenuItem(label="")
+                off.join_group(leader)
+                self._radio_off[exclusive_group] = off
         else:
             chk = Gtk.CheckMenuItem(label="")
 
@@ -422,6 +436,7 @@ class ConfigSubmenu:
                for r in rows if not r.heading and r.name in self._slots):
             self._slots.clear()
             self._radio_leaders.clear()
+            self._radio_off.clear()
             self._layout = None
 
         for row in rows:
@@ -504,6 +519,14 @@ class ConfigSubmenu:
                 toggle.set_active(bool(active))
             finally:
                 GObject.signal_handler_unblock(toggle, handler)
+
+            # Nothing active means the dot has to go somewhere off-menu, or GTK
+            # leaves it on whichever member had it last. The members were set
+            # one by one above; this is the only step that can actually clear
+            # the last one.
+            off = self._radio_off.get(row.name)
+            if off is not None and not active:
+                off.set_active(True)
 
 
 # ── Module-level helpers ──────────────────────────────────────────────────────
