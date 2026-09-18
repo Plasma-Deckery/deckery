@@ -16,6 +16,31 @@ HUD_ASSETS  = os.path.join(os.path.dirname(DIR), "deckery-hud", "assets")
 SENTINEL      = os.path.expanduser("~/.config/deckery/.onboarding-done")
 DECKERY_CONFIGS = os.path.expanduser("~/.config/deckery")
 
+
+def config_roots() -> list:
+    """Both directories configs are read from, the shipped one first.
+
+    Deckery stopped copying its configs into the user's directory, so looking
+    only there finds nothing on a fresh install. makima publishes both roots in
+    its state file — it is the only party that knows whether this is a git
+    checkout or an RPM install.
+
+    The fallbacks cover the window being opened before makima has ever written
+    that file, which is precisely when the setup wizard runs.
+    """
+    import json
+    try:
+        with open("/tmp/makima-state.json") as f:
+            roots = json.load(f).get("config_roots") or {}
+        if roots.get("system") and roots.get("user"):
+            return [roots["system"], roots["user"]]
+    except (OSError, ValueError):
+        pass
+    shipped = os.path.join(DIR, "configs")
+    if not os.path.isdir(shipped):
+        shipped = "/usr/share/deckery/configs"
+    return [shipped, DECKERY_CONFIGS]
+
 # -- Colors -------------------------------------------------------------------
 
 C_BG    = (0.031, 0.031, 0.071)

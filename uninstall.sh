@@ -95,14 +95,24 @@ echo ""
 # Current installs put no links here — configs are read from the repo in place.
 # An install predating that still has symlinks into the repo, and step 8 is
 # about to delete what they point at, so they would be left dangling.
+#
+# Only links into $SHARE_DIR qualify. Every other symlink here is somebody's
+# dotfile manager — chezmoi and friends install configs exactly this way — and
+# deleting those would take real configuration with it while the line below
+# promises the opposite.
 
 echo "── Removing dangling config links ───────────────────────────────────────"
 _removed=0
 while IFS= read -r link; do
+    target=$(readlink -f "$link" 2>/dev/null) || continue
+    case "$target" in
+        "$SHARE_DIR"/*) ;;
+        *) continue ;;
+    esac
     rm -f "$link" && echo "Removed: ${link#$CFG_DIR/}"
     _removed=1
 done < <(find "$CFG_DIR" -type l -name "*.toml" 2>/dev/null)
-[ "$_removed" -eq 0 ] && echo "Skipped: no config links (your own config files are untouched)"
+[ "$_removed" -eq 0 ] && echo "Skipped: no links into $SHARE_DIR (your own config files are untouched)"
 echo ""
 
 # ── 8. Remove cloned repos ───────────────────────────────────────────────────

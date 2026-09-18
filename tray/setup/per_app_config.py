@@ -1,7 +1,7 @@
 import os
 import glob
 from gi.repository import Gtk
-from .common import lbl, sp, action_btn, DECKERY_CONFIGS
+from .common import lbl, sp, action_btn, config_roots
 from .ipc import hud_toggle
 
 
@@ -12,9 +12,24 @@ def _app_name(filename: str) -> str:
 
 
 def _scan_apps():
-    pattern = os.path.join(DECKERY_CONFIGS, "apps", "*.toml")
+    """Every app override, from both config roots.
+
+    Looking in the user's directory alone used to be enough, because the
+    installer copied the shipped configs there. It does not any more, so that
+    lookup finds nothing at all on a fresh install — while the page next to it
+    claims every discovered profile is enabled.
+
+    A config is identified by its file name, and a file in the user's directory
+    replaces the shipped one of that name outright. Scanning the roots in order
+    and letting the later entry win reproduces that rule instead of listing the
+    same app twice.
+    """
+    found = {}
+    for root in config_roots():
+        for path in glob.glob(os.path.join(root, "apps", "*.toml")):
+            found[os.path.basename(path)] = path
     return sorted(
-        (p, _app_name(p)) for p in glob.glob(pattern)
+        (p, _app_name(p)) for p in found.values()
     )
 
 
@@ -32,7 +47,8 @@ def build() -> Gtk.Widget:
 
     if not apps:
         box.pack_start(lbl(
-            "No per-app configs found in ~/.config/deckery/",
+            "No per-app configs found in " + " or ".join(
+                os.path.join(r, "apps") for r in config_roots()),
             "toggle-sublabel",
         ), False, False, 0)
     else:
