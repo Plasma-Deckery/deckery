@@ -2,6 +2,7 @@
 common.py -- Shared constants, CSS, and widget helpers for the setup wizard.
 """
 import os
+import sys
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk, GdkPixbuf
@@ -16,30 +17,12 @@ HUD_ASSETS  = os.path.join(os.path.dirname(DIR), "deckery-hud", "assets")
 SENTINEL      = os.path.expanduser("~/.config/deckery/.onboarding-done")
 DECKERY_CONFIGS = os.path.expanduser("~/.config/deckery")
 
+# The state file has exactly one reader, and it is not this module. tray/ is
+# the import root for both entry points (deckery-tray.py and onboarding.py),
+# the same way config_menu and steam_bridge are reached.
+sys.path.insert(0, _TRAY_DIR)
+from state import config_roots  # noqa: E402  (path has to be set up first)
 
-def config_roots() -> list:
-    """Both directories configs are read from, the shipped one first.
-
-    Deckery stopped copying its configs into the user's directory, so looking
-    only there finds nothing on a fresh install. makima publishes both roots in
-    its state file — it is the only party that knows whether this is a git
-    checkout or an RPM install.
-
-    The fallbacks cover the window being opened before makima has ever written
-    that file, which is precisely when the setup wizard runs.
-    """
-    import json
-    try:
-        with open("/tmp/makima-state.json") as f:
-            roots = json.load(f).get("config_roots") or {}
-        if roots.get("system") and roots.get("user"):
-            return [roots["system"], roots["user"]]
-    except (OSError, ValueError):
-        pass
-    shipped = os.path.join(DIR, "configs")
-    if not os.path.isdir(shipped):
-        shipped = "/usr/share/deckery/configs"
-    return [shipped, DECKERY_CONFIGS]
 
 # -- Colors -------------------------------------------------------------------
 

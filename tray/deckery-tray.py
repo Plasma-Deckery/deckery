@@ -12,7 +12,6 @@ gi.require_version('GdkPixbuf', '2.0')
 gi.require_version('AyatanaAppIndicator3', '0.1')
 from gi.repository import Gtk, GdkPixbuf, AyatanaAppIndicator3, GLib, Gio
 
-import json
 import logging
 import os
 import shutil
@@ -29,6 +28,7 @@ log = logging.getLogger("deckery-tray")
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from updater import Updater, UpdateState, local_version, _DECKERY_DIR
 import config_menu
+import state as makima_state_file
 import steam_bridge
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
@@ -53,7 +53,10 @@ _DOT_ERR      = os.path.join(_ICONS, "dot-err.svg")
 _DOT_INACTIVE = os.path.join(_ICONS, "dot-inactive.svg")
 _DOT_GAMING   = os.path.join(_ICONS, "dot-gaming.svg")
 
-_STATE_JSON         = "/tmp/makima-state.json"
+# Kept as a module-level name so it stays the single place the path is named
+# from the tray's side; the file itself is read by state.py, which the setup
+# wizard shares.
+_STATE_JSON         = makima_state_file.STATE_JSON
 # Makima binds its control socket in $XDG_RUNTIME_DIR (/run/user/<uid>), not in
 # /tmp: /tmp is mode 1777, and this socket accepts "pause". No /tmp fallback —
 # it could only ever find a socket someone else squatted.
@@ -215,9 +218,10 @@ class MakimaState(NamedTuple):
     config_roots:      dict  # {"system": str, "user": str}; empty until reported
 
 def _makima_state() -> MakimaState:
+    data = makima_state_file.read(_STATE_JSON)
+    if not data:
+        return _no_makima_state()
     try:
-        with open(_STATE_JSON) as f:
-            data = json.load(f)
         ctx       = data.get("context", {})
         lifecycle = data.get("lifecycle", "")
         errors    = data.get("errors", {})
@@ -253,10 +257,8 @@ def _makima_state() -> MakimaState:
             configs           = configs,
             config_roots      = data.get("config_roots") or {},
         )
-    except FileNotFoundError:
-        return _no_makima_state()
     except Exception:
-        log.warning("Failed to read %s", _STATE_JSON, exc_info=True)
+        log.warning("Cannot make sense of %s", _STATE_JSON, exc_info=True)
         return _no_makima_state()
 
 

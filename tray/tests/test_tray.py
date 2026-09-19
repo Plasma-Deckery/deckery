@@ -324,3 +324,42 @@ class TestMakimaErrorText:
     def test_the_row_only_invites_a_click_when_there_is_something_behind_it(self, tray_mod):
         assert tray_mod._with_details("no device", "why") == "no device — click for details"
         assert tray_mod._with_details("no device", "") == "no device"
+
+
+class TestStateReader:
+    """One module opens makima's state file; both sides go through it."""
+
+    def test_a_missing_file_is_not_an_error(self, tmp_path):
+        import state
+        assert state.read(str(tmp_path / "gone.json")) == {}
+
+    def test_unreadable_content_yields_nothing_rather_than_raising(self, tmp_path):
+        # A truncated write, caught mid-rename. The tray polls twice a second;
+        # taking it down over one bad read would be the wrong trade.
+        import state
+        p = tmp_path / "makima-state.json"
+        p.write_text('{"lifecycle": "rea')
+        assert state.read(str(p)) == {}
+
+    def test_config_roots_come_from_makima_when_it_has_spoken(self, tmp_path):
+        import json, state
+        p = tmp_path / "makima-state.json"
+        p.write_text(json.dumps({"config_roots": {"system": "/usr/share/deckery/configs",
+                                                  "user": "/home/u/.config/deckery"}}))
+        assert state.config_roots(str(p)) == ["/usr/share/deckery/configs",
+                                              "/home/u/.config/deckery"]
+
+    def test_config_roots_fall_back_before_makima_has_ever_run(self, tmp_path):
+        # Precisely when the setup wizard is on screen.
+        import state
+        roots = state.config_roots(str(tmp_path / "gone.json"))
+        assert len(roots) == 2
+        assert roots[1] == state.USER_CONFIGS
+
+    def test_half_an_answer_is_not_used(self, tmp_path):
+        # An older makima, or one still starting. Pairing a real system root
+        # with a missing user root would send the wizard to the wrong place.
+        import json, state
+        p = tmp_path / "makima-state.json"
+        p.write_text(json.dumps({"config_roots": {"system": "/usr/share/deckery/configs"}}))
+        assert state.config_roots(str(p))[1] == state.USER_CONFIGS
