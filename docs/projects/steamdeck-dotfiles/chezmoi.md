@@ -17,7 +17,7 @@ The dotfiles are managed with [chezmoi](https://www.chezmoi.io/), which tracks c
 | `dot_config/private_powerdevilrc` | Power management — display timeout, auto-suspend, power button action |
 | `dot_local/share/kwin/scripts/steam-keyboard-focus-fix/` | Custom KWin script — restores focus after Steam OSK appears |
 | `dot_config/pipewire/filter-chain.conf.d/source-rnnoise.conf` | RNNoise voice filter |
-| `dot_config/deckery/symlink_Steam Deck.toml` | Symlink to the makima base config |
+| `dot_config/deckery/symlink_Steam Deck Base.toml` | Symlink to the makima base config. Deckery ships that file under this name since the config directories became content-addressed; a link still carrying the old `Steam Deck.toml` name is no longer an override but a *second* base config claiming the same controller, which the tray now warns about |
 | `dot_config/autostart/` | Autostart entries (Kando, OpenWhispr, Bitwarden) |
 | `dot_config/gtk-3.0/`, `dot_config/gtk-4.0/` | GTK theme, font, cursor settings |
 | `Brewfile` / `flatpaks.txt` | Package manifests |
