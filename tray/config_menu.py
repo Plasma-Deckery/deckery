@@ -473,10 +473,10 @@ class ConfigSubmenu:
             messages = "\n\n".join(e.get("message", "") for e in errors)
             slot.error_text = "" if status == "ok" else (messages or "Unknown error")
 
-            label_text = f"⚠ {label}" if status == "warning" else label
+            label_text = _marked(label, "warning") if status == "warning" else label
 
             if status == "error":
-                slot.error.set_label(f"🛑 {label}")
+                slot.error.set_label(_marked(label, "error"))
                 slot.error.set_sensitive(True)
                 slot.check.hide()
                 slot.error.show()
@@ -547,6 +547,22 @@ def _icon_item(label: str, icon_name: str) -> Gtk.MenuItem:
     item.set_image(img)
     item.set_always_show_image(True)
     return item
+
+
+# Emoji presentation, not the text form: U+26A0 on its own renders as a thin
+# monochrome glyph that disappears into a menu, and the point of the marker is
+# to be seen. U+FE0F asks for the coloured variant.
+_MARKERS = {"warning": "\u26a0\ufe0f", "error": "\U0001f6d1"}
+
+
+def _marked(label: str, status: str) -> str:
+    """*label* with its status marker — appended, never prefixed.
+
+    The tree glyphs are a column: "├─ " has to start the line, or the branch
+    it draws no longer lines up with the rows above and below it. A marker in
+    front of them breaks that column for every row that has one.
+    """
+    return f"{label}  {_MARKERS[status]}"
 
 
 def _show_error_dialog(title: str, msg: str) -> None:

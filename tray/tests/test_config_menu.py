@@ -133,20 +133,20 @@ class TestOkStatus:
 # ── warning status ────────────────────────────────────────────────────────────
 
 class TestWarningStatus:
-    def test_check_shown_with_warning_prefix(self, sub):
+    def test_check_shown_with_warning_marker(self, sub):
         sub.refresh([_cfg(APP_CFG, status="warning")])
         slot = sub._slots[APP_CFG]
-        slot.check.set_label.assert_called_with(f"⚠ {APP_ROW}")
+        slot.check.set_label.assert_called_with(cm._marked(APP_ROW, "warning"))
         slot.check.show.assert_called()
         slot.error.hide.assert_called()
 
-    def test_base_keeps_warning_prefix_and_becomes_clickable(self, sub):
+    def test_base_keeps_its_warning_marker_and_becomes_clickable(self, sub):
         # The base has no checkbox, so its warning rides on the plain row —
         # which turns sensitive so the message dialog can be opened.
         sub.refresh([_cfg(BASE_CFG, kind="base", status="warning",
                           errors=[{"message": "no bindings defined"}])])
         slot = sub._slots[BASE_CFG]
-        slot.error.set_label.assert_called_with(f"⚠ {BASE_CFG}")
+        slot.error.set_label.assert_called_with(cm._marked(BASE_CFG, "warning"))
         slot.error.set_sensitive.assert_called_with(True)
         slot.error.show.assert_called()
         assert slot.error_text == "no bindings defined"
@@ -163,7 +163,7 @@ class TestErrorStatus:
 
     def test_error_label_has_stop_sign(self, sub):
         sub.refresh([_cfg(APP_CFG, status="error")])
-        sub._slots[APP_CFG].error.set_label.assert_called_with(f"🛑 {APP_ROW}")
+        sub._slots[APP_CFG].error.set_label.assert_called_with(cm._marked(APP_ROW, "error"))
 
     def test_error_text_from_errors_list(self, sub):
         errors = [{"message": "missing key 'foo'"}, {"message": "bad value"}]
@@ -180,7 +180,7 @@ class TestErrorStatus:
         sub.refresh([_cfg(BASE_CFG, kind="base", status="error",
                           errors=[{"message": "no device section"}])])
         slot = sub._slots[BASE_CFG]
-        slot.error.set_label.assert_called_with(f"🛑 {BASE_CFG}")
+        slot.error.set_label.assert_called_with(cm._marked(BASE_CFG, "error"))
         slot.error.set_sensitive.assert_called_with(True)
         slot.check.hide.assert_called()
         assert slot.error_text == "no device section"
@@ -691,3 +691,17 @@ class TestStrayRows:
     def test_an_ungrouped_stray_still_gets_a_row(self):
         rows = cm.display_rows(self._strays())
         assert "Voice Control" in {r.name for r in rows}
+
+
+class TestStatusMarkers:
+    """The marker goes after the label, and is the coloured emoji form."""
+
+    def test_the_tree_glyph_keeps_the_start_of_the_line(self, sub):
+        # A marker in front of "├─ " knocks that column out of line for every
+        # row that has one, which is what the tree art is for.
+        marked = cm._marked("├─ Desktop", "warning")
+        assert marked.startswith("├─ Desktop")
+
+    def test_the_warning_marker_asks_for_colour(self, sub):
+        # Bare U+26A0 renders as a thin monochrome glyph and vanishes in a menu.
+        assert "\ufe0f" in cm._marked("x", "warning")
