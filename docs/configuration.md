@@ -20,6 +20,10 @@ Deckery also keeps a `README.md` in your folder covering this page in short, so 
 !!! warning "Same name means full replacement, not a patch"
     Because a file of the same name replaces the shipped one wholesale, improvements made to the shipped version in later releases will not reach you. Take over a file only when you want to own it — for a single binding, write your own small module instead.
 
+The replacement is conditional on the file being readable. If your copy has an error, Deckery keeps the shipped version in effect and marks the entry with a ⚠ in the tray, naming the file it skipped — a broken override costs you the edit you were making, not the bindings you started from. A file of your own that has no shipped counterpart has nothing to fall back to and is reported as a hard error instead.
+
+Deckery is strict about the fixed sections — `[module]`, `[device]`, `[gaming_mode]`, `[trackpad]`, and the section names themselves. An unknown key there is an error rather than a line that is quietly dropped, because the alternative is worse than it sounds: `match_window_classes` instead of `match_window_class` used to turn an app override into a plain module that applied to *every* window. Button names inside `[remap]` and `[commands]` are of course not restricted.
+
 ## Changing one binding
 
 Copying a whole file to change one line is a bad trade, and it is not necessary. Put a small `.toml` of your own in `~/.config/deckery/`, with nothing in it but the lines you want different:
@@ -147,9 +151,11 @@ disabled = ["Voice Control"]
 ```
 
 Deckery rewrites the file whenever you toggle something in the tray, and reads
-it at startup and on every reload. Only your deviations are recorded: a module
-that appears nowhere in the file is on, which is what lets a newly shipped
-module arrive already active.
+it at startup and on every reload. It is machine state rather than something to
+edit: the file watcher deliberately skips it, so a change made by hand is not
+noticed the way a change to a config file is. Only your deviations are recorded
+— a module that appears nowhere in the file is on, which is what lets a newly
+shipped module arrive already active.
 
 Deckery creates the file at the first start that does not find one, by copying
 the shipped `preferences.toml` into your config directory. After that it is

@@ -129,20 +129,25 @@ def display_rows(configs: list) -> list[Row]:
     def group(kind: str) -> list:
         return sorted((c for c in configs if c.get("kind") == kind), key=sort_key)
 
-    def nest(entries: list, parent: str = "") -> list[Row]:
+    def nest(entries: list, parent: str = "", glyphs: bool = True) -> list[Row]:
         """Indent entries under their base, each exclusive group under a heading.
 
         Members of one group are contiguous after ``sort_key``, so a group is a
         run rather than something that has to be gathered.
+
+        ``glyphs`` off drops the tree prefix, for rows that have no parent to
+        hang off. They still need the grouping: a group is one choice whether or
+        not the menu found a base config to nest it under.
         """
         rows: list[Row] = []
         total = len(entries)
+        glyph = (lambda last: ("└─ " if last else "├─ ")) if glyphs else (lambda last: "")
         i = 0
         while i < total:
             slug = entries[i].get("exclusive_group")
             if not slug:
                 name = entries[i]["name"]
-                rows.append(Row(name, "└─ " if i == total - 1 else "├─ ",
+                rows.append(Row(name, glyph(i == total - 1),
                                 label=_drop_shared_prefix(name, parent)))
                 i += 1
                 continue
@@ -152,10 +157,9 @@ def display_rows(configs: list) -> list[Row]:
                 members.append(entries[i])
                 i += 1
 
-            trailing = i == total
             names  = [m["name"] for m in members]
             shared = _shared_prefix(names)
-            rows.append(Row(slug, "└─ " if trailing else "├─ ", heading=True,
+            rows.append(Row(slug, glyph(i == total), heading=True,
                             label=_drop_shared_prefix(shared or slug, parent)))
             # The members go into a submenu of that heading. Exactly one of them
             # is active, so the heading can name the choice on its own line and
@@ -180,9 +184,15 @@ def display_rows(configs: list) -> list[Row]:
 
     # A module whose parent is gone, or a file that would not parse: neither can
     # be nested, but both still need a row — that row is where the error shows.
+    #
+    # Everything lands here at once when no base config parses, because then
+    # makima can name no parent for any module. So the rows go through nest()
+    # too: an exclusive group is still one choice, and drawing its members as
+    # loose checkboxes in that state would invite switching two of them on.
+    # Only the tree glyphs are dropped — there is nothing above them to hang off.
     strays = [m for m in modules if m.get("parent") not in base_names]
     strays += [c for c in configs if c.get("kind") not in ("base", "module", "app")]
-    rows += [Row(c["name"]) for c in sorted(strays, key=lambda c: c["name"].lower())]
+    rows += nest(sorted(strays, key=sort_key), glyphs=False)
 
     if apps:
         rows.append(Row("Apps", heading=True))
@@ -345,7 +355,7 @@ class ConfigSubmenu:
             # click on it does nothing.
             text = self._slots[n].error_text
             if text:
-                _show_error_dialog(n, text)
+                _show_error_dialog(f"Config error — {n}", text)
         err.connect("activate", _on_error_click)
 
         slot = _ConfigSlot(check=chk, error=err, toggle_id=toggle_id,
@@ -539,9 +549,14 @@ def _icon_item(label: str, icon_name: str) -> Gtk.MenuItem:
     return item
 
 
-def _show_error_dialog(name: str, msg: str) -> None:
-    """Open a scrollable dialog showing the full error text for a config."""
-    dlg = Gtk.Dialog(title=f"Config error — {name}", modal=True)
+def _show_error_dialog(title: str, msg: str) -> None:
+    """Open a scrollable dialog showing the full text of an error.
+
+    Takes the whole title rather than a config name: the tray shows makima's
+    own device and startup errors through the same dialog, and those are not
+    about a config file.
+    """
+    dlg = Gtk.Dialog(title=title, modal=True)
     dlg.set_default_size(600, 300)
     dlg.add_button("Close", Gtk.ResponseType.CLOSE)
     sw = Gtk.ScrolledWindow()

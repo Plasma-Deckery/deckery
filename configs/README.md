@@ -20,6 +20,11 @@ Both folders are scanned, along with their `apps/` subfolder. A config is
 identified by its **file name**, so a file here replaces the shipped file of the
 same name *entirely* — it is not merged into it.
 
+That replacement only happens if your file can be read. If it has an error,
+Deckery keeps the shipped version running and marks the entry with a ⚠ in the
+tray, naming the file it skipped. A typo in a copy costs you the change you were
+making, never the bindings you copied.
+
 The tray has an item for opening either folder, under **Controller Bindings**.
 
 ## Changing one binding
@@ -108,7 +113,7 @@ switching it back on returns to the one you picked.
 ## preferences.toml
 
 `preferences.toml` is the one file here that is **not** a config — it records
-which modules you switched on, and nothing about what they do:
+what you switched off, and nothing about what any of it does:
 
 ```toml
 [exclusive_groups]
@@ -118,17 +123,33 @@ kde-desktop-layout = "KDE Desktop Layout Horizontal"
 disabled = []
 
 [modules]
-disabled = ["Voice Control"]
+disabled = ["Voice Control", "Firefox"]
 ```
 
-Deckery rewrites it whenever you toggle something in the tray. Only your
-deviations are recorded — a module that appears nowhere in the file is on, which
-is what lets a newly shipped module arrive already active. Editing it by hand
-works, but takes effect on the next restart rather than immediately.
+| Section | What it holds |
+|---|---|
+| `[exclusive_groups]` | The member you picked from each set of alternatives |
+| `[groups] disabled` | Groups switched off as a whole — no member of them is active |
+| `[modules] disabled` | Everything else you switched off: plain modules and app overrides alike |
+
+Deckery rewrites the file whenever you toggle something in the tray, and it is
+the only file here Deckery writes. It is machine state, so it carries no
+comments — this section is its documentation, and it is rewritten with the rest
+of this file on every start.
+
+Only your deviations are recorded. Anything that appears nowhere in the file is
+on, which is what lets a newly shipped module arrive already active.
 
 A group listed under `[groups] disabled` has no active member at all. Its line in
 `[exclusive_groups]` stays while it is off — that is the choice to restore when
 you switch it back on.
+
+### Changes to this file's format
+
+Nothing so far. Should a release ever rename or drop an entry, Deckery migrates
+your file when it first starts on the new version, and the change is listed here
+— so you, or an assistant you point at this folder, can see what happened to a
+copy that was not migrated.
 
 ## Config format
 

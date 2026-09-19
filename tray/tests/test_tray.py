@@ -271,3 +271,56 @@ class TestMakimaStateConfigs:
     def test_an_absent_state_file_yields_empty_roots(self, tray_mod, tmp_path, monkeypatch):
         monkeypatch.setattr(tray_mod, "_STATE_JSON", str(tmp_path / "gone.json"))
         assert tray_mod._makima_state().config_roots == {}
+
+
+# ── Global error text ─────────────────────────────────────────────────────────
+
+class TestMakimaErrorText:
+    """makima writes a message behind "no device"; the tray has to carry it."""
+
+    def _state(self, tray_mod, tmp_path, monkeypatch, document):
+        import json
+        path = tmp_path / "makima-state.json"
+        path.write_text(json.dumps(document))
+        monkeypatch.setattr(tray_mod, "_STATE_JSON", str(path))
+        return tray_mod._makima_state()
+
+    def test_the_no_device_message_is_carried_through(self, tray_mod, tmp_path, monkeypatch):
+        # The two words in the status row cannot say to check [device] names.
+        state = self._state(tray_mod, tmp_path, monkeypatch, {
+            "lifecycle": "ready", "configs": [],
+            "errors": {"no_device": {"severity": "error",
+                                     "message": "check that [device] names matches evtest"}},
+        })
+        assert state.no_device
+        assert "evtest" in state.error_text
+
+    def test_both_global_errors_are_shown_together(self, tray_mod, tmp_path, monkeypatch):
+        # Showing only the first would hide the one the user can act on.
+        state = self._state(tray_mod, tmp_path, monkeypatch, {
+            "lifecycle": "ready", "configs": [],
+            "errors": {"no_device":   {"severity": "error", "message": "no hardware"},
+                       "base_config": {"severity": "error", "message": "line 4: bad"}},
+        })
+        assert "no hardware" in state.error_text
+        assert "line 4: bad" in state.error_text
+
+    def test_a_healthy_makima_has_nothing_to_report(self, tray_mod, tmp_path, monkeypatch):
+        state = self._state(tray_mod, tmp_path, monkeypatch, {
+            "lifecycle": "ready", "configs": [], "errors": {},
+        })
+        assert state.error_text == ""
+
+    def test_an_error_without_a_message_does_not_offer_details(self, tray_mod, tmp_path, monkeypatch):
+        # An older makima, or one that set the flag and no text. Inviting a
+        # click that opens an empty dialog is worse than not inviting it.
+        state = self._state(tray_mod, tmp_path, monkeypatch, {
+            "lifecycle": "ready", "configs": [],
+            "errors": {"no_device": {"severity": "error"}},
+        })
+        assert state.no_device
+        assert state.error_text == ""
+
+    def test_the_row_only_invites_a_click_when_there_is_something_behind_it(self, tray_mod):
+        assert tray_mod._with_details("no device", "why") == "no device — click for details"
+        assert tray_mod._with_details("no device", "") == "no device"

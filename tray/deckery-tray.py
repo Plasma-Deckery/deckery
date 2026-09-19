@@ -143,6 +143,15 @@ def _tray_state(
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
+def _with_details(label: str, text: str) -> str:
+    """Say that the row can be clicked, but only when there is something behind it.
+
+    Two words in a status row cannot carry makima's actual message, and a
+    clickable status row is not something anyone would guess at.
+    """
+    return f"{label} — click for details" if text else label
+
+
 def _load_pb(path: str, size: int = 16) -> GdkPixbuf.Pixbuf | None:
     """Load an SVG as a GdkPixbuf at the given pixel size. Returns None on failure."""
     try:
@@ -198,6 +207,10 @@ class MakimaState(NamedTuple):
     lifecycle:         str   # "starting" | "ready" | "" (file absent / legacy)
     no_device:         bool  # True when errors["no_device"] is present
     base_config_error: bool  # True when errors["base_config"] is present
+    # The text behind those two flags. makima writes a message that names what
+    # to check — the [device] names list, the file that failed to parse — and
+    # the status row said only "no device", so none of it ever reached anyone.
+    error_text:        str
     configs:           list  # list of {"name": str, "enabled": bool, "status": str}
     config_roots:      dict  # {"system": str, "user": str}; empty until reported
 
@@ -210,6 +223,11 @@ def _makima_state() -> MakimaState:
         errors    = data.get("errors", {})
         no_device         = "no_device"    in errors
         base_config_error = "base_config"  in errors
+        error_text = "\n\n".join(
+            str(e.get("message", "")).strip()
+            for e in (errors.get(k) or {} for k in ("no_device", "base_config"))
+            if e.get("message")
+        )
         configs   = [
             {
                 "name":    c.get("name", ""),
@@ -231,6 +249,7 @@ def _makima_state() -> MakimaState:
             lifecycle         = lifecycle,
             no_device         = no_device,
             base_config_error = base_config_error,
+            error_text        = error_text,
             configs           = configs,
             config_roots      = data.get("config_roots") or {},
         )
@@ -244,7 +263,7 @@ def _makima_state() -> MakimaState:
 def _no_makima_state() -> MakimaState:
     """The state of a makima that is not running, or not readable."""
     return MakimaState(paused=False, gaming_mode=False, lifecycle="",
-                       no_device=False, base_config_error=False,
+                       no_device=False, base_config_error=False, error_text="",
                        configs=[], config_roots={})
 
 
@@ -376,6 +395,11 @@ class DeckeryTray:
         self._items[f"status_{name}_lbl"] = lbl
         return item
 
+    def _on_makima_row_click(self, _widget) -> None:
+        text = self._makima.error_text
+        if text:
+            config_menu._show_error_dialog("Deckery — problem report", text)
+
     def _dynamic(self, item: Gtk.Widget) -> Gtk.Widget:
         """Mark an item as dynamic (hide/show via _poll, resist show_all)."""
         item.set_no_show_all(True)
@@ -393,7 +417,15 @@ class DeckeryTray:
         m.append(Gtk.SeparatorMenuItem())
 
         # ── Deckery (Makima) ──────────────────────────────────────────────
-        m.append(self._status_item("makima"))
+        makima_row = self._status_item("makima")
+        # "no device" and "config error" are two words standing in for a message
+        # makima wrote out in full — which names the [device] list to check, or
+        # the file that failed to parse. The row stays clickable in every state,
+        # the way a healthy base config does in the Bindings submenu: greying it
+        # out would read as "unavailable", and a click with nothing to report
+        # simply does nothing.
+        makima_row.connect("activate", self._on_makima_row_click)
+        m.append(makima_row)
 
         pause_item        = self._dynamic(_icon_item("Pause Deckery",        "media-playback-pause"))
         resume_item       = self._dynamic(_icon_item("Resume Deckery",       "media-playback-start"))
@@ -543,10 +575,10 @@ class DeckeryTray:
                 display = "reinitializing…"
             elif name == "makima" and status == "active" and makima.no_device:
                 pb_key  = "err"
-                display = "no device"
+                display = _with_details("no device", makima.error_text)
             elif name == "makima" and status == "active" and makima.base_config_error:
                 pb_key  = "err"
-                display = "config error"
+                display = _with_details("config error", makima.error_text)
             elif status == "active":
                 pb_key  = "ok"
                 display = "active"

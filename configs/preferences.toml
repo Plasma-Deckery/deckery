@@ -1,29 +1,11 @@
-# Deckery — which controller bindings are switched on.
-#
-# This is the shipped template. It is copied into ~/.config/deckery/ the first
-# time Deckery starts and never copied again — from then on the copy belongs to
-# you, and no update writes to it.
-#
-# Deckery rewrites your copy whenever you toggle a config in the tray. Editing
-# it by hand works, but takes effect on the next reload, not immediately.
-#
-# Only exclusive-group defaults are seeded. A group that is on resolves to one
-# member, and the registry's fallback — alphabetically first — is a safety net
-# rather than a statement of intent: it cannot know that Horizontal is the
-# arrangement KDE and Bazzite ship. Plain on/off modules are deliberately left
-# out, so a release that changes one of those defaults still reaches you.
+# Deckery — which controller bindings are switched on. Written by Deckery; see
+# README.md in the same folder for what the entries mean.
 
-# The chosen member of each set of mutually exclusive modules.
 [exclusive_groups]
-# Horizontal matches the single-row desktop arrangement KDE ships by default.
-# Switch to "KDE Desktop Layout Vertical" or "... Grid" here or in the tray.
 kde-desktop-layout = "KDE Desktop Layout Horizontal"
 
 [groups]
-# Whole groups switched off — no member of them is active. The line above is
-# kept for each one, because that is the choice to restore when it comes back.
 disabled = []
 
 [modules]
-# Modules switched off. Everything else is on.
 disabled = []

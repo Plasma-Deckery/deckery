@@ -655,3 +655,39 @@ class TestConfigFolders:
         monkeypatch.setattr(cm.subprocess, "Popen", popen)
         sub._open(sub.system_root)
         popen.assert_not_called()
+
+
+class TestStrayRows:
+    """When no base config parses, every module lands in the stray list."""
+
+    def _strays(self):
+        # kind "module" with a parent no base row carries: what makima reports
+        # when the base config itself failed to parse.
+        return [
+            {"name": "KDE Desktop Layout Grid", "kind": "module", "parent": None,
+             "exclusive_group": "kde-desktop-layout", "enabled": False,
+             "status": "ok", "errors": []},
+            {"name": "KDE Desktop Layout Vertical", "kind": "module", "parent": None,
+             "exclusive_group": "kde-desktop-layout", "enabled": True,
+             "status": "ok", "errors": []},
+            {"name": "Voice Control", "kind": "module", "parent": None,
+             "enabled": True, "status": "ok", "errors": []},
+        ]
+
+    def test_a_group_without_a_base_is_still_drawn_as_a_group(self):
+        # Drawn as loose checkboxes, two members could be switched on at once.
+        rows = cm.display_rows(self._strays())
+        heading = [r for r in rows if r.heading]
+        assert len(heading) == 1
+        assert heading[0].name == "kde-desktop-layout"
+        assert {r.name for r in rows if r.group == "kde-desktop-layout"} == {
+            "KDE Desktop Layout Grid", "KDE Desktop Layout Vertical"}
+
+    def test_a_stray_carries_no_tree_glyph(self):
+        # The glyph claims a parent row above it, and there is none.
+        rows = cm.display_rows(self._strays())
+        assert all(r.prefix == "" for r in rows), [(r.name, r.prefix) for r in rows]
+
+    def test_an_ungrouped_stray_still_gets_a_row(self):
+        rows = cm.display_rows(self._strays())
+        assert "Voice Control" in {r.name for r in rows}
