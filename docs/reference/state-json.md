@@ -178,8 +178,10 @@ Each entry:
 | `name` | `string` | Config identifier — the file base name without `.toml` (e.g. `"Steam Deck Base"`, `"Steam Deck Trackpads"`, `"Firefox"`). There is no naming convention to decode |
 | `enabled` | `bool` | Whether this config is active. The base config (the one declaring `[device]`) is always enabled and cannot be toggled by the user. |
 | `exclusive_group` | `string \| null` | Set when this config belongs to a set of mutually exclusive modules. At most one member of a group is enabled at a time; the tray draws them as radio buttons. No member enabled means the whole group is switched off — there is no separate field for that |
-| `status` | `string` | `"ok"`, `"warning"`, or `"error"` — `"error"` means the config could not be parsed and its slot in `errors` is populated |
-| `errors` | `[{severity, message}]` | Parse or load errors for this config; empty when `status != "error"`. Each entry: `{ "severity": "error" \| "warning", "message": "..." }` |
+| `status` | `string` | Derived from `errors`: `"ok"` when it is empty, `"error"` when any entry has severity `error`, `"warning"` otherwise |
+| `errors` | `[{severity, message}]` | Parse or load problems for this config; empty exactly when `status` is `"ok"`. Each entry: `{ "severity": "error" \| "warning", "message": "..." }` |
+
+`"error"` means the config is not loaded — nothing it declares is in effect. `"warning"` means it is loaded and something about it is worth saying. The common warning is a user file that failed to parse: the shipped config of the same name stays in effect, `enabled` stays true, and the message names the file that was skipped. `from_user` is not exported, so a consumer cannot tell that case apart from any other warning by the fields alone — the message is what says it.
 
 The tray's **Controller Bindings** submenu is driven directly from this array. Toggling a config via the tray sends a `config enable/disable <name>` IPC command, which updates `enabled` and rewrites this field. Enabling a member of an `exclusive_group` disables its siblings in the same step. The resulting state is persisted to `~/.config/deckery/preferences.toml`, which is re-read on every reload — so a restart and a reload always agree about what is active.
 

@@ -705,3 +705,38 @@ class TestStatusMarkers:
     def test_the_warning_marker_asks_for_colour(self, sub):
         # Bare U+26A0 renders as a thin monochrome glyph and vanishes in a menu.
         assert "\ufe0f" in cm._marked("x", "warning")
+
+
+class TestStrayGroupsReachTheMenu:
+    """display_rows() grouping a stray is only half of it — _relayout has to
+    place it, and that path used to never see a grouped row without a base."""
+
+    def _parentless_group(self):
+        return [
+            {"name": "KDE Desktop Layout Grid", "kind": "module", "parent": None,
+             "exclusive_group": "kde-desktop-layout", "enabled": False,
+             "status": "ok", "errors": []},
+            {"name": "KDE Desktop Layout Vertical", "kind": "module", "parent": None,
+             "exclusive_group": "kde-desktop-layout", "enabled": True,
+             "status": "ok", "errors": []},
+        ]
+
+    def test_the_group_gets_its_submenu(self, sub):
+        # The heading row creates it; without one the members would have had
+        # nowhere to go and _relayout would have raised.
+        sub.refresh(self._parentless_group())
+        assert "kde-desktop-layout" in sub._group_menus
+
+    def test_the_members_are_radio_items(self, sub):
+        sub.refresh(self._parentless_group())
+        for name in ("KDE Desktop Layout Grid", "KDE Desktop Layout Vertical"):
+            assert sub._slots[name].group == "kde-desktop-layout"
+
+    def test_the_group_still_has_its_own_switch(self, sub):
+        sub.refresh(self._parentless_group())
+        assert "kde-desktop-layout" in sub._group_toggles
+
+    def test_the_heading_still_names_the_active_member(self, sub):
+        sub.refresh(self._parentless_group())
+        sub._headings["kde-desktop-layout"].set_label.assert_called_with(
+            "KDE Desktop Layout: Vertical")
