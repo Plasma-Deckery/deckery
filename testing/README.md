@@ -1,4 +1,47 @@
-# VM Testing
+# Testing
+
+`acceptance.py` checks a running Deckery against the behaviour it promises. The
+rest of this directory is about QEMU virtual machines with live Steam Controller
+passthrough.
+
+---
+
+## Acceptance run
+
+```bash
+python3 testing/acceptance.py
+```
+
+Unit tests cover the pieces; this covers the seams. It sends real IPC commands
+over the control socket, writes real files into `~/.config/deckery`, and reads
+the state file the tray actually consumes — so it exercises round trips no unit
+test can: a command going out, the daemon rewriting `preferences.toml`, and the
+result coming back through `state.json`.
+
+What it checks:
+
+| | |
+|---|---|
+| Modifiers survive a module of the user's own | a one-line file in `~/.config/deckery` must not silence every combo the base config declares |
+| A broken override falls back | a user file that does not parse leaves the shipped config of that name in effect, with a warning naming the file |
+| Unknown keys are refused | a misspelt key in `[module]` or a misspelt section name is an error, while button names stay free-form |
+| A group switches off and remembers | disabling a whole exclusive group keeps the member choice, so switching it back on returns there |
+| The base config cannot be switched off | over the socket either, not just in the tray — and memory does not run away |
+| The state file comes back | recreated after being swept out of `/tmp`, without waiting for the state to change |
+| A malformed state file does not blank the tray | `/tmp` is mode 1777, so one field of the wrong shape must not cost the whole menu |
+
+Run it on the machine Deckery runs on — the host after a local install, or
+inside a test VM after deploying there. Exit code 0 when everything passes.
+
+It borrows the live configuration for the length of the run: `preferences.toml`
+and any config file whose name it needs are backed up first and restored on the
+way out, including on Ctrl-C. It refuses to start unless makima reports
+`lifecycle: ready`, so a failure means a real failure rather than "nothing was
+listening".
+
+---
+
+## VM testing
 
 Scripts for testing Deckery in QEMU virtual machines with live Steam Controller passthrough.
 
