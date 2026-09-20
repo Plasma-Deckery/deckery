@@ -104,7 +104,14 @@ echo ""
 echo "── Removing dangling config links ───────────────────────────────────────"
 _removed=0
 while IFS= read -r link; do
-    target=$(readlink -f "$link" 2>/dev/null) || continue
+    # readlink -f resolves nothing once the target's parent tree is gone — it
+    # returns rc=1 and an empty string, not the path. That is exactly the state
+    # a half-finished uninstall leaves behind: step 8 removed $SHARE_DIR, the
+    # links into it stayed. Skipping them there would strand them permanently,
+    # and makima reports each one as a red config error nobody can locate. The
+    # raw link target is the fallback: the copy scheme wrote absolute paths.
+    target=$(readlink -f "$link" 2>/dev/null) || target=""
+    [ -n "$target" ] || target=$(readlink "$link" 2>/dev/null) || continue
     case "$target" in
         "$SHARE_DIR"/*) ;;
         *) continue ;;
