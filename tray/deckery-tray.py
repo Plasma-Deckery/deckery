@@ -217,20 +217,37 @@ class MakimaState(NamedTuple):
     configs:           list  # list of {"name": str, "enabled": bool, "status": str}
     config_roots:      dict  # {"system": str, "user": str}; empty until reported
 
+def _mapping(value) -> dict:
+    """*value* if it is a mapping, else an empty one.
+
+    Applied to every level of the state file this function walks. makima writes
+    well-formed JSON, but the file sits in /tmp (mode 1777), so its shape is not
+    something the tray gets to assume — and one field of the wrong type used to
+    cost the whole menu, because the AttributeError landed in the outer except
+    and the tray fell back to "makima is not running".
+    """
+    return value if isinstance(value, dict) else {}
+
+
+def _error_message(errors: dict, key: str) -> str:
+    """The message behind one global error id, or "" if there is none to show."""
+    return str(_mapping(errors.get(key)).get("message", "")).strip()
+
+
 def _makima_state() -> MakimaState:
     data = makima_state_file.read(_STATE_JSON)
     if not data:
         return _no_makima_state()
     try:
-        ctx       = data.get("context", {})
-        lifecycle = data.get("lifecycle", "")
-        errors    = data.get("errors", {})
+        ctx       = _mapping(data.get("context"))
+        lifecycle = data.get("lifecycle")
+        lifecycle = lifecycle if isinstance(lifecycle, str) else ""
+        errors    = _mapping(data.get("errors"))
         no_device         = "no_device"    in errors
         base_config_error = "base_config"  in errors
         error_text = "\n\n".join(
-            str(e.get("message", "")).strip()
-            for e in (errors.get(k) or {} for k in ("no_device", "base_config"))
-            if e.get("message")
+            m for m in (_error_message(errors, k)
+                        for k in ("no_device", "base_config")) if m
         )
         configs   = [
             {
@@ -244,7 +261,9 @@ def _makima_state() -> MakimaState:
                 "status":  c.get("status", "ok"),
                 "errors":  c.get("errors", []),
             }
-            for c in data.get("configs", [])
+            # A non-mapping entry would take the whole list with it, and the
+            # list is the entire Controller Bindings submenu.
+            for c in map(_mapping, data.get("configs") or [])
             if c.get("name")
         ]
         return MakimaState(

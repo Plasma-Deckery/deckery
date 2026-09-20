@@ -363,3 +363,75 @@ class TestStateReader:
         p = tmp_path / "makima-state.json"
         p.write_text(json.dumps({"config_roots": {"system": "/usr/share/deckery/configs"}}))
         assert state.config_roots(str(p))[1] == state.USER_CONFIGS
+
+
+class TestMalformedState:
+    """The state file sits in /tmp, mode 1777. Its shape is not ours to assume.
+
+    Before this, one field of the wrong type raised inside _makima_state(),
+    landed in the outer except and returned _no_makima_state() — so the whole
+    Controller Bindings submenu vanished and makima read as not running.
+    """
+
+    def _state(self, tray_mod, tmp_path, monkeypatch, document):
+        import json
+        path = tmp_path / "makima-state.json"
+        path.write_text(json.dumps(document))
+        monkeypatch.setattr(tray_mod, "_STATE_JSON", str(path))
+        return tray_mod._makima_state()
+
+    def _doc(self, **over):
+        doc = {"lifecycle": "ready", "errors": {}, "configs": [
+            {"name": "KDE Desktop", "kind": "module", "enabled": True,
+             "status": "ok", "errors": []}]}
+        doc.update(over)
+        return doc
+
+    def test_an_error_entry_of_the_wrong_shape_keeps_the_config_list(
+            self, tray_mod, tmp_path, monkeypatch):
+        s = self._state(tray_mod, tmp_path, monkeypatch,
+                        self._doc(errors={"no_device": "a string"}))
+        assert len(s.configs) == 1
+        assert s.lifecycle == "ready"
+        # The flag comes from the key being there; only the text is unusable.
+        assert s.no_device
+        assert s.error_text == ""
+
+    def test_errors_itself_may_be_the_wrong_shape(
+            self, tray_mod, tmp_path, monkeypatch):
+        s = self._state(tray_mod, tmp_path, monkeypatch, self._doc(errors=["nope"]))
+        assert len(s.configs) == 1
+        assert not s.no_device
+
+    def test_one_bad_config_entry_does_not_take_the_others(
+            self, tray_mod, tmp_path, monkeypatch):
+        doc = self._doc()
+        doc["configs"].append("not a config")
+        s = self._state(tray_mod, tmp_path, monkeypatch, doc)
+        assert [c["name"] for c in s.configs] == ["KDE Desktop"]
+
+    def test_context_of_the_wrong_shape_is_ignored(
+            self, tray_mod, tmp_path, monkeypatch):
+        s = self._state(tray_mod, tmp_path, monkeypatch, self._doc(context="nope"))
+        assert len(s.configs) == 1
+        assert s.paused is False
+
+    def test_lifecycle_is_always_a_string(
+            self, tray_mod, tmp_path, monkeypatch):
+        # It is compared against "starting"/"reinitializing" downstream.
+        s = self._state(tray_mod, tmp_path, monkeypatch, self._doc(lifecycle=7))
+        assert s.lifecycle == ""
+
+    def test_a_state_file_that_is_not_an_object_reads_as_absent(self, tmp_path):
+        import state
+        for raw in ("null", "[]", '"text"', "123"):
+            p = tmp_path / "s.json"
+            p.write_text(raw)
+            assert state.read(str(p)) == {}
+            assert len(state.config_roots(str(p))) == 2
+
+    def test_config_roots_of_the_wrong_shape_fall_back(self, tmp_path):
+        import json, state
+        p = tmp_path / "s.json"
+        p.write_text(json.dumps({"config_roots": "nope"}))
+        assert state.config_roots(str(p))[1] == state.USER_CONFIGS

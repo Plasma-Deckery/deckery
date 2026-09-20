@@ -27,20 +27,31 @@ USER_CONFIGS  = os.path.expanduser("~/.config/deckery")
 
 
 def read(path: str = STATE_JSON) -> dict:
-    """The state file as a mapping, or `{}` if it is not there or not readable.
+    """The state file as a mapping, or `{}` if it is not there or not usable.
 
     A missing file is the normal state of a stopped makima and says nothing.
     Anything else — truncated JSON, a permission problem — is worth a line in
     the log, because it looks identical from the caller's side and is not.
+
+    The isinstance check is not paranoia about our own writer. This file lives
+    in /tmp, which is mode 1777, so any local process can create it first —
+    the same reason the control socket was moved to $XDG_RUNTIME_DIR. `null`,
+    `[]` and `"text"` are all valid JSON, and every caller here goes on to
+    treat the result as a mapping.
     """
     try:
         with open(path) as f:
-            return json.load(f)
+            data = json.load(f)
     except FileNotFoundError:
         return {}
     except Exception:
         log.warning("Failed to read %s", path, exc_info=True)
         return {}
+    if not isinstance(data, dict):
+        log.warning("%s holds %s, not an object — ignoring it",
+                    path, type(data).__name__)
+        return {}
+    return data
 
 
 def config_roots(path: str = STATE_JSON) -> list:
@@ -53,7 +64,9 @@ def config_roots(path: str = STATE_JSON) -> list:
 
     The fallback covers the window before makima has ever written that file.
     """
-    roots = read(path).get("config_roots") or {}
+    roots = read(path).get("config_roots")
+    if not isinstance(roots, dict):
+        roots = {}
     if roots.get("system") and roots.get("user"):
         return [roots["system"], roots["user"]]
     shipped = _REPO_CONFIGS if os.path.isdir(_REPO_CONFIGS) else _RPM_CONFIGS
