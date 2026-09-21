@@ -59,7 +59,8 @@ See [Configuration](../configuration.md) for the layering rules and [Config Regi
 | Area | Files |
 |---|---|
 | Config | `config.rs` (parse + merge), `config_registry.rs` (discovery, layering, activation), `preferences.rs`, `resolver.rs` |
-| Input | `event_reader.rs` (translation, emission, pointer emulation, IPC), `udev_monitor.rs` (device discovery), `virtual_devices.rs` |
+| Session | `session.rs` — what desktop session this is and what is focused; no crate dependencies |
+| Input | `event_reader.rs` (translation, emission, pointer emulation, IPC), `udev_monitor.rs` (watches udev), `device_tasks.rs` (starts and restarts a device's tasks), `virtual_devices.rs` |
 | Trackpads | `trackpad.rs`, `trackpad_router.rs`, `mt_trackpad.rs`, `gesture_pad.rs`, `scroll_pad.rs`, `trackball.rs` |
 | Compositor | `compositor/` — one adapter per desktop (`kde.rs`, `hyprland.rs`, `fallback.rs`) |
 | State out | `state_export.rs` (build the snapshot), `state_writer.rs` (write it, skipping unchanged content) |
