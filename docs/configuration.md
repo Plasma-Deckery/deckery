@@ -24,6 +24,8 @@ The replacement is conditional on the file being readable. If your copy has an e
 
 Deckery is strict about the fixed sections — `[module]`, `[device]`, `[gaming_mode]`, `[trackpad]`, and the section names themselves. An unknown key there is an error rather than a line that is quietly dropped, because the alternative is worse than it sounds: `match_window_classes` instead of `match_window_class` used to turn an app override into a plain module that applied to *every* window. Button names inside `[remap]` and `[commands]` are of course not restricted.
 
+One key this will reject on sight is `[module] layout`. It comes from upstream makima, where a configurable button pages through four global binding sets, and it is still described in that project's documentation. Deckery removed the mechanism — layers here come from holding a modifier, which is unlimited and visible, and the modal case is covered by Gaming Mode and by exclusive groups. A config carrying `layout = N` therefore fails with *unknown field `layout`*; delete the line.
+
 ## Changing one binding
 
 Copying a whole file to change one line is a bad trade, and it is not necessary. Put a small `.toml` of your own in `~/.config/deckery/`, with nothing in it but the lines you want different:
