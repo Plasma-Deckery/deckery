@@ -41,14 +41,14 @@ Configs are not part of the runtime picture above; they are resolved before an e
        │
        └─► ConfigRegistry ──► apply_preferences (preferences.toml)
                   │
-                  └─► resolve(base, focused window, layout) ──► Arc<Config> ──► EventReader
+                  └─► resolve(base, focused window) ──► Arc<Config> ──► EventReader
 ```
 
-Every `.toml` in either directory is picked up by being there — there is no include list and nothing is registered anywhere. A file's role follows from its content: a `[device]` section makes it a base config, `match_window_class` an app override, `layout = N` a layout module, anything else a plain module merged into every base config.
+Every `.toml` in either directory is picked up by being there — there is no include list and nothing is registered anywhere. A file's role follows from its content: a `[device]` section makes it a base config, `match_window_class` an app override, anything else a plain module merged into every base config.
 
 Entries are keyed by file base name and the shipped root is read first, so a file of yours replaces the shipped one of the same name — **if it parses**. When it does not, the shipped config stays in effect and the entry carries a warning naming the file that was skipped.
 
-`resolve()` is memoised per `(base config, window class, layout)`, because it runs on the input path and the merged config holds several maps that would otherwise be deep-copied on every key press. Any change that could affect the answer — a file written, a config toggled, the compositor detected — clears the memo.
+`resolve()` is memoised per `(base config, window class)`, because it runs on the input path and the merged config holds several maps that would otherwise be deep-copied on every key press. Any change that could affect the answer — a file written, a config toggled, the compositor detected — clears the memo.
 
 See [Configuration](../configuration.md) for the layering rules and [Config Registry architecture](https://github.com/Plasma-Deckery/makima-deckery/blob/main/docs/config-registry.md) for the implementation.
 

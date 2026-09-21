@@ -44,7 +44,6 @@ done
   "context": {
     "active_app": "org.mozilla.firefox",
     "config_stack": ["Steam Deck Base", "org.mozilla.firefox"],
-    "layout": 0,
     "paused": false,
     "gaming_mode": false,
     "held_modifiers": ["BTN_TL"],
@@ -206,7 +205,6 @@ Published so a frontend can offer to open either folder without re-deriving the 
 |---|---|---|
 | `active_app` | `string` | Active app class, e.g. `"org.mozilla.firefox"`. `"default"` when no app-specific config is loaded. |
 | `config_stack` | `[string]` | Active config name(s). One entry = base config only; two entries = base + app override. |
-| `layout` | `number` | Active layout index (0–3). For multi-layout configs. |
 | `paused` | `bool` | Makima is paused — no output is emitted. Set when HUD opens. |
 | `gaming_mode` | `bool` | Gaming Mode is active — all remaps suppressed, raw input passed through. |
 | `held_modifiers` | `[string]` | Modifier buttons currently physically held (e.g. `["BTN_TL"]`). Empty when no modifier is held. **Use this to switch between normal and modifier view.** |

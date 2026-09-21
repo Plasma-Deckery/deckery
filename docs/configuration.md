@@ -54,7 +54,6 @@ A file's role follows from its content — there is no type field and no include
 |---|---|
 | `[device]` section | **Base config.** Names the physical device it drives. |
 | `[module] match_window_class` | **App override.** Applied while a matching window is focused. |
-| `[module] layout = N` | **Layout module.** Applied while layout N is active. |
 | None of the above | **Plain module.** Merged into every base config. |
 
 ## The shipped files

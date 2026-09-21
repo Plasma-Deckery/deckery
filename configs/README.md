@@ -56,7 +56,6 @@ follows from what is in it:
 |---|---|
 | a `[device]` section | **Base config** — names the physical controller |
 | `[module] match_window_class` | **App override** — applied while a matching window is focused |
-| `[module] layout = N` | **Layout module** — applied while layout N is active |
 | none of the above | **Plain module** — merged into every base config |
 
 Dropping a new `.toml` file here is all it takes to add one. Deleting it removes
