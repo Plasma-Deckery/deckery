@@ -1,22 +1,17 @@
 # Claude Desktop — overrides on top of the base config.
 #
-# The class list is matched exactly, so every packaging of the app needs its own
-# entry — one that is merely similar matches nothing:
+# A window class is matched by name: capitalisation is ignored and a
+# reverse-DNS publisher prefix is dropped, so "claude" covers the official
+# build's com.anthropic.Claude as well as the bare Claude that X11 reports.
 #
-#   com.anthropic.Claude    the official Linux build (2.x), Wayland app_id
-#   claude-desktop          the AppImage's StartupWMClass
-#   io.github.aaddrick.…    the community Debian packaging
-#   Claude                  what X11 compatibility mode reports instead
-#
-# To check what your install actually reports, focus its window and look at
-# `context.active_app` in the state file: "default" means nothing matched.
+# The other two entries are not spellings of the first — they are packagings
+# that renamed the app, and no rule can guess those.
 
 [module]
 match_window_class = [
-    "com.anthropic.Claude",
-    "claude-desktop",
-    "io.github.aaddrick.claude-desktop-debian",
-    "Claude",
+    "claude",                  # official build, and X11
+    "claude-desktop",          # the AppImage
+    "claude-desktop-debian",   # the community Debian packaging
 ]
 
 [remap]

@@ -179,12 +179,16 @@ An app override is applied on top of the base config while a matching window is 
 ```toml
 # ~/.config/deckery/apps/Firefox.toml
 [module]
-match_window_class = ["firefox", "org.mozilla.firefox"]
+match_window_class = "firefox"
 
 [remap]
 R1-Left  = { keys = ["KEY_LEFTALT", "KEY_LEFT"],  label = "Back" }
 R1-Right = { keys = ["KEY_LEFTALT", "KEY_RIGHT"], label = "Forward" }
 ```
+
+The class is matched **by name**: capitalisation is ignored, and a reverse-DNS publisher prefix is dropped before comparing. One `firefox` therefore covers both `firefox` and `org.mozilla.firefox`, and one `claude` covers both `Claude` and `com.anthropic.Claude` — the two ways the same application ends up spelled depending on its packaging and display server.
+
+Only whole names are compared, never fragments of one, so `claude` does not claim a window class of `claude-box`. A packaging that renames the app rather than re-prefixing it — `claude-desktop-debian` — is a different name and needs its own entry; a list is still accepted for exactly that case.
 
 ## Config format
 

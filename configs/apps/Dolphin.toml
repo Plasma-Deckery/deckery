@@ -1,7 +1,7 @@
 # Dolphin — file manager overrides on top of the base config.
 
 [module]
-match_window_class = ["dolphin", "org.kde.dolphin"]
+match_window_class = "dolphin"
 
 [remap]
 # --- R1 + DPad → navigation (mirrors Firefox pattern) ---
