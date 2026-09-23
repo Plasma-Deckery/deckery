@@ -34,7 +34,7 @@ echo "analog-state-export on"                       | socat - UNIX-CONNECT:$XDG_
 echo "analog-state-export off"                      | socat - UNIX-CONNECT:$XDG_RUNTIME_DIR/makima-control.sock
 ```
 
-The socket may not exist if makima is not running — handle gracefully (socat exits with an error, nothing else happens). The current `paused` state is always reflected in `/tmp/makima-state.json`.
+The socket may not exist if makima is not running — handle gracefully (socat exits with an error, nothing else happens). The current `paused` state is always reflected in `$XDG_RUNTIME_DIR/makima-state.json`.
 
 ## HUD dry-run mode
 

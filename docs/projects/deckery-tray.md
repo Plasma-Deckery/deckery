@@ -48,7 +48,7 @@ plasma-core.target  ← KDE-only, not active in Gamescope/Gaming Mode
 | Source | Used for |
 |---|---|
 | `systemctl --user is-active` | Running state of makima and deckery-hud |
-| `/tmp/makima-state.json` | `paused`, `lifecycle`, `errors`, `configs` |
+| `$XDG_RUNTIME_DIR/makima-state.json` | `paused`, `lifecycle`, `errors`, `configs` |
 | `$XDG_RUNTIME_DIR/makima-control.sock` | Sending IPC commands (pause / resume, `config enable\|disable`, `config group enable\|disable`) |
 | `configset_controller_neptune.vdf` | Steam Input configured state (polled every 2 s) |
 

@@ -11,7 +11,7 @@ The heart of Deckery — the input remapper. Reads raw evdev events directly fro
 - **Context-aware layouts** — per-app configs loaded automatically based on the focused window, with config inheritance so overrides only declare what differs
 - **Modifier keys** — hold a button to activate a second layer of bindings
 - **Trackpad MT devices** — exposes the Steam Deck trackpads as standard uinput multi-touch devices for libinput and gesture tools
-- **HUD state export** — writes a fully-resolved state snapshot to `/tmp/makima-state.json` on every input event for deckery-hud to consume
+- **HUD state export** — writes a fully-resolved state snapshot to `$XDG_RUNTIME_DIR/makima-state.json` on every input event for deckery-hud to consume
 - **IPC control socket** — pause, resume, and switch configs on or off at runtime via `$XDG_RUNTIME_DIR/makima-control.sock`
 
 ## What's different from upstream
@@ -24,7 +24,7 @@ The heart of Deckery — the input remapper. Reads raw evdev events directly fro
 | Config registry | Configs discovered from two directories rather than an include list, layered by who wrote them, with enable/disable IPC, exclusive groups, and live `state.json` export — see [App Config](app-config.md) and [Config Registry architecture](https://github.com/Plasma-Deckery/makima-deckery/blob/main/docs/config-registry.md) |
 | Binding attributes | `label`, `no_pause`, `while_gaming` per binding — see [Bindings](bindings.md) |
 | Gaming Mode | Double-click trigger + Steam auto-detection — see [Gaming Mode](gaming-mode.md) |
-| State export | `/tmp/makima-state.json` including `lifecycle`, `errors`, `configs` — see [State JSON](../../reference/state-json.md) |
+| State export | `$XDG_RUNTIME_DIR/makima-state.json` including `lifecycle`, `errors`, `configs` — see [State JSON](../../reference/state-json.md) |
 | Trackpad MT translation | Both pads emulated as standard system touchpad devices — see [Trackpad](trackpad.md) |
 | Control socket | Pause/resume, Gaming Mode, enabling single configs or whole exclusive groups, analog export — see [IPC](../../reference/ipc.md) |
 | Reinitialising lifecycle | After device reconnect or resume, emits `lifecycle: "reinitialising"` so the tray can show amber without a spurious error |

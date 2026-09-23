@@ -2,8 +2,12 @@
 
 ## Overview
 
-Makima writes `/tmp/makima-state.json` atomically after every relevant input event.
+Makima writes `$XDG_RUNTIME_DIR/makima-state.json` atomically after every relevant input event.
 The file is updated via `rename()` so reads are always consistent — no partial writes.
+
+!!! info "The file moved"
+    Until 0.4 this lived at `/tmp/makima-state.json`. `/tmp` is mode `1777`, so any local process could create the path first and decide what every reader believed — the same reason the control socket sits in `$XDG_RUNTIME_DIR`, a per-user tmpfs with mode `0700`. The tray and the HUD still fall back to the old path when they find a file there and none in the runtime directory, so a makima from before the move is still read correctly. makima itself falls back to `/tmp` only when there is no runtime directory at all, which is a bare TTY or a container started without one.
+
 
 Watch for changes using inotify on the **directory**, not the file itself (atomic rename
 creates a new inode each time, so watching the file directly loses events):
@@ -12,7 +16,7 @@ creates a new inode each time, so watching the file directly loses events):
 inotifywait -m -e moved_to /tmp/ 2>/dev/null | grep --line-buffered "makima-state.json" | while read _; do
   python3 -c "
 import json, datetime
-d = json.load(open('/tmp/makima-state.json'))
+d = json.load(open('$XDG_RUNTIME_DIR/makima-state.json'))
 t = datetime.datetime.now().strftime('%H:%M:%S.%f')[:-3]
 lp = d['trackpads']['lpad']; rp = d['trackpads']['rpad']
 ls = d['sticks']['lstick'];   rs = d['sticks']['rstick']

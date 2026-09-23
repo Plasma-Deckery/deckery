@@ -35,7 +35,11 @@ import tempfile
 import time
 
 CFG   = os.path.expanduser("~/.config/deckery")
-STATE = "/tmp/makima-state.json"
+# Where the tray looks, so a run against an older makima still finds the file.
+sys.path.insert(0, os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "tray"))
+import state as _tray_state          # noqa: E402
+STATE = _tray_state.STATE_JSON
 SOCK  = os.path.join(os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}"),
                      "makima-control.sock")
 PREFS = os.path.join(CFG, "preferences.toml")

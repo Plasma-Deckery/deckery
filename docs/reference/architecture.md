@@ -21,8 +21,8 @@ plasma-core.target                ← KDE-only, not active in Gamescope/Gaming M
                │                                          │
                │                                          └─► libinput / gesture tools
                │
-               ├─ /tmp/makima-state.json  ──► deckery-hud  (live overlay)
-               │                         └──► deckery-tray (status display)
+               ├─ $XDG_RUNTIME_DIR/makima-state.json ──► deckery-hud (live overlay)
+               │                                    └──► deckery-tray (status)
                └─ $XDG_RUNTIME_DIR/makima-control.sock
                                           ◄── deckery-tray (pause, Gaming Mode,
                                               switching configs and groups)

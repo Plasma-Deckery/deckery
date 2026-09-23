@@ -16,7 +16,7 @@ This page explains how makima-deckery differs and why both tools exist.
 | **Config inheritance** | No | Yes — app override inherits base config |
 | **Shell commands as actions** | Yes (macro language) | Yes (arbitrary shell commands) |
 | **Pause / preview mode** | No | Yes — HUD dry-run mode |
-| **Live state export** | No | Yes — `/tmp/makima-state.json` for HUD |
+| **Live state export** | No | Yes — `$XDG_RUNTIME_DIR/makima-state.json` for HUD |
 | **Gaming Mode** | No | Yes — Steam auto-detection, disables remapping |
 | **`while_gaming` bindings** | No | Yes |
 | **Trackpad MT emulation** | No | Yes — virtual uinput touchpad devices |

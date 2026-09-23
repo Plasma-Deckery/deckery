@@ -16,7 +16,38 @@ import os
 
 log = logging.getLogger("deckery-tray")
 
-STATE_JSON = "/tmp/makima-state.json"
+_RUNTIME_STATE = os.path.join(
+    os.environ.get("XDG_RUNTIME_DIR") or f"/run/user/{os.getuid()}",
+    "makima-state.json")
+_LEGACY_STATE = "/tmp/makima-state.json"
+
+
+def state_path() -> str:
+    """Where makima's state file is, preferring the runtime directory.
+
+    makima writes to `$XDG_RUNTIME_DIR` — a per-user tmpfs, mode 0700, the same
+    place the control socket lives, and for the same reason: `/tmp` is mode
+    1777, so anything able to create the path first decides what every reader
+    here believes.
+
+    The `/tmp` fallback is for a makima from before the move, which still
+    writes there. The three components ship together, so that window is short,
+    but it is not zero.
+
+    The test is deliberately one-sided: `/tmp` is chosen only when there is a
+    file there and none in the runtime directory. The tray starts *before*
+    makima — deckery-hud and makima are both `BindsTo` it — so at the moment
+    this runs neither file need exist yet, and defaulting to the legacy path
+    then would leave the tray watching a directory nothing will ever write to.
+    """
+    if os.path.exists(_RUNTIME_STATE):
+        return _RUNTIME_STATE
+    if os.path.exists(_LEGACY_STATE):
+        return _LEGACY_STATE
+    return _RUNTIME_STATE
+
+
+STATE_JSON = state_path()
 
 # Where the shipped configs are when makima has not said. Only used before it
 # has ever run — which is exactly when the setup wizard is on screen.
@@ -33,11 +64,10 @@ def read(path: str = STATE_JSON) -> dict:
     Anything else — truncated JSON, a permission problem — is worth a line in
     the log, because it looks identical from the caller's side and is not.
 
-    The isinstance check is not paranoia about our own writer. This file lives
-    in /tmp, which is mode 1777, so any local process can create it first —
-    the same reason the control socket was moved to $XDG_RUNTIME_DIR. `null`,
-    `[]` and `"text"` are all valid JSON, and every caller here goes on to
-    treat the result as a mapping.
+    The isinstance check is not paranoia about our own writer. Under the `/tmp`
+    fallback the file sits in a world-writable directory, where any local
+    process can create it first — and `null`, `[]` and `"text"` are all valid
+    JSON, while every caller here goes on to treat the result as a mapping.
     """
     try:
         with open(path) as f:
