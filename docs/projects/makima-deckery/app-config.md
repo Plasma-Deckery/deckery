@@ -11,7 +11,7 @@ There is no naming convention. An app config is any file that declares a window 
 ```toml
 # apps/Firefox.toml
 [module]
-match_window_class = "firefox"
+match_window_class = ["firefox", "org.mozilla.firefox"]
 
 [remap]
 R1-Left  = { keys = ["KEY_LEFTALT", "KEY_LEFT"],  label = "Back" }
@@ -19,7 +19,7 @@ R1-Right = { keys = ["KEY_LEFTALT", "KEY_RIGHT"], label = "Forward" }
 R1-Up    = { keys = ["KEY_LEFTCTRL", "KEY_R"],    label = "Reload" }
 ```
 
-The window class comes from the focused window's `resourceClass` property in KWin. It is matched by name: capitalisation is ignored and a reverse-DNS publisher prefix is dropped first, which is what lets one entry cover the different spellings Wayland and X11 report for the same application. Whole names only, so a name is never matched by a fragment of itself. A list is still accepted, for packagings that renamed the app outright.
+The window class comes from the focused window's `resourceClass` property in KWin. Several classes can be listed — Wayland and X11 often report different ones for the same application.
 
 ## Config inheritance
 
