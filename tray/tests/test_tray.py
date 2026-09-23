@@ -437,34 +437,15 @@ class TestMalformedState:
         assert state.config_roots(str(p))[1] == state.USER_CONFIGS
 
 
-class TestStatePathSelection:
-    """makima moved its state file; the readers have to find it either way."""
+class TestStatePath:
+    """One path, derived the same way makima derives it."""
 
-    def _paths(self, tmp_path, monkeypatch):
+    def test_the_state_file_lives_in_the_runtime_directory(self):
         import state
-        runtime = tmp_path / "runtime" / "makima-state.json"
-        legacy  = tmp_path / "tmp" / "makima-state.json"
-        runtime.parent.mkdir(); legacy.parent.mkdir()
-        monkeypatch.setattr(state, "_RUNTIME_STATE", str(runtime))
-        monkeypatch.setattr(state, "_LEGACY_STATE", str(legacy))
-        return state, runtime, legacy
+        assert state.STATE_JSON.endswith("/makima-state.json")
+        assert "/tmp/" not in state.STATE_JSON, \
+            "/tmp is mode 1777 — the state file must not land there"
 
-    def test_the_runtime_directory_wins_when_it_has_the_file(self, tmp_path, monkeypatch):
-        state, runtime, legacy = self._paths(tmp_path, monkeypatch)
-        runtime.write_text("{}"); legacy.write_text("{}")
-        assert state.state_path() == str(runtime)
-
-    def test_an_older_makima_is_still_found_in_tmp(self, tmp_path, monkeypatch):
-        # The three components ship together, so this window is short — but a
-        # makima from before the move writes nowhere else.
-        state, _runtime, legacy = self._paths(tmp_path, monkeypatch)
-        legacy.write_text("{}")
-        assert state.state_path() == str(legacy)
-
-    def test_with_neither_file_the_runtime_path_is_assumed(self, tmp_path, monkeypatch):
-        # The tray starts before makima — both makima and the HUD are BindsTo
-        # it — so at selection time neither file need exist yet. Choosing the
-        # legacy path here would leave the tray watching a directory that
-        # nothing is ever going to write to.
-        state, runtime, _legacy = self._paths(tmp_path, monkeypatch)
-        assert state.state_path() == str(runtime)
+    def test_it_is_the_same_directory_as_the_control_socket(self, tray_mod):
+        import os, state
+        assert os.path.dirname(state.STATE_JSON) == os.path.dirname(tray_mod._MAKIMA_SOCK)
