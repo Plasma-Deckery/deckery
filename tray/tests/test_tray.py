@@ -221,3 +221,231 @@ class TestTrayState:
             base_config_error=True, reinitializing=True,
         ) == "err"
 
+
+
+# ── _makima_state ─────────────────────────────────────────────────────────────
+
+class TestMakimaStateConfigs:
+    """Everything the submenu needs has to survive the read of state.json."""
+
+    def _state(self, tray_mod, tmp_path, monkeypatch, document):
+        import json
+        path = tmp_path / "makima-state.json"
+        path.write_text(json.dumps(document))
+        monkeypatch.setattr(tray_mod, "_STATE_JSON", str(path))
+        return tray_mod._makima_state()
+
+    def test_exclusive_group_reaches_the_submenu(self, tray_mod, tmp_path, monkeypatch):
+        # Dropping this field once made every group render as loose checkboxes:
+        # display_rows() reads it, and absent means "not in a group".
+        state = self._state(tray_mod, tmp_path, monkeypatch, {
+            "lifecycle": "ready",
+            "configs": [{"name": "KDE Desktop Layout Grid", "kind": "module",
+                         "exclusive_group": "kde-desktop-layout", "enabled": False}],
+        })
+        assert state.configs[0]["exclusive_group"] == "kde-desktop-layout"
+
+    def test_a_config_without_a_group_reports_none(self, tray_mod, tmp_path, monkeypatch):
+        state = self._state(tray_mod, tmp_path, monkeypatch, {
+            "lifecycle": "ready",
+            "configs": [{"name": "Voice Control", "kind": "module", "enabled": True}],
+        })
+        assert state.configs[0]["exclusive_group"] is None
+
+    def test_config_roots_are_passed_through(self, tray_mod, tmp_path, monkeypatch):
+        state = self._state(tray_mod, tmp_path, monkeypatch, {
+            "lifecycle": "ready", "configs": [],
+            "config_roots": {"system": "/usr/share/deckery/configs",
+                             "user":   "/home/u/.config/deckery"},
+        })
+        assert state.config_roots["system"] == "/usr/share/deckery/configs"
+
+    def test_missing_config_roots_are_an_empty_mapping(self, tray_mod, tmp_path, monkeypatch):
+        # An older makima, or one that has not finished starting. The submenu
+        # falls back to the assumed user path and hides the shipped folder.
+        state = self._state(tray_mod, tmp_path, monkeypatch, {
+            "lifecycle": "starting", "configs": [], "config_roots": None,
+        })
+        assert state.config_roots == {}
+
+    def test_an_absent_state_file_yields_empty_roots(self, tray_mod, tmp_path, monkeypatch):
+        monkeypatch.setattr(tray_mod, "_STATE_JSON", str(tmp_path / "gone.json"))
+        assert tray_mod._makima_state().config_roots == {}
+
+
+# ── Global error text ─────────────────────────────────────────────────────────
+
+class TestMakimaErrorText:
+    """makima writes a message behind "no device"; the tray has to carry it."""
+
+    def _state(self, tray_mod, tmp_path, monkeypatch, document):
+        import json
+        path = tmp_path / "makima-state.json"
+        path.write_text(json.dumps(document))
+        monkeypatch.setattr(tray_mod, "_STATE_JSON", str(path))
+        return tray_mod._makima_state()
+
+    def test_the_no_device_message_is_carried_through(self, tray_mod, tmp_path, monkeypatch):
+        # The two words in the status row cannot say to check [device] names.
+        state = self._state(tray_mod, tmp_path, monkeypatch, {
+            "lifecycle": "ready", "configs": [],
+            "errors": {"no_device": {"severity": "error",
+                                     "message": "check that [device] names matches evtest"}},
+        })
+        assert state.no_device
+        assert "evtest" in state.error_text
+
+    def test_both_global_errors_are_shown_together(self, tray_mod, tmp_path, monkeypatch):
+        # Showing only the first would hide the one the user can act on.
+        state = self._state(tray_mod, tmp_path, monkeypatch, {
+            "lifecycle": "ready", "configs": [],
+            "errors": {"no_device":   {"severity": "error", "message": "no hardware"},
+                       "base_config": {"severity": "error", "message": "line 4: bad"}},
+        })
+        assert "no hardware" in state.error_text
+        assert "line 4: bad" in state.error_text
+
+    def test_a_healthy_makima_has_nothing_to_report(self, tray_mod, tmp_path, monkeypatch):
+        state = self._state(tray_mod, tmp_path, monkeypatch, {
+            "lifecycle": "ready", "configs": [], "errors": {},
+        })
+        assert state.error_text == ""
+
+    def test_an_error_without_a_message_does_not_offer_details(self, tray_mod, tmp_path, monkeypatch):
+        # An older makima, or one that set the flag and no text. Inviting a
+        # click that opens an empty dialog is worse than not inviting it.
+        state = self._state(tray_mod, tmp_path, monkeypatch, {
+            "lifecycle": "ready", "configs": [],
+            "errors": {"no_device": {"severity": "error"}},
+        })
+        assert state.no_device
+        assert state.error_text == ""
+
+    def test_the_row_only_invites_a_click_when_there_is_something_behind_it(self, tray_mod):
+        assert tray_mod._with_details("no device", "why") == "no device — click for details"
+        assert tray_mod._with_details("no device", "") == "no device"
+
+
+class TestStateReader:
+    """One module opens makima's state file; both sides go through it."""
+
+    def test_a_missing_file_is_not_an_error(self, tmp_path):
+        import state
+        assert state.read(str(tmp_path / "gone.json")) == {}
+
+    def test_unreadable_content_yields_nothing_rather_than_raising(self, tmp_path):
+        # A truncated write, caught mid-rename. The tray polls twice a second;
+        # taking it down over one bad read would be the wrong trade.
+        import state
+        p = tmp_path / "makima-state.json"
+        p.write_text('{"lifecycle": "rea')
+        assert state.read(str(p)) == {}
+
+    def test_config_roots_come_from_makima_when_it_has_spoken(self, tmp_path):
+        import json, state
+        p = tmp_path / "makima-state.json"
+        p.write_text(json.dumps({"config_roots": {"system": "/usr/share/deckery/configs",
+                                                  "user": "/home/u/.config/deckery"}}))
+        assert state.config_roots(str(p)) == ["/usr/share/deckery/configs",
+                                              "/home/u/.config/deckery"]
+
+    def test_config_roots_fall_back_before_makima_has_ever_run(self, tmp_path):
+        # Precisely when the setup wizard is on screen.
+        import state
+        roots = state.config_roots(str(tmp_path / "gone.json"))
+        assert len(roots) == 2
+        assert roots[1] == state.USER_CONFIGS
+
+    def test_half_an_answer_is_not_used(self, tmp_path):
+        # An older makima, or one still starting. Pairing a real system root
+        # with a missing user root would send the wizard to the wrong place.
+        import json, state
+        p = tmp_path / "makima-state.json"
+        p.write_text(json.dumps({"config_roots": {"system": "/usr/share/deckery/configs"}}))
+        assert state.config_roots(str(p))[1] == state.USER_CONFIGS
+
+
+class TestMalformedState:
+    """The state file sits in /tmp, mode 1777. Its shape is not ours to assume.
+
+    Before this, one field of the wrong type raised inside _makima_state(),
+    landed in the outer except and returned _no_makima_state() — so the whole
+    Controller Bindings submenu vanished and makima read as not running.
+    """
+
+    def _state(self, tray_mod, tmp_path, monkeypatch, document):
+        import json
+        path = tmp_path / "makima-state.json"
+        path.write_text(json.dumps(document))
+        monkeypatch.setattr(tray_mod, "_STATE_JSON", str(path))
+        return tray_mod._makima_state()
+
+    def _doc(self, **over):
+        doc = {"lifecycle": "ready", "errors": {}, "configs": [
+            {"name": "KDE Desktop", "kind": "module", "enabled": True,
+             "status": "ok", "errors": []}]}
+        doc.update(over)
+        return doc
+
+    def test_an_error_entry_of_the_wrong_shape_keeps_the_config_list(
+            self, tray_mod, tmp_path, monkeypatch):
+        s = self._state(tray_mod, tmp_path, monkeypatch,
+                        self._doc(errors={"no_device": "a string"}))
+        assert len(s.configs) == 1
+        assert s.lifecycle == "ready"
+        # The flag comes from the key being there; only the text is unusable.
+        assert s.no_device
+        assert s.error_text == ""
+
+    def test_errors_itself_may_be_the_wrong_shape(
+            self, tray_mod, tmp_path, monkeypatch):
+        s = self._state(tray_mod, tmp_path, monkeypatch, self._doc(errors=["nope"]))
+        assert len(s.configs) == 1
+        assert not s.no_device
+
+    def test_one_bad_config_entry_does_not_take_the_others(
+            self, tray_mod, tmp_path, monkeypatch):
+        doc = self._doc()
+        doc["configs"].append("not a config")
+        s = self._state(tray_mod, tmp_path, monkeypatch, doc)
+        assert [c["name"] for c in s.configs] == ["KDE Desktop"]
+
+    def test_context_of_the_wrong_shape_is_ignored(
+            self, tray_mod, tmp_path, monkeypatch):
+        s = self._state(tray_mod, tmp_path, monkeypatch, self._doc(context="nope"))
+        assert len(s.configs) == 1
+        assert s.paused is False
+
+    def test_lifecycle_is_always_a_string(
+            self, tray_mod, tmp_path, monkeypatch):
+        # It is compared against "starting"/"reinitializing" downstream.
+        s = self._state(tray_mod, tmp_path, monkeypatch, self._doc(lifecycle=7))
+        assert s.lifecycle == ""
+
+    def test_a_state_file_that_is_not_an_object_reads_as_absent(self, tmp_path):
+        import state
+        for raw in ("null", "[]", '"text"', "123"):
+            p = tmp_path / "s.json"
+            p.write_text(raw)
+            assert state.read(str(p)) == {}
+            assert len(state.config_roots(str(p))) == 2
+
+    def test_config_roots_of_the_wrong_shape_fall_back(self, tmp_path):
+        import json, state
+        p = tmp_path / "s.json"
+        p.write_text(json.dumps({"config_roots": "nope"}))
+        assert state.config_roots(str(p))[1] == state.USER_CONFIGS
+
+
+class TestStatePath:
+    """One path, derived the same way makima derives it."""
+
+    def test_the_state_file_lives_in_the_runtime_directory(self):
+        import state
+        assert state.STATE_JSON.endswith("/makima-state.json")
+        assert "/tmp/" not in state.STATE_JSON, \
+            "/tmp is mode 1777 — the state file must not land there"
+
+    def test_it_is_the_same_directory_as_the_control_socket(self, tray_mod):
+        import os, state
+        assert os.path.dirname(state.STATE_JSON) == os.path.dirname(tray_mod._MAKIMA_SOCK)

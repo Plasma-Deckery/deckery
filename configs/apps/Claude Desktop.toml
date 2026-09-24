@@ -1,11 +1,23 @@
 # Claude Desktop — overrides on top of the base config.
 #
-# Two window classes: Wayland native uses the app_id from the community
-# packaging (io.github.aaddrick.claude-desktop-debian); X11 compatibility
-# mode reports resourceClass "Claude" (capital C) instead.
+# The class list is matched exactly, so every packaging of the app needs its own
+# entry — one that is merely similar matches nothing:
+#
+#   com.anthropic.Claude    the official Linux build (2.x), Wayland app_id
+#   claude-desktop          the AppImage's StartupWMClass
+#   io.github.aaddrick.…    the community Debian packaging
+#   Claude                  what X11 compatibility mode reports instead
+#
+# To check what your install actually reports, focus its window and look at
+# `context.active_app` in the state file: "default" means nothing matched.
 
 [module]
-match_window_class = ["io.github.aaddrick.claude-desktop-debian", "Claude"]
+match_window_class = [
+    "com.anthropic.Claude",
+    "claude-desktop",
+    "io.github.aaddrick.claude-desktop-debian",
+    "Claude",
+]
 
 [remap]
 # --- R1 + DPad ---

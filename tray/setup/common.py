@@ -2,6 +2,7 @@
 common.py -- Shared constants, CSS, and widget helpers for the setup wizard.
 """
 import os
+import sys
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk, GdkPixbuf
@@ -15,6 +16,13 @@ ICONS       = os.path.join(_TRAY_DIR, "icons")
 HUD_ASSETS  = os.path.join(os.path.dirname(DIR), "deckery-hud", "assets")
 SENTINEL      = os.path.expanduser("~/.config/deckery/.onboarding-done")
 DECKERY_CONFIGS = os.path.expanduser("~/.config/deckery")
+
+# The state file has exactly one reader, and it is not this module. tray/ is
+# the import root for both entry points (deckery-tray.py and onboarding.py),
+# the same way config_menu and steam_bridge are reached.
+sys.path.insert(0, _TRAY_DIR)
+from state import config_roots  # noqa: E402  (path has to be set up first)
+
 
 # -- Colors -------------------------------------------------------------------
 

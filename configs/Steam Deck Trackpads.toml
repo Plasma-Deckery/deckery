@@ -1,0 +1,33 @@
+# Deckery — Steam Deck Trackpads
+#
+# Pad modes, haptics and the KDE/libinput settings written for the virtual
+# devices. The most-tuned part of the hardware configuration, which is why it
+# is its own file: haptics are a matter of taste and change more often than
+# anything else here.
+
+[trackpad]
+combined_gesture_device = true
+
+[trackpad.right]
+mode = "mt-trackpad"
+click_pressure = 30000   # Firmware click-pressure threshold, raw u16
+
+# on_movement fires at most once per `pixel_interval` raw units of travel.
+[trackpad.right.haptic]
+on_press   = { duration_us = 8000, interval_us = 8000, count = 3, gain_db = 0 }
+on_release = { duration_us = 8000, interval_us = 8000, count = 3, gain_db = 0 }
+# on_movement = { pixel_interval = 3000, duration_us = 4000, interval_us = 4000, count = 1, gain_db = 0 }
+
+# KDE/libinput settings written to kcminputrc for this pad's virtual device.
+[trackpad.right.kde]
+pointer_acceleration = 0.2
+pointer_acceleration_profile = "flat"   # or "adaptive"
+tap_to_click = false
+
+[trackpad.left]
+mode = "disabled"
+
+[trackpad.gestures.kde]
+natural_scroll = true
+scroll_factor = 0.5
+tap_to_click = false

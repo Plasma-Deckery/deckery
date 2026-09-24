@@ -6,7 +6,7 @@
 
 1. **Clone / update sub-repos** — clones `makima-deckery` and `deckery-hud` next to the deckery repo. When running from a tagged release, each sub-repo is checked out at the **same tag** as the main repo. If a matching tag is missing in a sub-repo, the installer exits with a clear error. See [Updates](updates.md) for details on the release-pinning mechanism.
 
-2. **Create the distrobox container** — runs `distrobox assemble create` using `distrobox.ini` in the repo root. The container (Arch Linux) is shared by all three services. On subsequent runs this step is a no-op.
+2. **Create the distrobox container** — runs `distrobox create --name deckery --image archlinux:latest`. The container is shared by all three services. On subsequent runs this step is a no-op.
 
 3. **Build and install Makima** — delegates to `makima-deckery/install.sh`, which compiles the Rust binary inside the container and deploys it to `~/.local/bin/`.
 
@@ -18,7 +18,16 @@
 
 7. **Remove the legacy Steam Input file** — deletes `~/.config/deckery/desktop_neptune.vdf` if it is present from a previous install.
 
-8. **Update the default makima config** — symlinks `configs/Steam Deck.toml` to `~/.config/deckery/Steam Deck.toml`. App-specific configs (e.g. `Steam Deck::org.kde.konsole.toml`) are copied from the repo on every run; the previous version is backed up as `.old` (e.g. `Steam Deck::org.kde.konsole.toml.old`) so your customisations are preserved and can be merged back manually.
+8. **Prepare the user config directory** — creates `~/.config/deckery/` if it is missing. Nothing is copied or symlinked: makima reads the shipped configs straight out of the repo and treats a user file of the same name as an override (see [Configuration](../configuration.md)).
+
+    Installs predating that model have a copy of every shipped config sitting in the user directory. As overrides those copies shadow the shipped file forever, so they are cleared out — but as a **one-time migration**, recorded by a stamp file, and by **moving** rather than deleting:
+
+    - A file in `~/.config/deckery/` carrying the name of a shipped config is also exactly what the documentation tells you to create in order to customise one. A sweep that ran on every update would delete the customisation it had just asked for.
+    - A leftover copy and a deliberate override cannot be told apart by then, so the ambiguity is resolved by keeping the file. Everything swept lands in `~/.config/deckery/replaced-by-update/` for you to check and delete.
+    - Symlinks are skipped outright. The old scheme copied, so a link is somebody's dotfile manager pointing at its own store.
+    - Names that used to be shipped and are not any more are swept too. The loop enumerates what ships *today*, so without that list a copy of the old base config would survive and go on claiming the same controller.
+
+    After the stamp is set, nothing under `~/.config/deckery/` is ever swept again.
 
 After step 8, the script runs two interactive prompts (skipped in non-interactive mode):
 

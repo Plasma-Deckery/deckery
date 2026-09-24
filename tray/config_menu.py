@@ -5,10 +5,20 @@ Each config gets exactly one dedicated slot (CheckMenuItem + MenuItem pair)
 identified by name.  Slots are never reused for a different config — they
 stay in the submenu permanently (hidden when their config is absent).
 
-Rows are grouped: each base config, its included modules indented beneath it,
-then an "Apps" heading with the per-application overrides. Grouping comes from
-the "kind" and "parent" fields makima writes into state.json — the tray never
+Rows are grouped: each base config, its modules indented beneath it, then an
+"Apps" heading with the per-application overrides. Grouping comes from the
+"kind" and "parent" fields makima writes into state.json — the tray never
 inspects config files itself.
+
+Modules sharing an "exclusive_group" are drawn as radio items in a submenu of
+their own, whose parent item names the active member: "Layout: Vertical". A
+submenu is what says "one choice" no matter how the host draws radio items —
+and since exactly one member is ever active, the parent's label loses nothing
+by folding the rest away. Independently switchable modules are never folded:
+there the label could not say what is on.
+
+A module's own label drops the base config's name, since the row is already
+nested under it — "Steam Deck Trackpads" reads as "Trackpads".
 
 Update strategy:
   - Same set of configs   → update slots in-place (label, active, visible)
@@ -37,29 +47,129 @@ log = logging.getLogger("deckery-tray")
 
 @dataclass(frozen=True)
 class Row:
-    """One line in the submenu: either a config or the "Apps" heading.
+    """One line in the submenu: a config, the "Apps" heading, or a group heading.
 
+    ``name``   identifies the row — a config name, or the group slug for a group
+               heading. It is the key slots and heading widgets are stored under,
+               never the text drawn.
     ``prefix`` carries the tree glyph a nested entry is drawn with.
+    ``label``  the text to draw, when it differs from ``name``. Group members are
+               drawn without the part of their name the heading already says.
+    ``group``  set on the members of an exclusive group: they are drawn in a
+               submenu of their heading rather than in the menu itself, so they
+               carry no tree glyph and no position in the top-level order.
     """
     name:    str
     prefix:  str = ""
     heading: bool = False
+    label:   str = ""
+    group:   str = ""
+
+    @property
+    def text(self) -> str:
+        return self.label or self.name
+
+
+def _shared_prefix(names: list[str]) -> str:
+    """The leading words every name has in common, e.g. "KDE Desktop Layout".
+
+    Used to name an exclusive group after its members rather than after its slug.
+    Whole words only: "Layout Horizontal"/"Layout Hyprland" share the characters
+    of "Layout H", which is not something to put on screen.
+    """
+    if len(names) < 2:
+        return ""
+    words = [n.split() for n in names]
+    shared: list[str] = []
+    for column in zip(*words):
+        if len(set(column)) != 1:
+            break
+        shared.append(column[0])
+    # All words shared means the names are equal — then the prefix says
+    # everything and the members would be left with empty labels.
+    if len(shared) == min(len(w) for w in words):
+        return ""
+    return " ".join(shared)
+
+
+def _drop_shared_prefix(name: str, sibling: str) -> str:
+    """*name* without the leading words it shares with *sibling*.
+
+    Used to shorten a module under its base. The two names rarely nest cleanly —
+    "Steam Deck Trackpads" under "Steam Deck Base" has no full-name prefix to
+    drop, only the "Steam Deck" both of them start with. Matching on that shared
+    run instead of on the base's whole name keeps the label at "Trackpads" no
+    matter what the base config is called.
+    """
+    return _drop_prefix(name, _shared_prefix([name, sibling]))
+
+
+def _drop_prefix(name: str, prefix: str) -> str:
+    """*name* without a leading *prefix*, on a word boundary.
+
+    Returns *name* unchanged when the prefix is absent or is the whole name —
+    a row labelled with the empty string would be worse than a redundant one.
+    """
+    if not prefix or not name.startswith(prefix + " "):
+        return name
+    return name[len(prefix):].strip() or name
 
 
 def display_rows(configs: list) -> list[Row]:
     """Order configs for display: each base, its modules beneath it, then apps.
 
-    Pure — no GTK, no I/O. Grouping comes entirely from the "kind" and "parent"
-    fields; a config missing them lands in the top-level group.
+    Pure — no GTK, no I/O. Grouping comes entirely from the "kind", "parent" and
+    "exclusive_group" fields; a config missing them lands in the top-level group.
     """
-    def group(kind: str) -> list:
-        return sorted((c for c in configs if c.get("kind") == kind),
-                      key=lambda c: c["name"].lower())
+    def sort_key(c: dict) -> tuple:
+        # Members of an exclusive group sort under the group's name, which puts
+        # them next to each other even when their own names do not adjoin.
+        return ((c.get("exclusive_group") or c["name"]).lower(), c["name"].lower())
 
-    def nest(entries: list) -> list[Row]:
-        last = len(entries) - 1
-        return [Row(c["name"], "└─ " if i == last else "├─ ")
-                for i, c in enumerate(entries)]
+    def group(kind: str) -> list:
+        return sorted((c for c in configs if c.get("kind") == kind), key=sort_key)
+
+    def nest(entries: list, parent: str = "", glyphs: bool = True) -> list[Row]:
+        """Indent entries under their base, each exclusive group under a heading.
+
+        Members of one group are contiguous after ``sort_key``, so a group is a
+        run rather than something that has to be gathered.
+
+        ``glyphs`` off drops the tree prefix, for rows that have no parent to
+        hang off. They still need the grouping: a group is one choice whether or
+        not the menu found a base config to nest it under.
+        """
+        rows: list[Row] = []
+        total = len(entries)
+        glyph = (lambda last: ("└─ " if last else "├─ ")) if glyphs else (lambda last: "")
+        i = 0
+        while i < total:
+            slug = entries[i].get("exclusive_group")
+            if not slug:
+                name = entries[i]["name"]
+                rows.append(Row(name, glyph(i == total - 1),
+                                label=_drop_shared_prefix(name, parent)))
+                i += 1
+                continue
+
+            members = []
+            while i < total and entries[i].get("exclusive_group") == slug:
+                members.append(entries[i])
+                i += 1
+
+            names  = [m["name"] for m in members]
+            shared = _shared_prefix(names)
+            rows.append(Row(slug, glyph(i == total), heading=True,
+                            label=_drop_shared_prefix(shared or slug, parent)))
+            # The members go into a submenu of that heading. Exactly one of them
+            # is active, so the heading can name the choice on its own line and
+            # nothing is hidden by folding them away — which is why this is done
+            # for exclusive groups and not for the independently switchable
+            # modules around them.
+            for m in members:
+                rows.append(Row(m["name"], label=_drop_prefix(m["name"], shared),
+                                group=slug))
+        return rows
 
     bases   = group("base")
     modules = group("module")
@@ -69,13 +179,20 @@ def display_rows(configs: list) -> list[Row]:
     rows: list[Row] = []
     for base in bases:
         rows.append(Row(base["name"]))
-        rows += nest([m for m in modules if m.get("parent") == base["name"]])
+        rows += nest([m for m in modules if m.get("parent") == base["name"]],
+                     parent=base["name"])
 
     # A module whose parent is gone, or a file that would not parse: neither can
     # be nested, but both still need a row — that row is where the error shows.
+    #
+    # Everything lands here at once when no base config parses, because then
+    # makima can name no parent for any module. So the rows go through nest()
+    # too: an exclusive group is still one choice, and drawing its members as
+    # loose checkboxes in that state would invite switching two of them on.
+    # Only the tree glyphs are dropped — there is nothing above them to hang off.
     strays = [m for m in modules if m.get("parent") not in base_names]
     strays += [c for c in configs if c.get("kind") not in ("base", "module", "app")]
-    rows += [Row(c["name"]) for c in sorted(strays, key=lambda c: c["name"].lower())]
+    rows += nest(sorted(strays, key=sort_key), glyphs=False)
 
     if apps:
         rows.append(Row("Apps", heading=True))
@@ -99,6 +216,10 @@ class _ConfigSlot:
     error:      Gtk.MenuItem
     toggle_id:  int
     error_text: str = ""
+    # The exclusive group this slot was built for. A radio item and a checkbox
+    # are different widgets with different toggle semantics, so a config that
+    # changes group across an update needs a new slot, not an updated one.
+    group:      str | None = None
 
 
 class ConfigSubmenu:
@@ -112,13 +233,17 @@ class ConfigSubmenu:
     ipc:
         Callable that sends a makima IPC command string, e.g. _makima_ipc.
     config_dir:
-        Path opened by the "Open config folder" item.
+        The user's config directory. Used until makima reports the roots it
+        actually resolved, which it only can once it is running.
     """
 
     def __init__(self, initial_configs: list, ipc: callable, config_dir: str):
         self._ipc        = ipc
         self._config_dir = config_dir
+        self._roots:     dict = {}
         self._slots:     dict[str, _ConfigSlot] = {}   # name → slot
+        self._radio_leaders: dict[str, object] = {}    # exclusive group → first item
+        self._radio_off: dict[str, object] = {}        # exclusive group → "none" item
         self._last:      list | None = None
         self._layout:    list | None = None            # last rendered row order
 
@@ -126,15 +251,27 @@ class ConfigSubmenu:
         self._submenu = Gtk.Menu()
         self._parent.set_submenu(self._submenu)
 
-        self._apps_heading = Gtk.MenuItem(label="Apps")
-        self._apps_heading.set_sensitive(False)
+        # Heading widgets by row name: "Apps", plus one per exclusive group.
+        self._headings: dict[str, Gtk.MenuItem] = {}
+        # The submenu each exclusive group's members are drawn in, by slug.
+        self._group_menus: dict[str, Gtk.Menu] = {}
+        # The "Enabled" check item at the top of each group submenu, by slug,
+        # paired with its handler id so its state can be set without firing it.
+        self._group_toggles: dict[str, tuple] = {}
 
         self._sep = Gtk.SeparatorMenuItem()
         self._sep.set_no_show_all(True)
         self._sep.hide()
 
-        self._open_cfg = _icon_item("Open config folder", "folder")
-        self._open_cfg.connect("activate", lambda _: subprocess.Popen(["xdg-open", self._config_dir]))
+        # Two folders, because a surgical override means copying a file from one
+        # into the other — and the shipped one is where you go to read what the
+        # file you are about to copy currently does.
+        self._open_user = _icon_item("Open my configs", "folder")
+        self._open_user.connect("activate", lambda _: self._open(self.user_root))
+        # A library, not a template folder: you go there to read what a config
+        # currently does, and copying one out is the exception.
+        self._open_system = _icon_item("Open shipped configs", "folder-library")
+        self._open_system.connect("activate", lambda _: self._open(self.system_root))
 
         self._apply(initial_configs)
 
@@ -145,12 +282,27 @@ class ConfigSubmenu:
         """The 'Controller Bindings' MenuItem — append this to the root menu."""
         return self._parent
 
-    def refresh(self, configs: list) -> None:
+    @property
+    def user_root(self) -> str:
+        """The user's config directory — makima's answer, or the assumed one."""
+        return self._roots.get("user") or self._config_dir
+
+    @property
+    def system_root(self) -> str:
+        """The shipped config directory, or "" while makima has not said."""
+        return self._roots.get("system") or ""
+
+    def refresh(self, configs: list, config_roots: dict | None = None) -> None:
         """Update submenu contents if configs changed.
 
         Idempotent: safe to call on every poll cycle.  Does nothing when the
         config list is identical to the last rendered state.
         """
+        if config_roots:
+            self._roots = config_roots
+            # Only reachable once, when makima first reports: the roots are
+            # fixed for its lifetime, so this cannot flip back and forth.
+            self._open_system.set_visible(bool(self.system_root))
         if configs == self._last:
             return
         self._last = configs
@@ -158,21 +310,102 @@ class ConfigSubmenu:
 
     # ── Private ───────────────────────────────────────────────────────────────
 
-    def _create_slot(self, name: str) -> _ConfigSlot:
+    @staticmethod
+    def _open(path: str) -> None:
+        if path:
+            subprocess.Popen(["xdg-open", path])
+
+    def _create_slot(self, name: str, exclusive_group: str | None = None) -> _ConfigSlot:
         """Create the widget pair for *name*. Placement is done by _relayout."""
-        chk = Gtk.CheckMenuItem(label="")
-        def _on_toggle(widget, n=name):
-            self._ipc(f"config {'enable' if widget.get_active() else 'disable'} {n}")
+        if exclusive_group:
+            chk = Gtk.RadioMenuItem(label="")
+            leader = self._radio_leaders.setdefault(exclusive_group, chk)
+            if leader is not chk:
+                chk.join_group(leader)
+            # A radio item cannot be cleared: set_active(False) on the one that
+            # is on does nothing, because GTK will not leave a radio group with
+            # nothing selected. A group switched off would therefore keep
+            # showing a ticked member — and clicking that member emits no
+            # `toggled` either, so it could not even be switched back on there.
+            #
+            # The fix is to give the group somewhere to put the dot. This item
+            # belongs to the group but is never appended to any menu, so
+            # selecting it is invisible and clears every member.
+            if exclusive_group not in self._radio_off:
+                off = Gtk.RadioMenuItem(label="")
+                off.join_group(leader)
+                self._radio_off[exclusive_group] = off
+        else:
+            chk = Gtk.CheckMenuItem(label="")
+
+        def _on_toggle(widget, n=name, grouped=bool(exclusive_group)):
+            active = widget.get_active()
+            # Selecting a radio item also deactivates the previous one. makima
+            # switches the siblings off itself, so forwarding that deactivation
+            # would race the activation and could undo it.
+            if grouped and not active:
+                return
+            self._ipc(f"config {'enable' if active else 'disable'} {n}")
         toggle_id = chk.connect("toggled", _on_toggle)
 
         err = Gtk.MenuItem(label="")
         def _on_error_click(widget, n=name):
-            _show_error_dialog(n, self._slots[n].error_text)
+            # This row also carries a healthy base config, which has nothing to
+            # report — it stays clickable so it does not read as broken, and a
+            # click on it does nothing.
+            text = self._slots[n].error_text
+            if text:
+                _show_error_dialog(f"Config error — {n}", text)
         err.connect("activate", _on_error_click)
 
-        slot = _ConfigSlot(check=chk, error=err, toggle_id=toggle_id)
+        slot = _ConfigSlot(check=chk, error=err, toggle_id=toggle_id,
+                           group=exclusive_group)
         self._slots[name] = slot
         return slot
+
+    def _heading(self, row: Row) -> Gtk.MenuItem:
+        """The non-interactive label row for *row*, created on first use."""
+        item = self._headings.get(row.name)
+        if item is None:
+            item = Gtk.MenuItem(label="")
+            # A heading with a submenu has to stay sensitive to be openable;
+            # a bare one ("Apps") is a label and must not look clickable.
+            item.set_sensitive(False)
+            self._headings[row.name] = item
+        item.set_label(f"{row.prefix}{row.text}")
+        return item
+
+    def _group_menu(self, slug: str) -> Gtk.Menu:
+        """The submenu holding the members of exclusive group *slug*."""
+        menu = self._group_menus.get(slug)
+        if menu is None:
+            menu = Gtk.Menu()
+            self._group_menus[slug] = menu
+            item = self._headings[slug]
+            item.set_submenu(menu)
+            item.set_sensitive(True)
+        for child in menu.get_children():
+            menu.remove(child)
+        # The heading carries the group's own on/off state, but an item with a
+        # submenu draws no checkbox through DBusMenu — a click opens the submenu
+        # instead of toggling. So the switch lives inside, above its members.
+        toggle, _ = self._group_toggle(slug)
+        menu.append(toggle)
+        menu.append(Gtk.SeparatorMenuItem())
+        return menu
+
+    def _group_toggle(self, slug: str) -> tuple:
+        """The "Enabled" check item for group *slug*, created on first use."""
+        pair = self._group_toggles.get(slug)
+        if pair is None:
+            item = Gtk.CheckMenuItem(label="Enabled")
+
+            def _on_toggle(widget, s=slug):
+                verb = "enable" if widget.get_active() else "disable"
+                self._ipc(f"config group {verb} {s}")
+            pair = (item, item.connect("toggled", _on_toggle))
+            self._group_toggles[slug] = pair
+        return pair
 
     def _relayout(self, rows: list) -> None:
         """Re-append every item so the menu matches *rows* top to bottom."""
@@ -180,24 +413,47 @@ class ConfigSubmenu:
             self._submenu.remove(child)
         for row in rows:
             if row.heading:
-                self._submenu.append(self._apps_heading)
+                item = self._heading(row)
+                self._submenu.append(item)
+                # Create the group's submenu before its members are placed.
+                if any(r.group == row.name for r in rows):
+                    self._group_menu(row.name)
                 continue
             slot = self._slots[row.name]
-            self._submenu.append(slot.check)
-            self._submenu.append(slot.error)
+            target = self._group_menus[row.group] if row.group else self._submenu
+            target.append(slot.check)
+            target.append(slot.error)
         self._submenu.append(self._sep)
-        self._submenu.append(self._open_cfg)
+        self._submenu.append(self._open_user)
+        self._submenu.append(self._open_system)
         self._submenu.show_all()
+        # show_all() has just made every child visible, including the item for a
+        # folder whose path is not known yet.
+        if not self.system_root:
+            self._open_system.hide()
 
     def _apply(self, configs: list) -> None:
         config_map = {c["name"]: c for c in configs}
         rows       = display_rows(configs)
 
+        # A config that gained or lost an exclusive group needs a different
+        # widget type, and a radio item cannot be pulled out of a GTK group
+        # without leaving the remaining members pointing at it. So the whole set
+        # is rebuilt — that only happens when an update changes a module's
+        # metadata, where correctness is worth more than the saved widgets.
+        if any(not r.heading and self._slots[r.name].group
+               != config_map[r.name].get("exclusive_group")
+               for r in rows if not r.heading and r.name in self._slots):
+            self._slots.clear()
+            self._radio_leaders.clear()
+            self._radio_off.clear()
+            self._layout = None
+
         for row in rows:
             if not row.heading and row.name not in self._slots:
-                self._create_slot(row.name)
+                self._create_slot(row.name, config_map[row.name].get("exclusive_group"))
 
-        layout = [(r.heading, r.name, r.prefix) for r in rows]
+        layout = [(r.heading, r.name, r.prefix, r.group) for r in rows]
         if layout != self._layout:
             self._layout = layout
             self._relayout(rows)
@@ -209,14 +465,18 @@ class ConfigSubmenu:
             slot    = self._slots[row.name]
             status  = cfg.get("status", "ok")
             errors  = cfg.get("errors", [])
-            label   = f"{row.prefix}{row.name}"
+            label   = f"{row.prefix}{row.text}"
 
-            slot.error_text = "\n\n".join(e.get("message", "") for e in errors) or "Unknown error"
+            # Empty only when the config is healthy — that is what tells the
+            # click handler there is no dialog to open. A bad status with no
+            # message still has something to say, even if it is only that.
+            messages = "\n\n".join(e.get("message", "") for e in errors)
+            slot.error_text = "" if status == "ok" else (messages or "Unknown error")
 
-            label_text = f"⚠ {label}" if status == "warning" else label
+            label_text = _marked(label, "warning") if status == "warning" else label
 
             if status == "error":
-                slot.error.set_label(f"🛑 {label}")
+                slot.error.set_label(_marked(label, "error"))
                 slot.error.set_sensitive(True)
                 slot.check.hide()
                 slot.error.show()
@@ -224,10 +484,11 @@ class ConfigSubmenu:
                 # The base config is the device itself — switching it off would
                 # leave makima with nothing to apply. A tick that is always set
                 # and never clickable is noise, so the base is drawn as a plain
-                # row instead, greyed out like the "Apps" group. A warning makes
-                # it clickable, and the click opens the message dialog.
+                # row instead. Not greyed out, though: it is the live config the
+                # whole menu hangs off, and insensitive text says "unavailable".
+                # The click does nothing unless there is a warning to show.
                 slot.error.set_label(label_text)
-                slot.error.set_sensitive(bool(errors))
+                slot.error.set_sensitive(True)
                 slot.check.hide()
                 slot.error.show()
             else:
@@ -240,7 +501,42 @@ class ConfigSubmenu:
                 slot.error.hide()
                 slot.check.show()
 
+        self._name_groups_after_their_choice(rows, config_map)
         self._sep.show() if config_map else self._sep.hide()
+
+    def _name_groups_after_their_choice(self, rows: list, config_map: dict) -> None:
+        """Put the active member into its group heading: "Layout: Vertical".
+
+        Folding the members into a submenu would otherwise cost the one thing
+        the flat list said at a glance — which of them is on. A group that is
+        switched off has no member to name and reads as just its own name.
+
+        The group's "Enabled" item is set from the same fact, so no extra field
+        in state.json is needed: a group with no active member is a group off.
+        """
+        for row in rows:
+            if not row.heading or row.name not in self._group_menus:
+                continue
+            active = next((m.text for m in rows if m.group == row.name
+                           and config_map[m.name].get("enabled")), "")
+            heading = f"{row.prefix}{row.text}"
+            self._headings[row.name].set_label(
+                f"{heading}: {active}" if active else heading)
+
+            toggle, handler = self._group_toggle(row.name)
+            GObject.signal_handler_block(toggle, handler)
+            try:
+                toggle.set_active(bool(active))
+            finally:
+                GObject.signal_handler_unblock(toggle, handler)
+
+            # Nothing active means the dot has to go somewhere off-menu, or GTK
+            # leaves it on whichever member had it last. The members were set
+            # one by one above; this is the only step that can actually clear
+            # the last one.
+            off = self._radio_off.get(row.name)
+            if off is not None and not active:
+                off.set_active(True)
 
 
 # ── Module-level helpers ──────────────────────────────────────────────────────
@@ -253,9 +549,30 @@ def _icon_item(label: str, icon_name: str) -> Gtk.MenuItem:
     return item
 
 
-def _show_error_dialog(name: str, msg: str) -> None:
-    """Open a scrollable dialog showing the full error text for a config."""
-    dlg = Gtk.Dialog(title=f"Config error — {name}", modal=True)
+# Emoji presentation, not the text form: U+26A0 on its own renders as a thin
+# monochrome glyph that disappears into a menu, and the point of the marker is
+# to be seen. U+FE0F asks for the coloured variant.
+_MARKERS = {"warning": "\u26a0\ufe0f", "error": "\U0001f6d1"}
+
+
+def _marked(label: str, status: str) -> str:
+    """*label* with its status marker — appended, never prefixed.
+
+    The tree glyphs are a column: "├─ " has to start the line, or the branch
+    it draws no longer lines up with the rows above and below it. A marker in
+    front of them breaks that column for every row that has one.
+    """
+    return f"{label}  {_MARKERS[status]}"
+
+
+def _show_error_dialog(title: str, msg: str) -> None:
+    """Open a scrollable dialog showing the full text of an error.
+
+    Takes the whole title rather than a config name: the tray shows makima's
+    own device and startup errors through the same dialog, and those are not
+    about a config file.
+    """
+    dlg = Gtk.Dialog(title=title, modal=True)
     dlg.set_default_size(600, 300)
     dlg.add_button("Close", Gtk.ResponseType.CLOSE)
     sw = Gtk.ScrolledWindow()

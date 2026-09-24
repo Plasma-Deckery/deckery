@@ -202,43 +202,102 @@ if ! distrobox list 2>/dev/null | grep -q "| deckery "; then
 fi
 echo ""
 
-# ── 3. Link default config ────────────────────────────────────────────────────
-# Done before any service is started so makima always boots with a full config.
+# ── 3. Config directories ─────────────────────────────────────────────────────
+# Nothing is copied. makima reads the shipped configs straight out of the
+# checkout and the user's own out of ~/.config/deckery, where a file of the same
+# name replaces the shipped one. That is the whole override mechanism, so the
+# installer only has to make sure the user directory exists.
 
 echo "── Config ───────────────────────────────────────────────────────────────"
 
-# Migrate from the old ~/.config/makima/ path if needed.
-_OLD_CFG="$HOME/.config/makima"
-if [ -d "$_OLD_CFG" ] && [ ! -d "$CFG_DIR" ]; then
-    mv "$_OLD_CFG" "$CFG_DIR"
-    echo "Migrated: ~/.config/makima → ~/.config/deckery"
-fi
-
 mkdir -p "$CFG_DIR"
 
-BASE_SRC="$DECKERY_DIR/configs/Steam Deck.toml"
-BASE_DST="$CFG_DIR/Steam Deck.toml"
-if [ -e "$BASE_DST" ] || [ -L "$BASE_DST" ]; then
-    mv -f "$BASE_DST" "$BASE_DST.old"
-    echo "Backed up: Steam Deck.toml → Steam Deck.toml.old"
-fi
-ln -sf "$BASE_SRC" "$BASE_DST"
-echo "Linked: Steam Deck.toml"
+# Clean up after the old copy-and-backup scheme, which put a copy of every
+# shipped config into the user directory. Under the new model those copies are
+# overrides: they would shadow the shipped file forever and freeze it at their
+# installed-at version, so every update would appear to do nothing.
+#
+# Two things make this dangerous, and both are guarded below.
+#
+# It cannot run on every install. A file in $CFG_DIR carrying the name of a
+# shipped config is exactly what the documentation tells people to create in
+# order to customise one — so a sweep that runs on every update deletes the
+# customisation it just told them to make. The stamp below turns this into a
+# one-time migration off the old scheme, which is all it was ever meant to be.
+#
+# And it cannot delete. A leftover copy and a deliberate override are
+# indistinguishable by then, so the ambiguity is resolved by keeping the file
+# and getting it out of the way instead of by guessing.
+MIGRATION_STAMP="$CFG_DIR/.copy-scheme-migrated"
+ATTIC="$CFG_DIR/replaced-by-update"
 
-# Install all non-base configs recursively (modules, app overrides, subdirs).
-# Skips Steam Deck.toml (already linked above) and the base config itself.
-while IFS= read -r src; do
-    rel="${src#$DECKERY_DIR/configs/}"
-    [ "$rel" = "Steam Deck.toml" ] && continue
-    dst="$CFG_DIR/$rel"
-    mkdir -p "$(dirname "$dst")"
-    if [ -e "$dst" ]; then
-        mv -f "$dst" "$dst.old"
-        echo "Backed up: $rel → $rel.old"
+if [ -e "$MIGRATION_STAMP" ]; then
+    echo "Skipped: config directory is yours alone (nothing is swept any more)"
+else
+    _moved=0
+    # _park <file> <path relative to CFG_DIR>. The relative path is kept inside
+    # the attic: apps/Firefox.toml and a top-level Firefox.toml are different
+    # files and must not land on top of each other on the way out.
+    _park() {
+        mkdir -p "$ATTIC/$(dirname "$2")"
+        mv -f "$1" "$ATTIC/$2"
+        echo "Moved aside: $2"
+        _moved=1
+    }
+
+    while IFS= read -r src; do
+        rel="${src#$DECKERY_DIR/configs/}"
+        dst="$CFG_DIR/$rel"
+        # preferences.toml is shipped under configs/ but is not a config — it is
+        # the user's own state, and their copy is the live one. It shares a name
+        # with a shipped file by design, so it is held out of the sweep.
+        [ "$rel" = "preferences.toml" ] && continue
+        # A symlink is never a leftover of the copy scheme, which copied. It is
+        # someone's dotfile manager pointing at its own store, and following it
+        # would move the target out from under them.
+        [ -L "$dst" ] && continue
+        [ -e "$dst" ] && _park "$dst" "$rel"
+    done < <(find "$DECKERY_DIR/configs" -name "*.toml" | sort)
+
+    # Names that used to be shipped and are not any more. The loop above
+    # enumerates what ships *today*, so a leftover copy under a retired name
+    # would survive the migration — and the worst of them is a copy of the old
+    # base config, which still declares the same [device]. Two base configs
+    # claiming one controller is not a config the user can fix by hand: they
+    # would have to know that a file they never wrote is now competing with the
+    # shipped one.
+    for rel in "Steam Deck.toml" \
+               "Steam Deck Bindings.toml" "Steam Deck Buttons.toml" \
+               "Steam Deck Settings.toml" "Steam Deck Sticks.toml" \
+               "Steam Deck Trackpad.toml"; do
+        dst="$CFG_DIR/$rel"
+        [ -L "$dst" ] && continue
+        [ -e "$dst" ] && _park "$dst" "$rel"
+    done
+
+    # The old installer's own backups. Also the user's data — it backed up
+    # whatever was in the way, which may well have been hand-written.
+    while IFS= read -r old; do
+        _park "$old" "${old#$CFG_DIR/}"
+    done < <(find "$CFG_DIR" -path "$ATTIC" -prune -o -name "*.toml.old" -print)
+
+    touch "$MIGRATION_STAMP"
+    if [ "$_moved" -eq 1 ]; then
+        echo ""
+        echo "Those files are copies the old installer left behind. They now sit"
+        echo "in $ATTIC — delete it once you have checked that none of"
+        echo "them was yours. Nothing under $CFG_DIR is ever swept again."
+    else
+        echo "Nothing to migrate from the old copy scheme"
     fi
-    cp "$src" "$dst"
-    echo "Installed: $rel"
-done < <(find "$DECKERY_DIR/configs" -name "*.toml" | sort)
+fi
+
+# Files the user added under their own names are untouched — they were never
+# part of the copy scheme and keep working as plain modules or app overrides.
+
+# preferences.toml is not created here. It ships as configs/preferences.toml and
+# is copied into the user directory by Deckery itself at first start, so that an
+# RPM install — which never runs this script — gets the same defaults.
 
 echo ""
 
@@ -401,7 +460,7 @@ else
     echo ""
     echo "  Try it: press L3 (left stick click) — the HUD overlay should appear."
     echo ""
-    echo "  Your config: $DECKERY_DIR/configs/Steam Deck.toml"
+    echo "  Your config: $DECKERY_DIR/configs/Steam Deck Base.toml"
     echo "  Docs:        https://plasma-deckery.github.io/deckery/"
     echo ""
 fi

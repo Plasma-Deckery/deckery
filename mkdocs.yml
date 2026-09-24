@@ -57,6 +57,7 @@ nav:
         - Gaming Mode: projects/makima-deckery/gaming-mode.md
         - Trackpad: projects/makima-deckery/trackpad.md
       - Deckery Tray: projects/deckery-tray.md
+      - Deckery Controller: projects/deckery-controller.md
       - Steam Deck Dotfiles:
         - projects/steamdeck-dotfiles/index.md
         - Chezmoi & Tracking: projects/steamdeck-dotfiles/chezmoi.md
@@ -76,6 +77,7 @@ nav:
     - Gaming Mode: reference/gaming-mode.md
     - Haptic Feedback: reference/haptic-feedback.md
     - State JSON: reference/state-json.md
+    - Lizard Mode: reference/lizard-mode.md
     - Steam Input Mapping: reference/steam-input-mapping.md
   - Similar Tools:
     - Input Remapper: reference/comparison-input-remapper.md

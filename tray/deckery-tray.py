@@ -12,7 +12,6 @@ gi.require_version('GdkPixbuf', '2.0')
 gi.require_version('AyatanaAppIndicator3', '0.1')
 from gi.repository import Gtk, GdkPixbuf, AyatanaAppIndicator3, GLib, Gio
 
-import json
 import logging
 import os
 import shutil
@@ -29,6 +28,7 @@ log = logging.getLogger("deckery-tray")
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from updater import Updater, UpdateState, local_version, _DECKERY_DIR
 import config_menu
+import state as makima_state_file
 import steam_bridge
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
@@ -53,7 +53,10 @@ _DOT_ERR      = os.path.join(_ICONS, "dot-err.svg")
 _DOT_INACTIVE = os.path.join(_ICONS, "dot-inactive.svg")
 _DOT_GAMING   = os.path.join(_ICONS, "dot-gaming.svg")
 
-_STATE_JSON         = "/tmp/makima-state.json"
+# Kept as a module-level name so it stays the single place the path is named
+# from the tray's side; the file itself is read by state.py, which the setup
+# wizard shares.
+_STATE_JSON         = makima_state_file.STATE_JSON
 # Makima binds its control socket in $XDG_RUNTIME_DIR (/run/user/<uid>), not in
 # /tmp: /tmp is mode 1777, and this socket accepts "pause". No /tmp fallback —
 # it could only ever find a socket someone else squatted.
@@ -62,7 +65,6 @@ _MAKIMA_SOCK        = os.path.join(
     "makima-control.sock",
 )
 _CONFIG_DIR         = os.path.expanduser("~/.config/deckery")
-_SYSTEM_CONFIGS     = "/usr/share/deckery/configs"
 _DESKTOP_DIR        = os.path.expanduser("~/Desktop")
 # Desktop file: RPM installs to /usr/share/applications/; source install lives
 # two levels up from this script (repo root).
@@ -144,6 +146,15 @@ def _tray_state(
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
+def _with_details(label: str, text: str) -> str:
+    """Say that the row can be clicked, but only when there is something behind it.
+
+    Two words in a status row cannot carry makima's actual message, and a
+    clickable status row is not something anyone would guess at.
+    """
+    return f"{label} — click for details" if text else label
+
+
 def _load_pb(path: str, size: int = 16) -> GdkPixbuf.Pixbuf | None:
     """Load an SVG as a GdkPixbuf at the given pixel size. Returns None on failure."""
     try:
@@ -199,27 +210,60 @@ class MakimaState(NamedTuple):
     lifecycle:         str   # "starting" | "ready" | "" (file absent / legacy)
     no_device:         bool  # True when errors["no_device"] is present
     base_config_error: bool  # True when errors["base_config"] is present
+    # The text behind those two flags. makima writes a message that names what
+    # to check — the [device] names list, the file that failed to parse — and
+    # the status row said only "no device", so none of it ever reached anyone.
+    error_text:        str
     configs:           list  # list of {"name": str, "enabled": bool, "status": str}
+    config_roots:      dict  # {"system": str, "user": str}; empty until reported
+
+def _mapping(value) -> dict:
+    """*value* if it is a mapping, else an empty one.
+
+    Applied to every level of the state file this function walks. makima writes
+    well-formed JSON, but the file sits in /tmp (mode 1777), so its shape is not
+    something the tray gets to assume — and one field of the wrong type used to
+    cost the whole menu, because the AttributeError landed in the outer except
+    and the tray fell back to "makima is not running".
+    """
+    return value if isinstance(value, dict) else {}
+
+
+def _error_message(errors: dict, key: str) -> str:
+    """The message behind one global error id, or "" if there is none to show."""
+    return str(_mapping(errors.get(key)).get("message", "")).strip()
+
 
 def _makima_state() -> MakimaState:
+    data = makima_state_file.read(_STATE_JSON)
+    if not data:
+        return _no_makima_state()
     try:
-        with open(_STATE_JSON) as f:
-            data = json.load(f)
-        ctx       = data.get("context", {})
-        lifecycle = data.get("lifecycle", "")
-        errors    = data.get("errors", {})
+        ctx       = _mapping(data.get("context"))
+        lifecycle = data.get("lifecycle")
+        lifecycle = lifecycle if isinstance(lifecycle, str) else ""
+        errors    = _mapping(data.get("errors"))
         no_device         = "no_device"    in errors
         base_config_error = "base_config"  in errors
+        error_text = "\n\n".join(
+            m for m in (_error_message(errors, k)
+                        for k in ("no_device", "base_config")) if m
+        )
         configs   = [
             {
                 "name":    c.get("name", ""),
                 "kind":    c.get("kind", "base"),
                 "parent":  c.get("parent"),
+                # Drives radio items and the bracket in the submenu. Dropping it
+                # here once made every group render as unrelated checkboxes.
+                "exclusive_group": c.get("exclusive_group"),
                 "enabled": bool(c.get("enabled", True)),
                 "status":  c.get("status", "ok"),
                 "errors":  c.get("errors", []),
             }
-            for c in data.get("configs", [])
+            # A non-mapping entry would take the whole list with it, and the
+            # list is the entire Controller Bindings submenu.
+            for c in map(_mapping, data.get("configs") or [])
             if c.get("name")
         ]
         return MakimaState(
@@ -228,13 +272,20 @@ def _makima_state() -> MakimaState:
             lifecycle         = lifecycle,
             no_device         = no_device,
             base_config_error = base_config_error,
+            error_text        = error_text,
             configs           = configs,
+            config_roots      = data.get("config_roots") or {},
         )
-    except FileNotFoundError:
-        return MakimaState(paused=False, gaming_mode=False, lifecycle="", no_device=False, base_config_error=False, configs=[])
     except Exception:
-        log.warning("Failed to read %s", _STATE_JSON, exc_info=True)
-        return MakimaState(paused=False, gaming_mode=False, lifecycle="", no_device=False, base_config_error=False, configs=[])
+        log.warning("Cannot make sense of %s", _STATE_JSON, exc_info=True)
+        return _no_makima_state()
+
+
+def _no_makima_state() -> MakimaState:
+    """The state of a makima that is not running, or not readable."""
+    return MakimaState(paused=False, gaming_mode=False, lifecycle="",
+                       no_device=False, base_config_error=False, error_text="",
+                       configs=[], config_roots={})
 
 
 def _git_dirty_files(repo_dir: str) -> list[str]:
@@ -277,20 +328,6 @@ def _hud_dbus(method: str) -> None:
 # ── Tray App ──────────────────────────────────────────────────────────────────
 
 class DeckeryTray:
-    def _seed_config_dir(self):
-        if os.path.isdir(_CONFIG_DIR):
-            return
-        if not os.path.isdir(_SYSTEM_CONFIGS):
-            log.warning("config dir %s not found and no system default at %s", _CONFIG_DIR, _SYSTEM_CONFIGS)
-            return
-        log.info("config dir %s not found — seeding from %s", _CONFIG_DIR, _SYSTEM_CONFIGS)
-        try:
-            import shutil
-            shutil.copytree(_SYSTEM_CONFIGS, _CONFIG_DIR)
-            log.info("config dir seeded successfully")
-        except Exception as e:
-            log.error("failed to seed config dir: %s", e)
-
     def _seed_desktop_icon(self):
         if not os.path.isdir(_DESKTOP_DIR):
             return
@@ -311,7 +348,6 @@ class DeckeryTray:
             log.error("failed to create desktop icon: %s", e)
 
     def __init__(self):
-        self._seed_config_dir()
         self._seed_desktop_icon()
 
         # ── Status dot pixbufs for menu (12 px circles, no D-pad shape) ──
@@ -337,7 +373,7 @@ class DeckeryTray:
         self._statuses: dict   = {}   # last known service statuses from poll
         self._paused           = False
         self._gaming_mode      = False
-        self._makima           = MakimaState(paused=False, gaming_mode=False, lifecycle="", no_device=False, base_config_error=False, configs=[])
+        self._makima           = _no_makima_state()
         self._poll_running     = False
         self._state_timeout_id = None
         self._updater           = Updater(on_state_change=self._on_update_state_changed)
@@ -380,6 +416,11 @@ class DeckeryTray:
         self._items[f"status_{name}_lbl"] = lbl
         return item
 
+    def _on_makima_row_click(self, _widget) -> None:
+        text = self._makima.error_text
+        if text:
+            config_menu._show_error_dialog("Deckery — problem report", text)
+
     def _dynamic(self, item: Gtk.Widget) -> Gtk.Widget:
         """Mark an item as dynamic (hide/show via _poll, resist show_all)."""
         item.set_no_show_all(True)
@@ -397,7 +438,15 @@ class DeckeryTray:
         m.append(Gtk.SeparatorMenuItem())
 
         # ── Deckery (Makima) ──────────────────────────────────────────────
-        m.append(self._status_item("makima"))
+        makima_row = self._status_item("makima")
+        # "no device" and "config error" are two words standing in for a message
+        # makima wrote out in full — which names the [device] list to check, or
+        # the file that failed to parse. The row stays clickable in every state,
+        # the way a healthy base config does in the Bindings submenu: greying it
+        # out would read as "unavailable", and a click with nothing to report
+        # simply does nothing.
+        makima_row.connect("activate", self._on_makima_row_click)
+        m.append(makima_row)
 
         pause_item        = self._dynamic(_icon_item("Pause Deckery",        "media-playback-pause"))
         resume_item       = self._dynamic(_icon_item("Resume Deckery",       "media-playback-start"))
@@ -547,10 +596,10 @@ class DeckeryTray:
                 display = "reinitializing…"
             elif name == "makima" and status == "active" and makima.no_device:
                 pb_key  = "err"
-                display = "no device"
+                display = _with_details("no device", makima.error_text)
             elif name == "makima" and status == "active" and makima.base_config_error:
                 pb_key  = "err"
-                display = "config error"
+                display = _with_details("config error", makima.error_text)
             elif status == "active":
                 pb_key  = "ok"
                 display = "active"
@@ -586,7 +635,7 @@ class DeckeryTray:
         self._items["quit_gaming"].set_visible(makima_active and gaming)
 
         # ── Configs submenu ───────────────────────────────────────────────
-        self._config_submenu.refresh(makima.configs)
+        self._config_submenu.refresh(makima.configs, makima.config_roots)
 
         # ── Tray icon ─────────────────────────────────────────────────────
         self._refresh_tray_icon()

@@ -1,7 +1,7 @@
 # Voice Control — OpenWhispr push-to-talk.
 #
-# Optional: drop this file, or take it out of the base config's
-# [modules] include, and the binding disappears with it.
+# Optional: delete this file, or switch the module off in the tray, and the
+# binding disappears with it.
 
 [remap]
 # --- L1 + R5 → OpenWhispr (Ctrl + PageDown) ---

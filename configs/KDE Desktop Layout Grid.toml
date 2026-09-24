@@ -1,0 +1,31 @@
+# KDE Desktop Layout — Grid
+#
+# Virtual desktops arranged in a grid of several rows and columns. All four
+# directions are spent on the grid, so this layout has no Activity bindings —
+# a grid that only reaches half its cells would be worse than no grid at all.
+#
+# Unlike the other two layouts these are grid-relative KWin shortcuts rather
+# than the linear previousDesktop/nextDesktop calls: "Switch One Desktop to the
+# Right" moves within the row, where nextDesktop would wrap into the next one.
+#
+# One of three mutually exclusive layouts — see KDE Desktop Layout Horizontal.
+#
+# Set the grid up first: System Settings → Virtual Desktops → Rows. With a
+# single row this layout behaves like Horizontal, minus the Activities.
+
+[module]
+requires_compositor = "KDE"
+exclusive_group = "kde-desktop-layout"
+
+[commands]
+# --- L1 + DPad → move across the grid ---
+L1-Left  = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Switch One Desktop to the Left'"], label = "Desktop Left" }
+L1-Right = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Switch One Desktop to the Right'"], label = "Desktop Right" }
+L1-Up    = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Switch One Desktop Up'"], label = "Desktop Up" }
+L1-Down  = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Switch One Desktop Down'"], label = "Desktop Down" }
+
+# --- L1+R1+DPad → carry the window across the grid ---
+L1-R1-Left  = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Window One Desktop to the Left'"], label = "Window Desktop Left" }
+L1-R1-Right = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Window One Desktop to the Right'"], label = "Window Desktop Right" }
+L1-R1-Up    = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Window One Desktop Up'"], label = "Window Desktop Up" }
+L1-R1-Down  = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Window One Desktop Down'"], label = "Window Desktop Down" }

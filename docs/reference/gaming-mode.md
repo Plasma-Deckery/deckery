@@ -56,7 +56,7 @@ BTN_THUMBL = { run = ["deckery-hud-toggle"], no_pause = true, while_gaming = tru
 
 ## State export
 
-Gaming Mode state is reflected in `/tmp/makima-state.json`:
+Gaming Mode state is reflected in `$XDG_RUNTIME_DIR/makima-state.json`:
 
 ```json
 {

@@ -18,7 +18,7 @@ With the right config, controller shortcuts can drive the full Kröhnkite featur
 - Move focus between windows (up/down/left/right)
 - Float/unfloat a window
 
-Map these to makima bindings in your `Steam Deck.toml`. Example:
+Map these to makima bindings in `KDE Desktop.toml`, or in a module of your own. Example:
 
 ```toml
 # Toggle tiling layout (example binding)

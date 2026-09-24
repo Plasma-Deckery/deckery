@@ -2,8 +2,12 @@
 
 ## Overview
 
-Makima writes `/tmp/makima-state.json` atomically after every relevant input event.
+Makima writes `$XDG_RUNTIME_DIR/makima-state.json` atomically after every relevant input event.
 The file is updated via `rename()` so reads are always consistent — no partial writes.
+
+!!! info "The file moved"
+    Until 0.4 this lived at `/tmp/makima-state.json`. `/tmp` is mode `1777`, so any local process could create the path first and decide what every reader believed — the same reason the control socket sits in `$XDG_RUNTIME_DIR`, a per-user tmpfs with mode `0700`. The tray and the HUD still fall back to the old path when they find a file there and none in the runtime directory, so a makima from before the move is still read correctly. makima itself falls back to `/tmp` only when there is no runtime directory at all, which is a bare TTY or a container started without one.
+
 
 Watch for changes using inotify on the **directory**, not the file itself (atomic rename
 creates a new inode each time, so watching the file directly loses events):
@@ -12,7 +16,7 @@ creates a new inode each time, so watching the file directly loses events):
 inotifywait -m -e moved_to /tmp/ 2>/dev/null | grep --line-buffered "makima-state.json" | while read _; do
   python3 -c "
 import json, datetime
-d = json.load(open('/tmp/makima-state.json'))
+d = json.load(open('$XDG_RUNTIME_DIR/makima-state.json'))
 t = datetime.datetime.now().strftime('%H:%M:%S.%f')[:-3]
 lp = d['trackpads']['lpad']; rp = d['trackpads']['rpad']
 ls = d['sticks']['lstick'];   rs = d['sticks']['rstick']
@@ -29,17 +33,21 @@ done
 {
   "lifecycle": "ready",
   "errors": {
-    "base_config": "parse error in Steam Deck.toml line 12: unexpected token"
+    "base_config": "parse error in Steam Deck Base.toml line 12: unexpected token"
   },
   "configs": [
-    { "name": "Steam Deck",                    "enabled": true,  "status": "ok",      "errors": [] },
-    { "name": "Steam Deck::org.mozilla.firefox","enabled": true,  "status": "warning", "errors": [] },
-    { "name": "Steam Deck::org.kde.konsole",   "enabled": false, "status": "ok",      "errors": [] }
+    { "name": "Steam Deck Base",          "enabled": true,  "status": "ok",      "errors": [] },
+    { "name": "Steam Deck Trackpads", "enabled": true, "status": "ok",    "errors": [] },
+    { "name": "Firefox",             "enabled": true,  "status": "warning", "errors": [] },
+    { "name": "Konsole",             "enabled": false, "status": "ok",      "errors": [] }
   ],
+  "config_roots": {
+    "system": "/usr/share/deckery/configs",
+    "user": "/home/user/.config/deckery"
+  },
   "context": {
     "active_app": "org.mozilla.firefox",
-    "config_stack": ["Steam Deck", "org.mozilla.firefox"],
-    "layout": 0,
+    "config_stack": ["Steam Deck Base", "org.mozilla.firefox"],
     "paused": false,
     "gaming_mode": false,
     "held_modifiers": ["BTN_TL"],
@@ -55,21 +63,21 @@ done
       "action": ["KEY_ENTER"],
       "kind": "remap",
       "label": null,
-      "origin": "Steam Deck",
+      "origin": "Steam Deck Base",
       "silent": false
     },
     "BTN_TL-BTN_GRIPR2": {
       "action": ["KEY_LEFTCTRL", "KEY_PAGEDOWN"],
       "kind": "remap",
       "label": "Next Tab",
-      "origin": "Steam Deck",
+      "origin": "Steam Deck Base",
       "silent": false
     },
     "BTN_THUMBL": {
       "action": ["deckery-hud-toggle"],
       "kind": "command",
       "label": "Toggle HUD",
-      "origin": "Steam Deck",
+      "origin": "Steam Deck Base",
       "no_pause": true
     }
   },
@@ -78,7 +86,7 @@ done
       "action": ["KEY_LEFTCTRL", "KEY_PAGEDOWN"],
       "kind": "remap",
       "label": "Next Tab",
-      "origin": "Steam Deck"
+      "origin": "Steam Deck Base"
     }
   },
   "gaming_mode_trigger": {
@@ -155,7 +163,7 @@ Object mapping error slot names to human-readable error strings. Empty `{}` when
 
 | Key | When present |
 |---|---|
-| `"base_config"` | The base config (`Steam Deck.toml`) failed to parse — all remapping is suspended |
+| `"base_config"` | A config file failed to parse — escalated to a top-level error so the tray shows red, not just a marker in the submenu |
 | `"no_device"` | No compatible input device was found — makima is waiting for one to appear |
 
 When any key is present the tray shows a red icon, regardless of service state.
@@ -170,12 +178,28 @@ Each entry:
 
 | Field | Type | Meaning |
 |---|---|---|
-| `name` | `string` | Config identifier — base configs use the device name (e.g. `"Steam Deck"`); app overrides use `"Device::app.class"` (e.g. `"Steam Deck::org.mozilla.firefox"`) |
-| `enabled` | `bool` | Whether this config is active. Base configs (`"::"` absent) are always enabled and cannot be toggled by the user. |
-| `status` | `string` | `"ok"`, `"warning"`, or `"error"` — `"error"` means the config could not be parsed and its slot in `errors` is populated |
-| `errors` | `[{severity, message}]` | Parse or load errors for this config; empty when `status != "error"`. Each entry: `{ "severity": "error" \| "warning", "message": "..." }` |
+| `name` | `string` | Config identifier — the file base name without `.toml` (e.g. `"Steam Deck Base"`, `"Steam Deck Trackpads"`, `"Firefox"`). There is no naming convention to decode |
+| `enabled` | `bool` | Whether this config is active. The base config (the one declaring `[device]`) is always enabled and cannot be toggled by the user. |
+| `exclusive_group` | `string \| null` | Set when this config belongs to a set of mutually exclusive modules. At most one member of a group is enabled at a time; the tray draws them as radio buttons. No member enabled means the whole group is switched off — there is no separate field for that |
+| `status` | `string` | Derived from `errors`: `"ok"` when it is empty, `"error"` when any entry has severity `error`, `"warning"` otherwise |
+| `errors` | `[{severity, message}]` | Parse or load problems for this config; empty exactly when `status` is `"ok"`. Each entry: `{ "severity": "error" \| "warning", "message": "..." }` |
 
-The tray's **Controller Bindings** submenu is driven directly from this array. Toggling a config via the tray sends a `config enable/disable <name>` IPC command, which updates `enabled` and rewrites this field.
+`"error"` means the config is not loaded — nothing it declares is in effect. `"warning"` means it is loaded and something about it is worth saying. The common warning is a user file that failed to parse: the shipped config of the same name stays in effect, `enabled` stays true, and the message names the file that was skipped. `from_user` is not exported, so a consumer cannot tell that case apart from any other warning by the fields alone — the message is what says it.
+
+The tray's **Controller Bindings** submenu is driven directly from this array. Toggling a config via the tray sends a `config enable/disable <name>` IPC command, which updates `enabled` and rewrites this field. Enabling a member of an `exclusive_group` disables its siblings in the same step. The resulting state is persisted to `~/.config/deckery/preferences.toml`, which is re-read on every reload — so a restart and a reload always agree about what is active.
+
+---
+
+### `config_roots`
+
+The two directories the configs above were read from. Written once at startup and unchanged for the rest of the process; `null` until then.
+
+| Field | Type | Meaning |
+|---|---|---|
+| `system` | `string` | The shipped configs — `/usr/share/deckery/configs` for an RPM install, the checkout's `configs/` for a git install, or whatever `DECKERY_SYSTEM_CONFIG` names |
+| `user` | `string` | The user's own configs, normally `~/.config/deckery` |
+
+Published so a frontend can offer to open either folder without re-deriving the resolution rules — which depend on the install method and on two environment variables, and would drift the moment either changes. The tray hides its **Open shipped configs** item while this field is `null` rather than opening a guessed path.
 
 ---
 
@@ -185,7 +209,6 @@ The tray's **Controller Bindings** submenu is driven directly from this array. T
 |---|---|---|
 | `active_app` | `string` | Active app class, e.g. `"org.mozilla.firefox"`. `"default"` when no app-specific config is loaded. |
 | `config_stack` | `[string]` | Active config name(s). One entry = base config only; two entries = base + app override. |
-| `layout` | `number` | Active layout index (0–3). For multi-layout configs. |
 | `paused` | `bool` | Makima is paused — no output is emitted. Set when HUD opens. |
 | `gaming_mode` | `bool` | Gaming Mode is active — all remaps suppressed, raw input passed through. |
 | `held_modifiers` | `[string]` | Modifier buttons currently physically held (e.g. `["BTN_TL"]`). Empty when no modifier is held. **Use this to switch between normal and modifier view.** |

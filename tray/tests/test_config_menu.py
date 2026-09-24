@@ -27,7 +27,7 @@ def _cfg(name, enabled=True, status="ok", errors=None, kind="app", parent=None):
 
 
 APP_CFG  = "Firefox"
-BASE_CFG = "Steam Deck"
+BASE_CFG = "Steam Deck Base"
 # Nested rows carry a tree glyph; a lone entry in its group is the last one.
 APP_ROW  = f"└─ {APP_CFG}"
 
@@ -117,29 +117,36 @@ class TestOkStatus:
         slot.check.hide.assert_called()
         slot.check.show.assert_not_called()
 
-    def test_healthy_base_is_not_clickable(self, sub):
-        # Nothing to report → no dialog to open.
+    def test_healthy_base_is_not_greyed_out(self, sub):
+        # It is the live config the whole menu hangs off. Insensitive text says
+        # "unavailable", which is the opposite of true here.
         sub.refresh([_cfg(BASE_CFG, kind="base")])
-        sub._slots[BASE_CFG].error.set_sensitive.assert_called_with(False)
+        sub._slots[BASE_CFG].error.set_sensitive.assert_called_with(True)
+
+    def test_healthy_base_has_nothing_to_report(self, sub):
+        # Clickable, but the click opens no dialog — that is what the empty
+        # error text is for.
+        sub.refresh([_cfg(BASE_CFG, kind="base")])
+        assert sub._slots[BASE_CFG].error_text == ""
 
 
 # ── warning status ────────────────────────────────────────────────────────────
 
 class TestWarningStatus:
-    def test_check_shown_with_warning_prefix(self, sub):
+    def test_check_shown_with_warning_marker(self, sub):
         sub.refresh([_cfg(APP_CFG, status="warning")])
         slot = sub._slots[APP_CFG]
-        slot.check.set_label.assert_called_with(f"⚠ {APP_ROW}")
+        slot.check.set_label.assert_called_with(cm._marked(APP_ROW, "warning"))
         slot.check.show.assert_called()
         slot.error.hide.assert_called()
 
-    def test_base_keeps_warning_prefix_and_becomes_clickable(self, sub):
+    def test_base_keeps_its_warning_marker_and_becomes_clickable(self, sub):
         # The base has no checkbox, so its warning rides on the plain row —
         # which turns sensitive so the message dialog can be opened.
         sub.refresh([_cfg(BASE_CFG, kind="base", status="warning",
                           errors=[{"message": "no bindings defined"}])])
         slot = sub._slots[BASE_CFG]
-        slot.error.set_label.assert_called_with(f"⚠ {BASE_CFG}")
+        slot.error.set_label.assert_called_with(cm._marked(BASE_CFG, "warning"))
         slot.error.set_sensitive.assert_called_with(True)
         slot.error.show.assert_called()
         assert slot.error_text == "no bindings defined"
@@ -156,7 +163,7 @@ class TestErrorStatus:
 
     def test_error_label_has_stop_sign(self, sub):
         sub.refresh([_cfg(APP_CFG, status="error")])
-        sub._slots[APP_CFG].error.set_label.assert_called_with(f"🛑 {APP_ROW}")
+        sub._slots[APP_CFG].error.set_label.assert_called_with(cm._marked(APP_ROW, "error"))
 
     def test_error_text_from_errors_list(self, sub):
         errors = [{"message": "missing key 'foo'"}, {"message": "bad value"}]
@@ -173,7 +180,7 @@ class TestErrorStatus:
         sub.refresh([_cfg(BASE_CFG, kind="base", status="error",
                           errors=[{"message": "no device section"}])])
         slot = sub._slots[BASE_CFG]
-        slot.error.set_label.assert_called_with(f"🛑 {BASE_CFG}")
+        slot.error.set_label.assert_called_with(cm._marked(BASE_CFG, "error"))
         slot.error.set_sensitive.assert_called_with(True)
         slot.check.hide.assert_called()
         assert slot.error_text == "no device section"
@@ -213,7 +220,7 @@ class TestSeparatorVisibility:
 
 class TestRuntimeSlotCreation:
     def test_new_config_gets_a_slot(self, sub):
-        new_cfg = "Steam Deck::org.kde.dolphin"
+        new_cfg = "Dolphin"
         assert new_cfg not in sub._slots
 
         sub.refresh([_cfg(new_cfg)])
@@ -221,7 +228,7 @@ class TestRuntimeSlotCreation:
         assert new_cfg in sub._slots
 
     def test_new_slot_is_shown(self, sub):
-        new_cfg = "Steam Deck::org.kde.dolphin"
+        new_cfg = "Dolphin"
         sub.refresh([_cfg(new_cfg)])
         sub._slots[new_cfg].check.show.assert_called()
 
@@ -248,3 +255,488 @@ class TestIpcOnToggle:
         toggle_handler = slot.check.connect.call_args[0][1]
         toggle_handler(slot.check)
         ipc.assert_called_with(f"config disable {APP_CFG}")
+
+
+# ── exclusive groups ──────────────────────────────────────────────────────────
+
+def _grouped(name, group, enabled=False, parent=BASE_CFG):
+    cfg = _cfg(name, enabled=enabled, kind="module", parent=parent)
+    cfg["exclusive_group"] = group
+    return cfg
+
+
+class TestExclusiveGroups:
+    def test_group_members_are_radio_items(self, sub):
+        sub.refresh([
+            _cfg(BASE_CFG, kind="base"),
+            _grouped("Layout Horizontal", "layout", enabled=True),
+        ])
+        cm.Gtk.RadioMenuItem.assert_called()
+
+    def test_group_members_are_drawn_adjacently(self):
+        rows = cm.display_rows([
+            _cfg(BASE_CFG, kind="base"),
+            _grouped("Layout Zulu",  "layout"),
+            _grouped("Layout Alpha", "layout"),
+            _cfg("Manual", kind="module", parent=BASE_CFG),
+        ])
+        names = [r.name for r in rows]
+        assert abs(names.index("Layout Zulu") - names.index("Layout Alpha")) == 1
+
+    def test_selecting_a_member_sends_only_enable(self, sub, ipc):
+        sub.refresh([
+            _cfg(BASE_CFG, kind="base"),
+            _grouped("Layout Horizontal", "layout", enabled=True),
+            _grouped("Layout Vertical",   "layout"),
+        ])
+        ipc.reset_mock()
+        slot = sub._slots["Layout Vertical"]
+        slot.check.get_active.return_value = True
+        slot.check.connect.call_args[0][1](slot.check)
+        ipc.assert_called_once_with("config enable Layout Vertical")
+
+    def test_deselecting_a_member_sends_nothing(self, sub, ipc):
+        """GTK deactivates the previous radio item; makima already did that."""
+        sub.refresh([
+            _cfg(BASE_CFG, kind="base"),
+            _grouped("Layout Horizontal", "layout", enabled=True),
+            _grouped("Layout Vertical",   "layout"),
+        ])
+        ipc.reset_mock()
+        slot = sub._slots["Layout Horizontal"]
+        slot.check.get_active.return_value = False
+        slot.check.connect.call_args[0][1](slot.check)
+        ipc.assert_not_called()
+
+    def test_ungrouped_module_still_sends_disable(self, sub, ipc):
+        sub.refresh([_cfg(BASE_CFG, kind="base"), _cfg("Voice Control", kind="module", parent=BASE_CFG)])
+        ipc.reset_mock()
+        slot = sub._slots["Voice Control"]
+        slot.check.get_active.return_value = False
+        slot.check.connect.call_args[0][1](slot.check)
+        ipc.assert_called_once_with("config disable Voice Control")
+
+
+class TestGroupHeadings:
+    """A group is drawn as a named cluster, not a run of unrelated radio ticks."""
+
+    def test_a_heading_row_precedes_the_members(self):
+        rows = cm.display_rows([
+            _cfg(BASE_CFG, kind="base"),
+            _grouped("KDE Desktop Layout Horizontal", "kde-desktop-layout"),
+            _grouped("KDE Desktop Layout Vertical",   "kde-desktop-layout"),
+        ])
+        names = [r.name for r in rows]
+        heading = names.index("kde-desktop-layout")
+        assert rows[heading].heading
+        assert heading < names.index("KDE Desktop Layout Horizontal")
+
+    def test_the_heading_is_named_after_its_members(self):
+        rows = cm.display_rows([
+            _cfg(BASE_CFG, kind="base"),
+            _grouped("KDE Desktop Layout Horizontal", "kde-desktop-layout"),
+            _grouped("KDE Desktop Layout Vertical",   "kde-desktop-layout"),
+        ])
+        heading = next(r for r in rows if r.heading)
+        # The slug is an identifier, not something to put in front of a user.
+        assert heading.text == "KDE Desktop Layout"
+
+    def test_members_drop_what_the_heading_already_says(self):
+        rows = cm.display_rows([
+            _cfg(BASE_CFG, kind="base"),
+            _grouped("KDE Desktop Layout Horizontal", "kde-desktop-layout"),
+            _grouped("KDE Desktop Layout Vertical",   "kde-desktop-layout"),
+        ])
+        labels = {r.name: r.text for r in rows if not r.heading}
+        assert labels["KDE Desktop Layout Horizontal"] == "Horizontal"
+        assert labels["KDE Desktop Layout Vertical"]   == "Vertical"
+
+    def test_members_without_a_shared_prefix_keep_their_names(self):
+        rows = cm.display_rows([
+            _cfg(BASE_CFG, kind="base"),
+            _grouped("Alpha", "layout"),
+            _grouped("Beta",  "layout"),
+        ])
+        heading = next(r for r in rows if r.heading)
+        labels  = {r.name: r.text for r in rows if not r.heading}
+        assert heading.text == "layout"
+        assert labels["Alpha"] == "Alpha"
+        assert labels["Beta"]  == "Beta"
+
+    def test_a_shared_prefix_is_whole_words_only(self):
+        # "Layout H" is a shared character run, not a shared name.
+        assert cm._shared_prefix(["Layout Horizontal", "Layout Hyprland"]) == "Layout"
+
+    def test_a_lone_member_keeps_its_full_name(self):
+        # Nothing to factor out, and the heading must not swallow the only label.
+        assert cm._shared_prefix(["KDE Desktop Layout Grid"]) == ""
+
+    def test_the_apps_heading_still_works(self, sub):
+        sub.refresh([_cfg(BASE_CFG, kind="base"), _cfg("Firefox", kind="app")])
+        rows = cm.display_rows([_cfg(BASE_CFG, kind="base"), _cfg("Firefox", kind="app")])
+        assert any(r.heading and r.name == "Apps" for r in rows)
+
+
+class TestGroupMembershipChanges:
+    """A module can gain or lose a group across an update."""
+
+    def test_gaining_a_group_replaces_the_checkbox_with_a_radio(self, sub):
+        sub.refresh([_cfg(BASE_CFG, kind="base"),
+                     _cfg("Layout Alpha", kind="module", parent=BASE_CFG)])
+        assert sub._slots["Layout Alpha"].group is None
+        before = sub._slots["Layout Alpha"].check
+
+        sub.refresh([_cfg(BASE_CFG, kind="base"),
+                     _grouped("Layout Alpha", "layout")])
+
+        slot = sub._slots["Layout Alpha"]
+        assert slot.group == "layout"
+        # A new widget, not the old one relabelled — the toggle handler on the
+        # old checkbox would still send "disable", which makima now refuses.
+        assert slot.check is not before
+
+    def test_losing_a_group_replaces_the_radio_with_a_checkbox(self, sub):
+        sub.refresh([_cfg(BASE_CFG, kind="base"),
+                     _grouped("Layout Alpha", "layout")])
+        before = sub._slots["Layout Alpha"].check
+
+        sub.refresh([_cfg(BASE_CFG, kind="base"),
+                     _cfg("Layout Alpha", kind="module", parent=BASE_CFG)])
+
+        slot = sub._slots["Layout Alpha"]
+        assert slot.group is None
+        assert slot.check is not before
+
+    def test_an_unchanged_group_keeps_its_widgets(self, sub):
+        sub.refresh([_cfg(BASE_CFG, kind="base"),
+                     _grouped("Layout Alpha", "layout", enabled=True)])
+        before = sub._slots["Layout Alpha"].check
+
+        sub.refresh([_cfg(BASE_CFG, kind="base"),
+                     _grouped("Layout Alpha", "layout", enabled=False)])
+
+        assert sub._slots["Layout Alpha"].check is before
+
+
+class TestGroupSubmenu:
+    """An exclusive group is a submenu of its heading, not a run of rows.
+
+    Exactly one member is active, so the choice fits on the heading's own line —
+    which is what makes folding the members away cost nothing.
+    """
+
+    def _rows(self, members):
+        return cm.display_rows(
+            [_cfg(BASE_CFG, kind="base")] +
+            [_grouped(n, "layout") for n in members])
+
+    def test_members_are_marked_as_belonging_to_their_group(self):
+        rows = {r.name: r for r in self._rows(["Alpha", "Bravo", "Charlie"])}
+        assert rows["Alpha"].group == "layout"
+        assert rows["Bravo"].group == "layout"
+        assert rows["Charlie"].group == "layout"
+
+    def test_members_carry_no_tree_glyph(self):
+        # They are drawn in a menu of their own, where there is no tree to hang
+        # off and no siblings to line up with.
+        rows = self._rows(["Alpha", "Bravo"])
+        assert all(r.prefix == "" for r in rows if r.group)
+
+    def test_the_heading_keeps_its_place_in_the_tree(self):
+        rows = cm.display_rows([
+            _cfg(BASE_CFG, kind="base"),
+            _grouped("Alpha", "layout"),
+            _grouped("Bravo", "layout"),
+            _cfg("Zulu", kind="module", parent=BASE_CFG),
+        ])
+        heading = next(r for r in rows if r.heading)
+        # Zulu follows, so the group is not the last child of the base.
+        assert heading.prefix == "├─ "
+
+    def test_a_lone_member_is_still_a_group(self):
+        # A group can shrink to one when its siblings fail to parse. Drawing it
+        # as a plain row would invite a click that cannot switch it off.
+        rows = {r.name: r for r in self._rows(["Alpha"])}
+        assert rows["Alpha"].group == "layout"
+
+
+class TestGroupSubmenuWidgets:
+    def _sub(self, ipc, active="Layout Vertical"):
+        return cm.ConfigSubmenu(
+            initial_configs=[
+                _cfg(BASE_CFG, kind="base"),
+                _grouped("Layout Grid",     "layout", enabled=False),
+                _grouped("Layout Vertical", "layout", enabled=(active == "Layout Vertical")),
+            ],
+            ipc=ipc, config_dir="/tmp/cfg")
+
+    def test_the_heading_becomes_an_openable_submenu(self, ipc):
+        sub = self._sub(ipc)
+        heading = sub._headings["layout"]
+        heading.set_submenu.assert_called_once_with(sub._group_menus["layout"])
+        # A heading that opens something must not be greyed out.
+        heading.set_sensitive.assert_called_with(True)
+
+    def test_members_land_in_the_group_menu_not_the_main_one(self, ipc):
+        sub = self._sub(ipc)
+        appended = [c.args[0] for c in sub._group_menus["layout"].append.call_args_list]
+        assert sub._slots["Layout Grid"].check in appended
+        assert sub._slots["Layout Vertical"].check in appended
+        top = [c.args[0] for c in sub._submenu.append.call_args_list]
+        assert sub._slots["Layout Grid"].check not in top
+
+    def test_the_heading_names_the_active_member(self, ipc):
+        # Folding the members away would otherwise hide which one is on.
+        sub = self._sub(ipc)
+        label = sub._headings["layout"].set_label.call_args.args[0]
+        assert label.endswith(": Vertical")
+
+    def test_the_group_toggle_is_the_first_entry_of_the_submenu(self, ipc):
+        # A check item with a submenu draws no checkbox at all through
+        # DBusMenu, so the group's own switch has to live inside it.
+        sub = self._sub(ipc)
+        appended = [c.args[0] for c in sub._group_menus["layout"].append.call_args_list]
+        toggle, _ = sub._group_toggles["layout"]
+        assert appended[0] is toggle
+        assert appended.index(toggle) < appended.index(sub._slots["Layout Grid"].check)
+
+    def test_the_group_toggle_follows_the_active_member(self, ipc):
+        toggle, _ = self._sub(ipc)._group_toggles["layout"]
+        assert toggle.set_active.call_args.args[0] is True
+
+    def test_the_group_toggle_is_off_when_no_member_is_active(self, ipc):
+        sub = cm.ConfigSubmenu(
+            initial_configs=[
+                _cfg(BASE_CFG, kind="base"),
+                _grouped("Layout Grid", "layout", enabled=False),
+                _grouped("Layout Vertical", "layout", enabled=False),
+            ],
+            ipc=ipc, config_dir="/tmp/cfg")
+        toggle, _ = sub._group_toggles["layout"]
+        assert toggle.set_active.call_args.args[0] is False
+
+    def test_a_group_with_nothing_active_parks_the_radio_dot_off_menu(self, ipc):
+        # GTK refuses to leave a radio group empty: set_active(False) on the one
+        # member that is on is silently ignored, so a group switched off would
+        # keep a member ticked. The off-menu item is where the dot goes instead.
+        sub = cm.ConfigSubmenu(
+            initial_configs=[
+                _cfg(BASE_CFG, kind="base"),
+                _grouped("Layout Grid", "layout", enabled=False),
+                _grouped("Layout Vertical", "layout", enabled=False),
+            ],
+            ipc=ipc, config_dir="/tmp/cfg")
+        off = sub._radio_off["layout"]
+        assert off.set_active.call_args.args[0] is True
+
+    def test_the_off_menu_radio_is_left_alone_while_a_member_is_active(self, ipc):
+        sub = self._sub(ipc)          # Vertical is on
+        off = sub._radio_off["layout"]
+        assert not off.set_active.called
+
+    def test_the_off_menu_radio_joins_its_group(self, ipc):
+        # Sharing the group is the whole mechanism — an item outside it would
+        # take the dot without taking it away from anyone.
+        sub = self._sub(ipc)
+        leader = sub._radio_leaders["layout"]
+        sub._radio_off["layout"].join_group.assert_called_once_with(leader)
+
+    def test_toggling_the_group_sends_a_group_command(self, ipc):
+        # Not a per-module command: switching the group off has to leave the
+        # remembered member alone so switching it back on lands there.
+        sub = self._sub(ipc)
+        toggle, _ = sub._group_toggles["layout"]
+        handler = toggle.connect.call_args.args[1]
+        toggle.get_active.return_value = False
+        handler(toggle)
+        assert ipc.call_args.args[0] == "config group disable layout"
+        toggle.get_active.return_value = True
+        handler(toggle)
+        assert ipc.call_args.args[0] == "config group enable layout"
+
+    def test_the_heading_says_nothing_when_no_member_is_active(self, ipc):
+        # A group switched off entirely: no member to name, so the heading is
+        # its own name rather than one with a trailing colon.
+        sub = cm.ConfigSubmenu(
+            initial_configs=[
+                _cfg(BASE_CFG, kind="base"),
+                _grouped("Layout Grid", "layout", enabled=False),
+                _grouped("Layout Vertical", "layout", enabled=False),
+            ],
+            ipc=ipc, config_dir="/tmp/cfg")
+        label = sub._headings["layout"].set_label.call_args.args[0]
+        assert not label.endswith(":")
+        assert "Layout" in label
+
+
+class TestParentPrefix:
+    """A module is already nested under its base — repeating its name is noise."""
+
+    def test_a_module_drops_the_name_of_its_base(self):
+        rows = cm.display_rows([
+            _cfg(BASE_CFG, kind="base"),
+            _cfg("Steam Deck Trackpads", kind="module", parent=BASE_CFG),
+        ])
+        labels = {r.name: r.text for r in rows if not r.heading}
+        assert labels["Steam Deck Trackpads"] == "Trackpads"
+
+    def test_an_unrelated_module_keeps_its_name(self):
+        rows = cm.display_rows([
+            _cfg(BASE_CFG, kind="base"),
+            _cfg("KDE Desktop", kind="module", parent=BASE_CFG),
+        ])
+        labels = {r.name: r.text for r in rows if not r.heading}
+        assert labels["KDE Desktop"] == "KDE Desktop"
+
+    def test_the_base_name_does_not_have_to_be_a_full_prefix(self):
+        # "Steam Deck Trackpads" does not start with "Steam Deck Base" — only
+        # the words both of them share can be dropped. Tying the label to the
+        # base's whole name would make renaming the base config re-lengthen
+        # every module row under it.
+        rows = cm.display_rows([
+            _cfg("Steam Deck Base", kind="base"),
+            _cfg("Steam Deck Trackpads", kind="module", parent="Steam Deck Base"),
+        ])
+        labels = {r.name: r.text for r in rows if not r.heading}
+        assert labels["Steam Deck Trackpads"] == "Trackpads"
+
+    def test_a_module_named_exactly_like_its_base_keeps_its_name(self):
+        # Stripping would leave an empty label, which is worse than a repeat.
+        assert cm._drop_prefix("Steam Deck", "Steam Deck") == "Steam Deck"
+
+    def test_the_prefix_has_to_end_on_a_word_boundary(self):
+        assert cm._drop_prefix("Steam Decker", "Steam Deck") == "Steam Decker"
+
+    def test_a_group_heading_drops_the_base_name_too(self):
+        rows = cm.display_rows([
+            _cfg(BASE_CFG, kind="base"),
+            _grouped("Steam Deck Layout Alpha", "layout"),
+            _grouped("Steam Deck Layout Bravo", "layout"),
+        ])
+        heading = next(r for r in rows if r.heading)
+        assert heading.text == "Layout"
+
+    def test_the_apps_group_is_not_affected(self):
+        rows = cm.display_rows([
+            _cfg(BASE_CFG, kind="base"),
+            _cfg("Steam Deck Companion", kind="app"),
+        ])
+        labels = {r.name: r.text for r in rows if not r.heading}
+        assert labels["Steam Deck Companion"] == "Steam Deck Companion"
+
+
+class TestConfigFolders:
+    """Two folders: the user's own, and the shipped one they copy from."""
+
+    def test_the_user_root_falls_back_to_the_assumed_path(self, sub):
+        assert sub.user_root == "/tmp/cfg"
+
+    def test_the_shipped_folder_is_hidden_until_makima_reports_it(self, sub):
+        assert sub.system_root == ""
+        sub._open_system.hide.assert_called()
+
+    def test_reported_roots_win_over_the_assumed_one(self, sub):
+        sub.refresh([_cfg(APP_CFG)],
+                    {"system": "/usr/share/deckery/configs", "user": "/home/u/.config/deckery"})
+        assert sub.user_root   == "/home/u/.config/deckery"
+        assert sub.system_root == "/usr/share/deckery/configs"
+        sub._open_system.set_visible.assert_called_with(True)
+
+    def test_opening_a_folder_hands_the_path_to_xdg_open(self, sub, monkeypatch):
+        popen = MagicMock()
+        monkeypatch.setattr(cm.subprocess, "Popen", popen)
+        sub.refresh([_cfg(APP_CFG)], {"system": "/shipped", "user": "/mine"})
+        sub._open(sub.system_root)
+        popen.assert_called_once_with(["xdg-open", "/shipped"])
+
+    def test_an_unknown_folder_is_never_opened(self, sub, monkeypatch):
+        # Better nothing than xdg-open on the empty string, which opens $HOME.
+        popen = MagicMock()
+        monkeypatch.setattr(cm.subprocess, "Popen", popen)
+        sub._open(sub.system_root)
+        popen.assert_not_called()
+
+
+class TestStrayRows:
+    """When no base config parses, every module lands in the stray list."""
+
+    def _strays(self):
+        # kind "module" with a parent no base row carries: what makima reports
+        # when the base config itself failed to parse.
+        return [
+            {"name": "KDE Desktop Layout Grid", "kind": "module", "parent": None,
+             "exclusive_group": "kde-desktop-layout", "enabled": False,
+             "status": "ok", "errors": []},
+            {"name": "KDE Desktop Layout Vertical", "kind": "module", "parent": None,
+             "exclusive_group": "kde-desktop-layout", "enabled": True,
+             "status": "ok", "errors": []},
+            {"name": "Voice Control", "kind": "module", "parent": None,
+             "enabled": True, "status": "ok", "errors": []},
+        ]
+
+    def test_a_group_without_a_base_is_still_drawn_as_a_group(self):
+        # Drawn as loose checkboxes, two members could be switched on at once.
+        rows = cm.display_rows(self._strays())
+        heading = [r for r in rows if r.heading]
+        assert len(heading) == 1
+        assert heading[0].name == "kde-desktop-layout"
+        assert {r.name for r in rows if r.group == "kde-desktop-layout"} == {
+            "KDE Desktop Layout Grid", "KDE Desktop Layout Vertical"}
+
+    def test_a_stray_carries_no_tree_glyph(self):
+        # The glyph claims a parent row above it, and there is none.
+        rows = cm.display_rows(self._strays())
+        assert all(r.prefix == "" for r in rows), [(r.name, r.prefix) for r in rows]
+
+    def test_an_ungrouped_stray_still_gets_a_row(self):
+        rows = cm.display_rows(self._strays())
+        assert "Voice Control" in {r.name for r in rows}
+
+
+class TestStatusMarkers:
+    """The marker goes after the label, and is the coloured emoji form."""
+
+    def test_the_tree_glyph_keeps_the_start_of_the_line(self, sub):
+        # A marker in front of "├─ " knocks that column out of line for every
+        # row that has one, which is what the tree art is for.
+        marked = cm._marked("├─ Desktop", "warning")
+        assert marked.startswith("├─ Desktop")
+
+    def test_the_warning_marker_asks_for_colour(self, sub):
+        # Bare U+26A0 renders as a thin monochrome glyph and vanishes in a menu.
+        assert "\ufe0f" in cm._marked("x", "warning")
+
+
+class TestStrayGroupsReachTheMenu:
+    """display_rows() grouping a stray is only half of it — _relayout has to
+    place it, and that path used to never see a grouped row without a base."""
+
+    def _parentless_group(self):
+        return [
+            {"name": "KDE Desktop Layout Grid", "kind": "module", "parent": None,
+             "exclusive_group": "kde-desktop-layout", "enabled": False,
+             "status": "ok", "errors": []},
+            {"name": "KDE Desktop Layout Vertical", "kind": "module", "parent": None,
+             "exclusive_group": "kde-desktop-layout", "enabled": True,
+             "status": "ok", "errors": []},
+        ]
+
+    def test_the_group_gets_its_submenu(self, sub):
+        # The heading row creates it; without one the members would have had
+        # nowhere to go and _relayout would have raised.
+        sub.refresh(self._parentless_group())
+        assert "kde-desktop-layout" in sub._group_menus
+
+    def test_the_members_are_radio_items(self, sub):
+        sub.refresh(self._parentless_group())
+        for name in ("KDE Desktop Layout Grid", "KDE Desktop Layout Vertical"):
+            assert sub._slots[name].group == "kde-desktop-layout"
+
+    def test_the_group_still_has_its_own_switch(self, sub):
+        sub.refresh(self._parentless_group())
+        assert "kde-desktop-layout" in sub._group_toggles
+
+    def test_the_heading_still_names_the_active_member(self, sub):
+        sub.refresh(self._parentless_group())
+        sub._headings["kde-desktop-layout"].set_label.assert_called_with(
+            "KDE Desktop Layout: Vertical")

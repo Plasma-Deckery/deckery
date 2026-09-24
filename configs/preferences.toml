@@ -1,0 +1,11 @@
+# Deckery — which controller bindings are switched on. Written by Deckery; see
+# README.md in the same folder for what the entries mean.
+
+[exclusive_groups]
+kde-desktop-layout = "KDE Desktop Layout Horizontal"
+
+[groups]
+disabled = []
+
+[modules]
+disabled = []

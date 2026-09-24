@@ -13,7 +13,7 @@ A live overlay for visualising and exploring your button config. See what every 
 Toggle open (default: L3) to pause remapping and inspect your full button layout:
 
 - Renders two Steam Deck silhouettes (front + back) with callout lines to button labels
-- Updates live from `/tmp/makima-state.json` — written atomically by makima-deckery on every input event
+- Updates live from `$XDG_RUNTIME_DIR/makima-state.json` — written atomically by makima-deckery on every input event
 - Pauses makima remapping while open — dry-run mode: see what buttons do without triggering anything
 - Center strip shows the active modifier state and the currently held output keys
 - Trackpad and stick positions rendered as analog overlays on the silhouette
@@ -53,7 +53,7 @@ Built with GTK4 + gtk4-layer-shell (Wayland Layer Shell protocol). Two persisten
 Both windows are Wayland layer-shell surfaces anchored to the center of the screen. The OSD runs at all times; the HUD is shown/hidden on demand.
 
 ```
-makima-deckery ──► /tmp/makima-state.json
+makima-deckery ──► $XDG_RUNTIME_DIR/makima-state.json
                            │
                       deckery-hud
                     (GTK4, Layer Shell)
@@ -86,4 +86,4 @@ L3 = "dbus de.plasma_deckery.hud /de/plasma_deckery/hud de.plasma_deckery.hud To
 
 ## State file
 
-Watches `/tmp/makima-state.json` via GLib FileMonitor. On change, updates the button map display without re-implementing any of makima's lookup logic. See [State JSON](../reference/state-json.md) for the full format.
+Watches `$XDG_RUNTIME_DIR/makima-state.json` via GLib FileMonitor. On change, updates the button map display without re-implementing any of makima's lookup logic. See [State JSON](../reference/state-json.md) for the full format.
