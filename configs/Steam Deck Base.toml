@@ -25,7 +25,8 @@ names = ["Steam Deck", "Valve Software Steam Controller"]
 # every file in the config directories, modules and app overrides included.
 # Kernel names keep working alongside them. Combos join with `-`.
 # Paddles L4/R4 are the top pair, L5/R5 the bottom pair.
-aliases = { A = "BTN_SOUTH", B = "BTN_EAST", X = "BTN_WEST", Y = "BTN_NORTH", L1 = "BTN_TL", R1 = "BTN_TR", L2 = "BTN_TL2", R2 = "BTN_TR2", L3 = "BTN_THUMBL", R3 = "BTN_THUMBR", L4 = "BTN_GRIPL", L5 = "BTN_GRIPL2", R4 = "BTN_GRIPR", R5 = "BTN_GRIPR2", Up = "BTN_DPAD_UP", Down = "BTN_DPAD_DOWN", Left = "BTN_DPAD_LEFT", Right = "BTN_DPAD_RIGHT", Select = "BTN_SELECT", Start = "BTN_START", Steam = "BTN_MODE" }
+# QAM is the (···) button; double-clicking it toggles Gaming Mode, see below.
+aliases = { A = "BTN_SOUTH", B = "BTN_EAST", X = "BTN_WEST", Y = "BTN_NORTH", L1 = "BTN_TL", R1 = "BTN_TR", L2 = "BTN_TL2", R2 = "BTN_TR2", L3 = "BTN_THUMBL", R3 = "BTN_THUMBR", L4 = "BTN_GRIPL", L5 = "BTN_GRIPL2", R4 = "BTN_GRIPR", R5 = "BTN_GRIPR2", Up = "BTN_DPAD_UP", Down = "BTN_DPAD_DOWN", Left = "BTN_DPAD_LEFT", Right = "BTN_DPAD_RIGHT", Select = "BTN_SELECT", Start = "BTN_START", Steam = "BTN_MODE", QAM = "BTN_BASE" }
 
 # ── Gaming Mode ───────────────────────────────────────────────────────────────
 # A device-level concern like [device] itself, and the merge treats the base
@@ -82,7 +83,29 @@ L1-X  = { keys = ["KEY_LEFTCTRL", "KEY_C"], label = "Copy" }
 L1-Y  = { keys = ["KEY_LEFTCTRL", "KEY_V"], label = "Paste" }
 L1-B  = { keys = ["KEY_LEFTCTRL", "KEY_Z"], label = "Undo" }
 L1-A  = { keys = ["KEY_LEFTCTRL", "KEY_LEFTSHIFT", "KEY_Z"], label = "Redo" }
-L1-L4 = { keys = ["KEY_LEFTCTRL", "KEY_A"], label = "Select All" }
+L1-R4 = { keys = ["KEY_LEFTCTRL", "KEY_A"], label = "Select All" }
+
+# --- QAM layer: system-level controls ---
+# Held with the right thumb, so only the left-hand side is reachable while it
+# is down — D-pad, View, and the paddles. The face buttons are deliberately
+# left out of this layer for that reason.
+#
+# Every output here is a plain kernel keycode, which is why these live in the
+# base config and not in a desktop module: any desktop reacts to them, and
+# nothing about them is KDE-specific.
+#
+# All of them are `while_gaming` too. Brightness, track skipping and mute are
+# not remapping in the sense Gaming Mode switches off — they are the controls
+# you reach for *during* a game, and there is nothing else on the device that
+# offers them. Nothing here collides with a game, because a game never sees
+# QAM combinations in the first place.
+QAM-Up     = { keys = ["KEY_BRIGHTNESSUP"],   while_gaming = true, label = "Brightness Up" }
+QAM-Down   = { keys = ["KEY_BRIGHTNESSDOWN"], while_gaming = true, label = "Brightness Down" }
+QAM-Left   = { keys = ["KEY_PREVIOUSSONG"],   while_gaming = true, label = "Previous Track" }
+QAM-Right  = { keys = ["KEY_NEXTSONG"],       while_gaming = true, label = "Next Track" }
+QAM-L4     = { keys = ["KEY_PLAYPAUSE"],      while_gaming = true, label = "Play / Pause" }
+# Volume has hardware buttons on the Deck; mute does not.
+QAM-Select = { keys = ["KEY_MUTE"],           while_gaming = true, label = "Mute" }
 
 # --- Steam layer: makima stays out of the way, Steam Input handles both ---
 Steam-X = { keys = [], label = "(Steam Keyboard)" }

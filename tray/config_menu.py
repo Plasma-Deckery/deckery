@@ -340,6 +340,7 @@ class ConfigSubmenu:
 
         def _on_toggle(widget, n=name, grouped=bool(exclusive_group)):
             active = widget.get_active()
+            log.info("toggled %r active=%s grouped=%s", n, active, grouped)
             # Selecting a radio item also deactivates the previous one. makima
             # switches the siblings off itself, so forwarding that deactivation
             # would race the activation and could undo it.

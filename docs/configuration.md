@@ -199,4 +199,4 @@ R1-A    = { keys = ["KEY_LEFTCTRL", "KEY_N"], label = "New Chat" }
 L1-Right = { run = ["qdbus org.kde.KWin /KWin nextDesktop"], label = "Next Desktop" }
 ```
 
-`label` is what the HUD overlay shows for that button. Refer to the [makima-deckery](https://github.com/Plasma-Deckery/makima-deckery) README for the full reference including layouts, trackpad modes, and gaming mode.
+`label` is what the HUD overlay shows for that button. Refer to the [makima-deckery](https://github.com/Plasma-Deckery/makima-deckery) README for the full reference including trackpad modes and gaming mode.

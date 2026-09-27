@@ -238,7 +238,7 @@ Value fields:
 | `silent` | `bool` | If `true`, this binding is intentionally hidden from the HUD display |
 | `no_pause` | `bool` | (command only) Fires even when makima is paused |
 
-**This map is static while the config doesn't change.** Reload it when `context.config_stack` or `context.layout` changes.
+**This map is static while the config doesn't change.** Reload it when `context.config_stack` changes.
 
 ---
 
