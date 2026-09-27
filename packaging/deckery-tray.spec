@@ -79,6 +79,7 @@ install -Dm644 packaging/deckery-tray.service \
 - DE-agnostic systemd service: graphical-session.target + gamescope-session* guard (Issue #56)
 - Fix Steam Input setup: shut down Steam before writing empty.vdf config
 - Container detection via CONTAINER_ID env var
+- Config menu: exclusive groups as radio items, warnings marked on the row
 
 * Thu Sep 11 2026 Philipp Schimmelfennig <philipp@plasma-deckery.dev> - 0.4.0-1
 - Minor version bump to 0.4.0

@@ -74,7 +74,12 @@ done
 
 %changelog
 * Mon Sep 15 2026 Philipp Schimmelfennig <philipp@plasma-deckery.dev> - 0.4.1-1
-- Add L1-L4 = Ctrl+A (Select All) to default Steam Deck config
+- Add L1-R4 = Ctrl+A (Select All) to default Steam Deck config
+- QAM layer: brightness, track skip, play/pause and mute, active in Gaming Mode
+- QAM+R4 puts a screenshot of the current monitor into the clipboard
+- Config auto-discovery: user files layer over shipped ones, broken copies fall back
+- Exclusive module groups, remembered in preferences.toml
+- State file moved to $XDG_RUNTIME_DIR; needs makima-deckery and deckery-hud 0.4.1
 - DE-agnostic tray service: graphical-session.target + gamescope-session* guard
 - Fix Steam Input setup: Steam is shut down before config is applied
 
