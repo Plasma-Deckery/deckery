@@ -26,6 +26,32 @@ L1-R1-X = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalac
 L1-R1-Y = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'KrohnkiteToggleFloat'"], label = "Toggle Float" }
 L1-R1-B = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Window Close'"], label = "Close Window" }
 
+# Session dialog — log out, reboot or shut down, with a prompt rather than
+# doing it outright. On L5 because QAM is held with the right thumb, so the
+# left paddles are what stays reachable.
+QAM-L5 = { run = ["qdbus org.kde.LogoutPrompt /LogoutPrompt promptAll"], label = "Session Menu" }
+
+# Screenshot of the current monitor, into the clipboard.
+#
+# This asks Plasma to run its own screenshot shortcut rather than calling
+# spectacle directly, and that is the whole trick. On Wayland only a focused
+# client may set the clipboard — so `spectacle -b -c` (no window) produces an
+# empty image, and piping into wl-copy from a systemd scope leaves wl-copy
+# waiting for a focus it never gets. Plasma has the focus; letting it do the
+# work sidesteps the rule instead of fighting it. See KDE bug 421974, where
+# the fix was to delay copying "until a window is focused".
+#
+# Spectacle only copies if it is told to, and that lives in its own config,
+# not in ours. Rather than depend on a setting the user has to know about,
+# the binding writes it first. kwriteconfig6 is idempotent — writing the same
+# value again is a no-op — so this costs nothing per press and needs no
+# install step. It does mean the binding owns that Spectacle preference: if
+# you had it set to something else, this overwrites it.
+#
+# `while_gaming` because catching a moment from a game is exactly when you
+# want it, and Gaming Mode is exactly when every other binding is off.
+QAM-R4 = { run = ["kwriteconfig6 --file spectaclerc --group General --key clipboardGroup PostScreenshotCopyImage && qdbus org.kde.kglobalaccel /component/org_kde_spectacle_desktop org.kde.kglobalaccel.Component.invokeShortcut CurrentMonitorScreenShot"], while_gaming = true, label = "Screenshot to Clipboard" }
+
 L1-Select = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Grid View'"], label = "Desktop Grid" }
 
 # --- L1+R1+Select → send the window back where it came from ---
