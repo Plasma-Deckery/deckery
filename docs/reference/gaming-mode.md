@@ -30,6 +30,22 @@ Detection uses two signals — either is sufficient:
 
 Set to `false` to disable. Gaming Mode can then only be toggled via the double-click trigger or IPC.
 
+## Muting a game in the background
+
+```toml
+[gaming_mode]
+auto_mute = true   # built-in default: false; the shipped base config sets true
+```
+
+When `true`, a running Steam game is muted while its window does not have focus, and unmuted when it is focused again. Switch from a game to the desktop and it stops playing; switch back and it plays again.
+
+- **Only the game.** Each audio stream is traced to its process and from there up to the game's `reaper` — the same walk the auto-detection above uses. Steam, browsers and voice chat are never touched.
+- **It follows focus, not the Gaming Mode flag.** Toggling Gaming Mode by hand does not change the audio.
+- **Only what Deckery muted is unmuted.** If you muted the game yourself, it stays muted when you switch back.
+- **Turning the setting off releases a muted game immediately**; turning it on mutes a game that is already in the background.
+
+One detail worth knowing if a game ever starts muted: WirePlumber remembers the mute state of every application by name and restores it the next time that application opens a stream. If a game exits while Deckery has it muted, WirePlumber would bring it back muted. Deckery therefore keeps a list of the application names whose remembered mute it caused — in `~/.local/state/deckery/auto-mute-names` — and releases such a stream when it reappears and there is no reason for it to be muted.
+
 ## Haptic feedback
 
 `haptic_on` fires when Gaming Mode turns **on**; `haptic_off` fires when it turns **off**. Both have sensible built-in defaults and do not need to be set in the config.
