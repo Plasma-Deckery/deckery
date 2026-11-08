@@ -1,5 +1,5 @@
 Name:           deckery-tray
-Version:        0.4.1
+Version:        0.5.0
 Release:        1%{?dist}
 Summary:        Deckery system tray — service monitor and control for KDE Plasma
 
@@ -75,6 +75,9 @@ install -Dm644 packaging/deckery-tray.service \
 %{_userunitdir}/deckery-tray.service
 
 %changelog
+* Sun Nov 08 2026 Philipp Schimmelfennig <philipp@plasma-deckery.dev> - 0.5.0-1
+- Version aligned with makima-deckery and deckery-hud 0.5.0; no functional changes
+
 * Mon Sep 15 2026 Philipp Schimmelfennig <philipp@plasma-deckery.dev> - 0.4.1-1
 - DE-agnostic systemd service: graphical-session.target + gamescope-session* guard (Issue #56)
 - Fix Steam Input setup: shut down Steam before writing empty.vdf config
