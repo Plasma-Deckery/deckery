@@ -44,6 +44,11 @@ trigger = { key = "BTN_BASE", ms = 400 }   # QAM (···)
 # Also enable Gaming Mode on its own when a Steam game or Big Picture is focused.
 auto_detect_steam_games = true
 
+# Mute a running game while its window is not focused, and unmute it when you
+# switch back. Only the game's own audio is touched — not Steam, not anything
+# else that is playing. Off unless set here.
+auto_mute = true
+
 # ── Buttons ───────────────────────────────────────────────────────────────────
 
 [remap]
