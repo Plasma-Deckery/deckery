@@ -1,0 +1,32 @@
+# Removes the tray enablement left behind by deckery-tray <= 0.4.0.
+#
+# Up to 0.4.0 the tray was WantedBy=plasma-core.target, so a manual
+# `systemctl --user enable` created the link below. Since 0.4.1 the tray is
+# After=graphical-session.target; together with the old link (a target is
+# implicitly After= the units it Wants=) that forms an ordering cycle, and
+# systemd drops the tray's start job. The tray is now enabled by the package
+# (graphical-session.target.wants in /usr/lib/systemd/user), so the old link
+# is simply removed. RPM scriptlets cannot do this: they run as root, and on
+# rpm-ostree while the image is composed, without access to home directories.
+#
+# Pulled in twice: by default.target, which normally runs before the desktop
+# session starts, and by graphical-session.target as a fallback in case the
+# session transaction (with the cycle) was already built. Once the link is
+# gone the condition fails and the unit is a no-op.
+
+[Unit]
+Description=Deckery: remove stale tray enablement from 0.4.0 and earlier
+ConditionPathIsSymbolicLink=%h/.config/systemd/user/plasma-core.target.wants/deckery-tray.service
+After=graphical-session.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/rm -f %h/.config/systemd/user/plasma-core.target.wants/deckery-tray.service
+ExecStart=/usr/bin/systemctl --user daemon-reload
+# Before the desktop session the tray is pulled in by graphical-session.target
+# later on. Starting it now would drag graphical-session.target up early, so
+# only start it if the session is already running.
+ExecStart=/bin/sh -c 'if systemctl --user --quiet is-active graphical-session.target; then exec systemctl --user --no-block start deckery-tray.service; fi'
+
+[Install]
+WantedBy=default.target graphical-session.target
