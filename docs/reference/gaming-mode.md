@@ -30,6 +30,21 @@ Detection uses two signals — either is sufficient:
 
 Set to `false` to disable. Gaming Mode can then only be toggled via the double-click trigger or IPC.
 
+### Waiting before a game counts
+
+```toml
+[gaming_mode]
+focus_threshold_ms = 1000   # built-in default: 0; the shipped base config sets 1000
+```
+
+A game only counts as focused once it has **kept** focus for this long. Switching desktops with L1 + D-pad passes over a game's window on the way, and without a threshold that instant turns Gaming Mode on — which switches off Deckery's bindings, including the L1 + D-pad you were using to move on. With the threshold you can slide past a game's desktop and keep going.
+
+- **Only gaining focus waits.** Leaving a game counts at once, so the controller is never raw on the desktop.
+- **The game has to keep focus the whole time.** Moving on before the threshold cancels it; coming back starts the wait again.
+- **It applies to muting too** (next section), so sliding past a game does not make it audible for a moment.
+- **The double-click trigger is unaffected** and still toggles at once.
+- **Per-app bindings are unaffected** — which bindings apply to the focused window still follows focus immediately.
+
 ## Muting a game in the background
 
 ```toml

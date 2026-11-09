@@ -44,6 +44,12 @@ trigger = { key = "BTN_BASE", ms = 400 }   # QAM (···)
 # Also enable Gaming Mode on its own when a Steam game or Big Picture is focused.
 auto_detect_steam_games = true
 
+# How long a game has to keep focus before it counts, in milliseconds. Switching
+# desktops passes over a game's window on the way; without this, that moment
+# turns Gaming Mode on and switches off the very bindings you are using to move
+# on. Leaving a game still counts at once.
+focus_threshold_ms = 1000
+
 # Mute a running game while its window is not focused, and unmute it when you
 # switch back. Only the game's own audio is touched — not Steam, not anything
 # else that is playing. Off unless set here.
