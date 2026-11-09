@@ -59,8 +59,10 @@ auto_mute = true
 
 [remap]
 # --- Mouse clicks (triggers as buttons) ---
-L2 = { keys = ["BTN_RIGHT"], no_pause = true, silent = true }
-R2 = { keys = ["BTN_LEFT"],  no_pause = true, silent = true }
+# A tick on the side you pressed, the way Steam does for a trigger click. The
+# pulse is the default one, tuned on the Deck against Lizard Mode's own click.
+L2 = { keys = ["BTN_RIGHT"], no_pause = true, silent = true, haptic = { pad = "left" } }
+R2 = { keys = ["BTN_LEFT"],  no_pause = true, silent = true, haptic = { pad = "right" } }
 
 # --- Basic navigation ---
 Up     = ["KEY_UP"]
