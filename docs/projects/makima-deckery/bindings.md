@@ -34,6 +34,7 @@ BTN_THUMBL = { run = ["deckery-hud-toggle"], no_pause = true, label = "Toggle HU
 | `label` | string | both | Human-readable name exported to the HUD and OSD |
 | `no_pause` | bool | command | Execute even when makima is paused (e.g. HUD open) |
 | `while_gaming` | bool | both | Not suppressed in Gaming Mode — active during normal use and also in Gaming Mode. Default: false. |
+| `haptic` | table | both | Feedback the controller plays when the binding fires. See [`haptic`](#haptic) below. |
 
 ## Labels in the HUD
 
@@ -65,3 +66,35 @@ BTN_THUMBL = { run = ["deckery-hud-toggle"], no_pause = true, while_gaming = tru
 ```
 
 See [Gaming Mode](gaming-mode.md) for more.
+
+## `haptic`
+
+A binding can make the controller buzz when it fires — a tick under your finger, the way Steam ticks when a trigger used as a mouse button clicks. The shipped base config does exactly that for the mouse buttons on L2 and R2:
+
+```toml
+[remap]
+L2 = { keys = ["BTN_RIGHT"], no_pause = true, silent = true, haptic = { pad = "left" } }
+R2 = { keys = ["BTN_LEFT"],  no_pause = true, silent = true, haptic = { pad = "right" } }
+```
+
+`pad` is the side you feel it on: `left`, `right` or `both` (default `both`). With nothing else given, it plays the default pulse — 8 ms on, 8 ms off, three times — which was tuned on the Deck against the click buzz of Steam's Lizard Mode. To change the feel, give the pulse fields inline:
+
+```toml
+R2 = { keys = ["BTN_LEFT"], haptic = { pad = "right", duration_us = 3000, count = 1 } }
+```
+
+or a full chain, in the same form every other haptic in the config takes:
+
+```toml
+haptic = { pad = "both", chain = [{ duration_us = 8000, pause_ms = 150 }, { duration_us = 8000 }] }
+```
+
+Pulse fields and `chain` are mutually exclusive, and an unknown field is an error rather than a silent fall-back to the default — `duraton_us` would otherwise just play the default pulse. `gain_db` is accepted but has no perceptible effect on Steam Deck hardware.
+
+When it plays:
+
+- **On the press only.** A held key repeating, or the release, is not a click.
+- **Only when the binding actually fires.** A press swallowed by pause does not buzz, unless the binding is `no_pause`. In Gaming Mode only `while_gaming` bindings fire, so only they can buzz.
+- **Only for the binding it is written on.** With L1 held, `L1-R2` is a different binding from `R2` and does not borrow its tick. If no `L1-R2` exists and `R2` fires as the fallback, `R2`'s tick plays — it is `R2` that fired.
+- **Modules and app overrides** carry it like a label: a binding an app replaces loses the old haptic unless the app gives its own.
+

@@ -19,6 +19,14 @@ This behaviour is on by default and can be disabled in the config:
 auto_detect_steam_games = false
 ```
 
+### A moment's grace before a game counts
+
+Switching desktops with L1 + D-pad passes over a game's window on the way. If that alone switched Gaming Mode on, the very bindings you were using to move on would stop working. So a game only counts once it has kept focus for a moment — one second in the shipped config (`focus_threshold_ms = 1000`). Leaving a game still switches Gaming Mode off at once.
+
+### Muting a game you switched away from
+
+With `auto_mute = true` — on in the shipped config — a game is muted while you are on another window and unmuted when you come back. Only the game's own sound is touched, not Steam or anything else that is playing, and it works for Flatpak emulators such as Dolphin too.
+
 ---
 
 For trigger config, haptic setup, IPC commands, `while_gaming` bindings, and state export fields, see the [Gaming Mode reference](../../reference/gaming-mode.md).
