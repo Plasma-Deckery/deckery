@@ -1,6 +1,6 @@
 Name:           deckery
 Version:        0.5.0
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Steam Deck input stack for KDE Plasma — meta-package
 
 # next_minor is the first version that would introduce a breaking change.
@@ -38,8 +38,9 @@ Install this package to get the full stack:
   dnf copr enable phischx/Deckery
   dnf install deckery
 
-After install, enable and start the services:
-  systemctl --user enable --now deckery-tray.service
+The services start automatically with the next graphical login, for every
+user. To opt out for one user:
+  systemctl --user mask deckery-tray.service
 
 %prep
 %autosetup -n %{name}-%{version}
@@ -73,6 +74,9 @@ done
 %{_datadir}/deckery/
 
 %changelog
+* Tue Nov 10 2026 Philipp Schimmelfennig <philipp@plasma-deckery.dev> - 0.5.0-2
+- Description: services are enabled by deckery-tray, no manual enable step
+
 * Sun Nov 08 2026 Philipp Schimmelfennig <philipp@plasma-deckery.dev> - 0.5.0-1
 - Version aligned with makima-deckery and deckery-hud 0.5.0
 - All component constraints updated: >= 0.5.0, < 0.6
