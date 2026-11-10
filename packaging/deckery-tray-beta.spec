@@ -87,8 +87,11 @@ ln -s ../deckery-tray-migrate.service \
 %dir %{_userunitdir}/deckery-tray.service.wants
 %{_userunitdir}/deckery-tray.service.wants/makima.service
 %{_userunitdir}/deckery-tray.service.wants/deckery-hud.service
+# Co-owned: no package in the dependency chain owns these on Fedora.
+%dir %{_userunitdir}/graphical-session.target.wants
 %{_userunitdir}/graphical-session.target.wants/deckery-tray.service
 %{_userunitdir}/graphical-session.target.wants/deckery-tray-migrate.service
+%dir %{_userunitdir}/default.target.wants
 %{_userunitdir}/default.target.wants/deckery-tray-migrate.service
 
 %changelog
