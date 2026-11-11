@@ -74,7 +74,7 @@ Left   = ["KEY_LEFT"]
 Right  = ["KEY_RIGHT"]
 A      = ["KEY_ENTER"]
 B      = ["KEY_ESC"]
-X      = ["KEY_BACKSPACE"]
+X      = { keys = ["KEY_BACKSPACE"], label = "⌫ Backspace" }
 Y      = { keys = ["KEY_SPACE"], label = "␣ Space" }
 Start  = ["KEY_F10"]   # three-stripes button → menu bar
 Select = { keys = ["KEY_TAB"], label = "⇥ Tab" }
@@ -95,11 +95,11 @@ R4 = { keys = ["KEY_LEFTALT"], label = "⌥ Alt" }
 R5 = { keys = ["KEY_LEFTCTRL"], label = "⌃ Ctrl" }
 
 # --- L1 layer: Copy/Paste, Undo/Redo, Select All ---
-L1-X  = { keys = ["KEY_LEFTCTRL", "KEY_C"], label = "⎘ Copy" }
+L1-X  = { keys = ["KEY_LEFTCTRL", "KEY_C"], label = "🗐 Copy" }
 L1-Y  = { keys = ["KEY_LEFTCTRL", "KEY_V"], label = "📋 Paste" }
 L1-B  = { keys = ["KEY_LEFTCTRL", "KEY_Z"], label = "↺ Undo" }
 L1-A  = { keys = ["KEY_LEFTCTRL", "KEY_LEFTSHIFT", "KEY_Z"], label = "↻ Redo" }
-L1-R4 = { keys = ["KEY_LEFTCTRL", "KEY_A"], label = "⬚ Select All" }
+L1-R4 = { keys = ["KEY_LEFTCTRL", "KEY_A"], label = "⌶ Select All" }
 
 # --- QAM layer: system-level controls ---
 # Held with the right thumb, so only the left-hand side is reachable while it

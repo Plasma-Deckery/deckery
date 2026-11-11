@@ -14,7 +14,7 @@ R1-Down  = { keys = ["KEY_LEFTCTRL", "KEY_F"],    label = "🔍 Search" }
 R1-A = { keys = ["KEY_LEFTCTRL", "KEY_LEFTSHIFT", "KEY_N"], label = "🗀 New Folder" }
 R1-B = { keys = ["KEY_DELETE"],                              label = "🗑 Move to Trash" }
 R1-X = { keys = ["KEY_F2"],                                  label = "✎ Rename" }
-R1-Y = { keys = ["KEY_LEFTCTRL", "KEY_LEFTALT", "KEY_C"], label = "⎘ Copy Location" }
+R1-Y = { keys = ["KEY_LEFTCTRL", "KEY_LEFTALT", "KEY_C"], label = "🗐 Copy Location" }
 
 # --- R1 + Start → view toggle ---
 R1-Start = { keys = ["KEY_LEFTCTRL", "KEY_H"], label = "👁 Toggle Hidden Files" }

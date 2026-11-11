@@ -12,8 +12,8 @@ exclusive_group = "kde-desktop-layout"
 
 [commands]
 # --- L1 + DPad → switch desktop / activity ---
-L1-Up    = { run = ["qdbus org.kde.KWin /KWin previousDesktop"], label = "🗔 Previous Desktop" }
-L1-Down  = { run = ["qdbus org.kde.KWin /KWin nextDesktop"], label = "🗔 Next Desktop" }
+L1-Up    = { run = ["qdbus org.kde.KWin /KWin previousDesktop"], label = "Previous Desktop" }
+L1-Down  = { run = ["qdbus org.kde.KWin /KWin nextDesktop"], label = "Next Desktop" }
 L1-Left  = { run = ["qdbus org.kde.ActivityManager /ActivityManager/Activities org.kde.ActivityManager.Activities.PreviousActivity"], label = "Previous Activity" }
 L1-Right = { run = ["qdbus org.kde.ActivityManager /ActivityManager/Activities org.kde.ActivityManager.Activities.NextActivity"], label = "Next Activity" }
 

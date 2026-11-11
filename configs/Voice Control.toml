@@ -1,8 +1,11 @@
-# Voice Control — OpenWhispr push-to-talk.
+# Voice Control — OpenWhispr dictation.
 #
 # Optional: delete this file, or switch the module off in the tray, and the
 # binding disappears with it.
 
 [remap]
-# --- L1 + R5 → OpenWhispr (Ctrl + PageDown), push-to-talk: hold while speaking ---
-L1-R5 = { keys = ["KEY_LEFTCTRL", "KEY_PAGEDOWN"], label = "🔊 Text to Speech (Ctrl+PgDn)", note = "halten" }
+# --- L1 + R5 → OpenWhispr (Ctrl + PageDown) ---
+# OpenWhispr's own activation mode decides how this behaves. Its default is
+# "tap": press once to start dictating, once more to stop. Switch the note to
+# "halten" if you set OpenWhispr to push-to-talk.
+L1-R5 = { keys = ["KEY_LEFTCTRL", "KEY_PAGEDOWN"], label = "🎙 Voice Input", note = "an / aus" }

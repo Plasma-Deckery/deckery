@@ -5,7 +5,7 @@ match_window_class = ["konsole", "org.kde.konsole"]
 
 [remap]
 B    = ["KEY_LEFTCTRL", "KEY_C"]   # Ctrl+C instead of Esc
-L1-X = { keys = ["KEY_LEFTCTRL", "KEY_LEFTSHIFT", "KEY_C"], label = "⎘ Copy" }
+L1-X = { keys = ["KEY_LEFTCTRL", "KEY_LEFTSHIFT", "KEY_C"], label = "🗐 Copy" }
 L1-Y = { keys = ["KEY_LEFTCTRL", "KEY_LEFTSHIFT", "KEY_V"], label = "📋 Paste" }
 
 # --- R1 + Face → Tab-Verwaltung (parallel zu Firefox) ---
