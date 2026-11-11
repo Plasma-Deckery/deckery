@@ -19,10 +19,10 @@ exclusive_group = "kde-desktop-layout"
 
 [commands]
 # --- L1 + DPad → move across the grid ---
-L1-Left  = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Switch One Desktop to the Left'"], label = "Desktop Left" }
-L1-Right = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Switch One Desktop to the Right'"], label = "Desktop Right" }
-L1-Up    = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Switch One Desktop Up'"], label = "Desktop Up" }
-L1-Down  = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Switch One Desktop Down'"], label = "Desktop Down" }
+L1-Left  = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Switch One Desktop to the Left'"], label = "🗔 Desktop Left" }
+L1-Right = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Switch One Desktop to the Right'"], label = "🗔 Desktop Right" }
+L1-Up    = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Switch One Desktop Up'"], label = "🗔 Desktop Up" }
+L1-Down  = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Switch One Desktop Down'"], label = "🗔 Desktop Down" }
 
 # --- L1+R1+DPad → carry the window across the grid ---
 L1-R1-Left  = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Window One Desktop to the Left'"], label = "Window Desktop Left" }

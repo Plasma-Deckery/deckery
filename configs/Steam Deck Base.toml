@@ -65,6 +65,9 @@ L2 = { keys = ["BTN_RIGHT"], no_pause = true, silent = true, haptic = { pad = "l
 R2 = { keys = ["BTN_LEFT"],  no_pause = true, silent = true, haptic = { pad = "right" } }
 
 # --- Basic navigation ---
+# A and B carry no label on purpose: a written label outranks a plain [hints]
+# line, so "⏎ Enter (Send Message)" from an app config could no longer sit on A.
+# Their icons live in those hints instead.
 Up     = ["KEY_UP"]
 Down   = ["KEY_DOWN"]
 Left   = ["KEY_LEFT"]
@@ -72,9 +75,9 @@ Right  = ["KEY_RIGHT"]
 A      = ["KEY_ENTER"]
 B      = ["KEY_ESC"]
 X      = ["KEY_BACKSPACE"]
-Y      = ["KEY_SPACE"]
+Y      = { keys = ["KEY_SPACE"], label = "␣ Space" }
 Start  = ["KEY_F10"]   # three-stripes button → menu bar
-Select = ["KEY_TAB"]
+Select = { keys = ["KEY_TAB"], label = "⇥ Tab" }
 
 # Not redundant: a modifier that is held and released without any combo firing
 # taps its raw button through to the virtual gamepad. The empty output is what
@@ -86,17 +89,17 @@ R1 = []
 R3 = ["BTN_LEFT"]
 
 # --- Back paddles ---
-L4 = ["KEY_LEFTSHIFT"]
-L5 = ["KEY_LEFTMETA"]
-R4 = ["KEY_LEFTALT"]
-R5 = ["KEY_LEFTCTRL"]
+L4 = { keys = ["KEY_LEFTSHIFT"], label = "⇧ Shift" }
+L5 = { keys = ["KEY_LEFTMETA"], label = "❖ Super" }
+R4 = { keys = ["KEY_LEFTALT"], label = "⌥ Alt" }
+R5 = { keys = ["KEY_LEFTCTRL"], label = "⌃ Ctrl" }
 
 # --- L1 layer: Copy/Paste, Undo/Redo, Select All ---
-L1-X  = { keys = ["KEY_LEFTCTRL", "KEY_C"], label = "Copy" }
-L1-Y  = { keys = ["KEY_LEFTCTRL", "KEY_V"], label = "Paste" }
-L1-B  = { keys = ["KEY_LEFTCTRL", "KEY_Z"], label = "Undo" }
-L1-A  = { keys = ["KEY_LEFTCTRL", "KEY_LEFTSHIFT", "KEY_Z"], label = "Redo" }
-L1-R4 = { keys = ["KEY_LEFTCTRL", "KEY_A"], label = "Select All" }
+L1-X  = { keys = ["KEY_LEFTCTRL", "KEY_C"], label = "⎘ Copy" }
+L1-Y  = { keys = ["KEY_LEFTCTRL", "KEY_V"], label = "📋 Paste" }
+L1-B  = { keys = ["KEY_LEFTCTRL", "KEY_Z"], label = "↺ Undo" }
+L1-A  = { keys = ["KEY_LEFTCTRL", "KEY_LEFTSHIFT", "KEY_Z"], label = "↻ Redo" }
+L1-R4 = { keys = ["KEY_LEFTCTRL", "KEY_A"], label = "⬚ Select All" }
 
 # --- QAM layer: system-level controls ---
 # Held with the right thumb, so only the left-hand side is reachable while it
@@ -125,11 +128,11 @@ QAM-L4     = { keys = ["KEY_PLAYPAUSE"],      while_gaming = true, label = "⏯ 
 QAM-Select = { keys = ["KEY_MUTE"],           while_gaming = true, label = "🔇 Mute" }
 
 # --- Steam layer: makima stays out of the way, Steam Input handles both ---
-Steam-X = { keys = [], label = "(Steam Keyboard)" }
-Steam-B = { keys = [], label = "(Handheld Daemon)" }
+Steam-X = { keys = [], label = "⌨ (Steam Keyboard)" }
+Steam-B = { keys = [], label = "⚙ (Handheld Daemon)" }
 
 [commands]
-L3 = { run = ["deckery-hud-toggle"], no_pause = true, silent = true, label = "Toggle HUD" }
+L3 = { run = ["deckery-hud-toggle"], no_pause = true, silent = true, label = "👁 Toggle HUD" }
 
 # ── Sticks and axis handling ──────────────────────────────────────────────────
 
