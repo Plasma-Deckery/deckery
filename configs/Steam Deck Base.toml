@@ -118,7 +118,7 @@ L1-R4 = { keys = ["KEY_LEFTCTRL", "KEY_A"], label = "⌶ Select All" }
 #
 # A label may start with a Unicode symbol and a space ("☀ Brightness Up").
 # The HUD sets that symbol as an icon beside the text, on the button's side;
-# everywhere else (toasts, the classic HUD) it simply reads as part of the label.
+# a toast shows it as part of the label, the classic HUD leaves it out.
 QAM-Up     = { keys = ["KEY_BRIGHTNESSUP"],   while_gaming = true, label = "☀ Brightness Up" }
 QAM-Down   = { keys = ["KEY_BRIGHTNESSDOWN"], while_gaming = true, label = "☼ Brightness Down" }
 QAM-Left   = { keys = ["KEY_PREVIOUSSONG"],   while_gaming = true, label = "⏮ Previous Track" }
@@ -132,7 +132,7 @@ Steam-X = { keys = [], label = "⌨ (Steam Keyboard)" }
 Steam-B = { keys = [], label = "⚙ (Handheld Daemon)" }
 
 [commands]
-L3 = { run = ["deckery-hud-toggle"], no_pause = true, silent = true, label = "👁 Toggle HUD" }
+L3 = { run = ["deckery-hud-toggle"], no_pause = true, silent = true, label = "🎮 Toggle HUD" }
 
 # ── Sticks and axis handling ──────────────────────────────────────────────────
 

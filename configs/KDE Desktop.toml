@@ -17,7 +17,7 @@
 requires_compositor = "KDE"
 
 [remap]
-L1-Start = { keys = ["KEY_LEFTALT", "KEY_F3"], label = "☰ Window Menu" }
+L1-Start = { keys = ["KEY_LEFTALT", "KEY_F3"], label = "Window Menu" }
 
 [commands]
 # --- L1+R1+Face → Window management ---
