@@ -391,8 +391,8 @@ class TestCheck:
                       pending=EVR("0", "0.5.0", "2.fc44"))
         assert r.status == "up_to_date"
 
-    def test_no_channel_is_up_to_date(self, monkeypatch):
-        assert self._run(monkeypatch, None).status == "up_to_date"
+    def test_no_channel_is_not_up_to_date(self, monkeypatch):
+        assert self._run(monkeypatch, None) == ch.Result("no_channel", None)
 
     def test_unreadable_installed_version_raises(self, monkeypatch):
         with pytest.raises(RuntimeError):

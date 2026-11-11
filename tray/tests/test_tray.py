@@ -529,3 +529,26 @@ class TestPackagedUpdateClick:
         tray_mod.DeckeryTray._show_system_update_hint(fake)
         dialog_cls.return_value.add_button.assert_not_called()
         fake._updater.start_system_update.assert_not_called()
+
+
+class TestUpdateBadge:
+    """The update badge: on for update available / restart needed, off when
+    updates are not available (packaged install without a Deckery channel)."""
+
+    @pytest.mark.parametrize("state,badge", [
+        ("UPDATE_AVAILABLE", True),
+        ("RESTART_REQUIRED", True),
+        ("UNAVAILABLE",      False),
+        ("UP_TO_DATE",       False),
+    ])
+    def test_badge(self, tray_mod, monkeypatch, state, badge):
+        seen = {}
+        def fake_state(statuses, paused, steam, has_update, **kw):
+            seen["has_update"] = has_update
+            return "ok"
+        monkeypatch.setattr(tray_mod, "_tray_state", fake_state)
+        fake = MagicMock()
+        fake._updater.state = getattr(tray_mod.UpdateState, state)
+        fake._makima.lifecycle = ""
+        tray_mod.DeckeryTray._refresh_tray_icon(fake)
+        assert seen["has_update"] is badge

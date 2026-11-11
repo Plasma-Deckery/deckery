@@ -16,7 +16,8 @@ channel instead of git tags (channel.py), so UPDATE_AVAILABLE only appears
 when the system update can deliver it. A click opens a dialog in
 deckery-tray.py that explains this and, where the image has `ujust`, offers
 to start the system update in a terminal. RESTART_REQUIRED (packaged only)
-means the update is downloaded and waits for a restart. The hourly check
+means the update is downloaded and waits for a restart; UNAVAILABLE (packaged
+only, greyed out, no badge) means no Deckery channel is enabled. The hourly check
 keeps running in both states. AHEAD_OF_RELEASE needs git and is never reached
 on packaged installs.
 
@@ -61,6 +62,7 @@ class UpdateState(Enum):
     UPDATE_AVAILABLE = auto()
     AHEAD_OF_RELEASE = auto()
     RESTART_REQUIRED = auto()   # packaged only: update downloaded, not booted
+    UNAVAILABLE      = auto()   # packaged only: no Deckery channel enabled
     ERROR            = auto()
 
 
@@ -71,6 +73,7 @@ _SENSITIVE = {
     UpdateState.UPDATE_AVAILABLE: True,
     UpdateState.AHEAD_OF_RELEASE: True,
     UpdateState.RESTART_REQUIRED: True,
+    UpdateState.UNAVAILABLE:      False,
     UpdateState.ERROR:            True,
 }
 
@@ -140,6 +143,8 @@ def packaged_label(state: UpdateState, version: str | None, can_update: bool) ->
         return f"Update available: v{version} — comes with your next system update"
     if state == UpdateState.RESTART_REQUIRED:
         return f"Restart to finish updating to v{version}"
+    if state == UpdateState.UNAVAILABLE:
+        return "Updates not available"
     return None
 
 
@@ -314,7 +319,8 @@ class Updater:
         checking and the label follows newer releases."""
         recheck = {UpdateState.IDLE, UpdateState.UP_TO_DATE, UpdateState.ERROR}
         if self._packaged:
-            recheck |= {UpdateState.UPDATE_AVAILABLE, UpdateState.RESTART_REQUIRED}
+            recheck |= {UpdateState.UPDATE_AVAILABLE, UpdateState.RESTART_REQUIRED,
+                        UpdateState.UNAVAILABLE}
         if self._state in recheck:
             self._start_check()
         GLib.timeout_add_seconds(self.CHECK_INTERVAL_S, self._auto_check)
@@ -368,6 +374,8 @@ class Updater:
                 return f"Rollback to v{self._latest}"
             case UpdateState.RESTART_REQUIRED:
                 return f"Restart to finish updating to v{self._latest}"
+            case UpdateState.UNAVAILABLE:
+                return "Updates not available"
             case UpdateState.ERROR:
                 return "Update check failed — retry"
 
@@ -440,6 +448,7 @@ class Updater:
             "up_to_date":       UpdateState.UP_TO_DATE,
             "update_available": UpdateState.UPDATE_AVAILABLE,
             "restart_required": UpdateState.RESTART_REQUIRED,
+            "no_channel":       UpdateState.UNAVAILABLE,
         }[result.status])
 
     def start_system_update(self) -> bool:

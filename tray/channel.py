@@ -267,7 +267,8 @@ def newest_offered(name: str, repo_dir: str = REPO_DIR,
 
 class Result(NamedTuple):
     status:  str          # "up_to_date" | "update_available" | "restart_required"
-    version: str | None   # for the label; None when up to date
+                          # | "no_channel"
+    version: str | None   # for the label; None when there is nothing to offer
 
 
 def check(tray_file: str) -> Result:
@@ -279,8 +280,10 @@ def check(tray_file: str) -> Result:
     name, installed = owner
     offered = newest_offered(name)
     if offered is None:
+        # No enabled Deckery channel (or no build in it): nothing can update
+        # Deckery here, and "Up to date" would be a claim we cannot back.
         log.info("no enabled Deckery channel offers %s", name)
-        return Result("up_to_date", None)
+        return Result("no_channel", None)
     channel, evr = offered
     pending = pending_package(name)
     log.info("installed %s  offered %s (%s)  pending %s", installed, evr, channel, pending)

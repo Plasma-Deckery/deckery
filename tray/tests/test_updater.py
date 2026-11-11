@@ -562,7 +562,8 @@ class TestPackagedMode:
         start.assert_called_once()
 
     @pytest.mark.parametrize("state", [UpdateState.UPDATE_AVAILABLE,
-                                       UpdateState.RESTART_REQUIRED])
+                                       UpdateState.RESTART_REQUIRED,
+                                       UpdateState.UNAVAILABLE])
     def test_keeps_auto_checking(self, state):
         # Sticky state from #78: the label must follow the channel.
         u = self._make(state=state)
@@ -581,10 +582,12 @@ class TestPackagedMode:
         ("up_to_date",       UpdateState.UP_TO_DATE),
         ("update_available", UpdateState.UPDATE_AVAILABLE),
         ("restart_required", UpdateState.RESTART_REQUIRED),
+        ("no_channel",       UpdateState.UNAVAILABLE),
     ])
     def test_check_uses_channel_not_tags(self, status, state):
         u = self._make(state=UpdateState.IDLE, latest=None)
-        result = upd.channel.Result(status, "0.5.0-3" if status != "up_to_date" else None)
+        result = upd.channel.Result(
+            status, "0.5.0-3" if status in ("update_available", "restart_required") else None)
         with patch.object(upd.channel, "check", return_value=result) as check, \
              patch.object(upd, "_fetch_latest_tag") as tags:
             u._check_thread()
@@ -683,6 +686,11 @@ class TestPackagedText:
     def test_update_available_label_without_button(self):
         u = self._make(UpdateState.UPDATE_AVAILABLE, False)
         assert u.label == "Update available: v0.6.0 — comes with your next system update"
+
+    def test_no_channel_label_is_greyed_out(self):
+        u = self._make(UpdateState.UNAVAILABLE, True, latest=None)
+        assert u.label == "Updates not available"
+        assert not u.sensitive
 
     def test_restart_required_label(self):
         u = self._make(UpdateState.RESTART_REQUIRED, True)
