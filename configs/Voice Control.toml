@@ -4,5 +4,5 @@
 # binding disappears with it.
 
 [remap]
-# --- L1 + R5 → OpenWhispr (Ctrl + PageDown) ---
-L1-R5 = { keys = ["KEY_LEFTCTRL", "KEY_PAGEDOWN"], label = "Text to Speech (Ctrl+PgDn)" }
+# --- L1 + R5 → OpenWhispr (Ctrl + PageDown), push-to-talk: hold while speaking ---
+L1-R5 = { keys = ["KEY_LEFTCTRL", "KEY_PAGEDOWN"], label = "Text to Speech (Ctrl+PgDn)", note = "halten" }
