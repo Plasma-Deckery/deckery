@@ -112,13 +112,17 @@ L1-R4 = { keys = ["KEY_LEFTCTRL", "KEY_A"], label = "Select All" }
 # you reach for *during* a game, and there is nothing else on the device that
 # offers them. Nothing here collides with a game, because a game never sees
 # QAM combinations in the first place.
-QAM-Up     = { keys = ["KEY_BRIGHTNESSUP"],   while_gaming = true, label = "Brightness Up" }
-QAM-Down   = { keys = ["KEY_BRIGHTNESSDOWN"], while_gaming = true, label = "Brightness Down" }
-QAM-Left   = { keys = ["KEY_PREVIOUSSONG"],   while_gaming = true, label = "Previous Track" }
-QAM-Right  = { keys = ["KEY_NEXTSONG"],       while_gaming = true, label = "Next Track" }
-QAM-L4     = { keys = ["KEY_PLAYPAUSE"],      while_gaming = true, label = "Play / Pause" }
+#
+# A label may start with a Unicode symbol and a space ("☀ Brightness Up").
+# The HUD sets that symbol as an icon beside the text, on the button's side;
+# everywhere else (toasts, the classic HUD) it simply reads as part of the label.
+QAM-Up     = { keys = ["KEY_BRIGHTNESSUP"],   while_gaming = true, label = "☀ Brightness Up" }
+QAM-Down   = { keys = ["KEY_BRIGHTNESSDOWN"], while_gaming = true, label = "☼ Brightness Down" }
+QAM-Left   = { keys = ["KEY_PREVIOUSSONG"],   while_gaming = true, label = "⏮ Previous Track" }
+QAM-Right  = { keys = ["KEY_NEXTSONG"],       while_gaming = true, label = "⏭ Next Track" }
+QAM-L4     = { keys = ["KEY_PLAYPAUSE"],      while_gaming = true, label = "⏯ Play / Pause" }
 # Volume has hardware buttons on the Deck; mute does not.
-QAM-Select = { keys = ["KEY_MUTE"],           while_gaming = true, label = "Mute" }
+QAM-Select = { keys = ["KEY_MUTE"],           while_gaming = true, label = "🔇 Mute" }
 
 # --- Steam layer: makima stays out of the way, Steam Input handles both ---
 Steam-X = { keys = [], label = "(Steam Keyboard)" }
