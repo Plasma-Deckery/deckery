@@ -454,18 +454,30 @@ class TestStatePath:
 # ── Update item on packaged installs (Issue #78) ──────────────────────────────
 
 class TestPackagedUpdateClick:
-    """_on_update_clicked on a packaged install shows the explanation and
-    hands nothing to the updater."""
+    """On a packaged install the update item opens the explanation dialog;
+    "Update now" (only where the system can run it) starts the system update
+    through the updater, never get.sh."""
 
-    def _fake_self(self, tray_mod, packaged: bool):
+    def _fake_self(self, tray_mod, packaged=True, state="UPDATE_AVAILABLE",
+                   command=("konsole",)):
+        from types import SimpleNamespace
         fake = MagicMock()
         fake._updater.packaged = packaged
-        fake._updater.state = tray_mod.UpdateState.UPDATE_AVAILABLE
+        fake._updater.state = getattr(tray_mod.UpdateState, state)
         fake._updater.latest = "0.6.0"
+        fake._updater.system_update_command = list(command) if command else None
+        fake._updater.hint = SimpleNamespace(title="Title", text="Text")
         return fake
 
-    def test_packaged_shows_hint_and_does_not_update(self, tray_mod, monkeypatch):
-        fake = self._fake_self(tray_mod, packaged=True)
+    @pytest.fixture
+    def dialog_cls(self, tray_mod, monkeypatch):
+        cls = MagicMock()
+        monkeypatch.setattr(tray_mod.Gtk, "MessageDialog", cls)
+        return cls
+
+    @pytest.mark.parametrize("state", ["UPDATE_AVAILABLE", "RESTART_REQUIRED"])
+    def test_packaged_click_shows_hint_only(self, tray_mod, monkeypatch, state):
+        fake = self._fake_self(tray_mod, state=state)
         popen = MagicMock()
         monkeypatch.setattr(tray_mod.subprocess, "Popen", popen)
         tray_mod.DeckeryTray._on_update_clicked(fake, None)
@@ -481,19 +493,39 @@ class TestPackagedUpdateClick:
         fake._show_system_update_hint.assert_not_called()
         fake._updater.on_clicked.assert_called_once()
 
-    def test_hint_dialog_text(self, tray_mod, monkeypatch):
-        import updater as real_updater
-        monkeypatch.setattr(tray_mod, "PACKAGED_HINT_TITLE", real_updater.PACKAGED_HINT_TITLE)
-        monkeypatch.setattr(tray_mod, "packaged_hint_text", real_updater.packaged_hint_text)
-        dialog_cls = MagicMock()
-        monkeypatch.setattr(tray_mod.Gtk, "MessageDialog", dialog_cls)
-        fake = self._fake_self(tray_mod, packaged=True)
+    def test_update_now_button_starts_system_update(self, tray_mod, dialog_cls, monkeypatch):
+        fake = self._fake_self(tray_mod)
+        dialog = dialog_cls.return_value
+        dialog.run.return_value = tray_mod.Gtk.ResponseType.OK
+        monkeypatch.setattr(tray_mod, "UPDATE_NOW_BUTTON", "Update now")
+        monkeypatch.setattr(tray_mod, "LATER_BUTTON", "Later")
         tray_mod.DeckeryTray._show_system_update_hint(fake)
         kw = dialog_cls.call_args.kwargs
-        assert kw["text"] == real_updater.PACKAGED_HINT_TITLE
-        assert kw["buttons"] == tray_mod.Gtk.ButtonsType.OK
-        dialog = dialog_cls.return_value
-        dialog.format_secondary_text.assert_called_once_with(
-            real_updater.packaged_hint_text("0.6.0"))
-        dialog.run.assert_called_once()
+        assert kw["text"] == "Title"
+        assert kw["buttons"] == tray_mod.Gtk.ButtonsType.NONE
+        dialog.format_secondary_text.assert_called_once_with("Text")
+        labels = [c.args[0] for c in dialog.add_button.call_args_list]
+        assert labels == ["Later", "Update now"]
+        fake._updater.start_system_update.assert_called_once()
         dialog.destroy.assert_called_once()
+
+    def test_later_does_nothing(self, tray_mod, dialog_cls):
+        fake = self._fake_self(tray_mod)
+        dialog_cls.return_value.run.return_value = tray_mod.Gtk.ResponseType.CANCEL
+        tray_mod.DeckeryTray._show_system_update_hint(fake)
+        fake._updater.start_system_update.assert_not_called()
+
+    def test_no_command_means_no_button(self, tray_mod, dialog_cls):
+        fake = self._fake_self(tray_mod, command=None)
+        dialog_cls.return_value.run.return_value = tray_mod.Gtk.ResponseType.OK
+        tray_mod.DeckeryTray._show_system_update_hint(fake)
+        assert dialog_cls.call_args.kwargs["buttons"] == tray_mod.Gtk.ButtonsType.OK
+        dialog_cls.return_value.add_button.assert_not_called()
+        fake._updater.start_system_update.assert_not_called()
+
+    def test_restart_dialog_has_no_button(self, tray_mod, dialog_cls):
+        fake = self._fake_self(tray_mod, state="RESTART_REQUIRED")
+        dialog_cls.return_value.run.return_value = tray_mod.Gtk.ResponseType.OK
+        tray_mod.DeckeryTray._show_system_update_hint(fake)
+        dialog_cls.return_value.add_button.assert_not_called()
+        fake._updater.start_system_update.assert_not_called()

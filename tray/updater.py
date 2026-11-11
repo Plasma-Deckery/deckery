@@ -11,11 +11,14 @@ State machine:
     ERROR            → "Update check failed — retry"  clickable → retries
 
 Packaged installs (RPM, see is_packaged_install()) are updated by the system
-update, never by the tray. There the state machine only reports: the
-UPDATE_AVAILABLE label says the new version arrives with a system update, a
-click shows an explanation (deckery-tray.py), and get.sh is never run. The
-hourly check keeps running in UPDATE_AVAILABLE so the label follows newer
-tags. AHEAD_OF_RELEASE needs git and is never reached there (Issue #78).
+update, never by get.sh (Issue #78). There the check asks the enabled package
+channel instead of git tags (channel.py), so UPDATE_AVAILABLE only appears
+when the system update can deliver it. A click opens a dialog in
+deckery-tray.py that explains this and, where the image has `ujust`, offers
+to start the system update in a terminal. RESTART_REQUIRED (packaged only)
+means the update is downloaded and waits for a restart. The hourly check
+keeps running in both states. AHEAD_OF_RELEASE needs git and is never reached
+on packaged installs.
 
 AHEAD_OF_RELEASE fires when HEAD is not at an exact tag but its commit
 timestamp is newer than the latest release tag — i.e. the user is running
@@ -30,9 +33,12 @@ import os
 import subprocess
 import threading
 import urllib.request
+from typing import NamedTuple
 from enum import Enum, auto
 
 from gi.repository import GLib
+
+import channel
 
 log = logging.getLogger("updater")
 
@@ -54,6 +60,7 @@ class UpdateState(Enum):
     UP_TO_DATE       = auto()
     UPDATE_AVAILABLE = auto()
     AHEAD_OF_RELEASE = auto()
+    RESTART_REQUIRED = auto()   # packaged only: update downloaded, not booted
     ERROR            = auto()
 
 
@@ -63,6 +70,7 @@ _SENSITIVE = {
     UpdateState.UP_TO_DATE:       True,
     UpdateState.UPDATE_AVAILABLE: True,
     UpdateState.AHEAD_OF_RELEASE: True,
+    UpdateState.RESTART_REQUIRED: True,
     UpdateState.ERROR:            True,
 }
 
@@ -119,26 +127,55 @@ def is_packaged_install() -> bool:
     return _packaged
 
 
-# User-facing text for packaged installs. Plain words for non-technical users:
-# no package or distribution jargon. The version comes from git tags, which can
-# be ahead of what the system update offers yet, so nothing here promises that
-# the update is installable right now.
-PACKAGED_HINT_TITLE = "Deckery updates come with your system updates"
+# ── User-facing text for packaged installs ────────────────────────────────────
+#
+# Plain words for non-technical users: no package or distribution jargon.
+
+def packaged_label(state: UpdateState, version: str | None, can_update: bool) -> str | None:
+    """Menu label for packaged installs where it differs from source installs,
+    else None."""
+    if state == UpdateState.UPDATE_AVAILABLE:
+        if can_update:
+            return f"Update available: v{version}"
+        return f"Update available: v{version} — comes with your next system update"
+    if state == UpdateState.RESTART_REQUIRED:
+        return f"Restart to finish updating to v{version}"
+    return None
 
 
-def packaged_hint_text(latest: str | None) -> str:
-    """Body of the explanation dialog shown on packaged installs."""
-    if latest:
-        first = (f"Deckery v{latest} has been released. On this system, Deckery "
-                 "is updated together with the rest of your system, so there is "
-                 "nothing to install here.")
-    else:
-        first = ("On this system, Deckery is updated together with the rest of "
-                 "your system, so there is nothing to install here.")
-    return (first + "\n\n"
-            "The new version will arrive with one of your next system updates. "
-            "It may not be available right away. Updates take effect after you "
-            "restart your device.")
+class Hint(NamedTuple):
+    title: str
+    text:  str
+
+
+def packaged_hint(state: UpdateState, version: str | None, can_update: bool) -> Hint:
+    """Title and text of the dialog a click opens on packaged installs."""
+    v = f"Deckery v{version}" if version else "A new version of Deckery"
+    if state == UpdateState.RESTART_REQUIRED:
+        return Hint(
+            "Restart to finish the update",
+            f"{v} has already been downloaded. Restart your device to start "
+            "using it.",
+        )
+    if can_update:
+        return Hint(
+            "Update available",
+            f"{v} is ready. Deckery is updated together with the rest of your "
+            "system.\n\n"
+            "Update now updates your whole system. This can take a while, and "
+            "you need to restart your device afterwards.",
+        )
+    return Hint(
+        "Deckery updates come with your system updates",
+        f"{v} is ready. On this system, Deckery is updated together with the "
+        "rest of your system, so there is nothing to install here.\n\n"
+        "It will be installed with your next system update. Updates take "
+        "effect after you restart your device.",
+    )
+
+
+UPDATE_NOW_BUTTON = "Update now"
+LATER_BUTTON      = "Later"
 
 
 def local_version() -> str:
@@ -277,7 +314,7 @@ class Updater:
         checking and the label follows newer releases."""
         recheck = {UpdateState.IDLE, UpdateState.UP_TO_DATE, UpdateState.ERROR}
         if self._packaged:
-            recheck.add(UpdateState.UPDATE_AVAILABLE)
+            recheck |= {UpdateState.UPDATE_AVAILABLE, UpdateState.RESTART_REQUIRED}
         if self._state in recheck:
             self._start_check()
         GLib.timeout_add_seconds(self.CHECK_INTERVAL_S, self._auto_check)
@@ -299,9 +336,25 @@ class Updater:
         return self._latest
 
     @property
+    def system_update_command(self) -> list[str] | None:
+        """Packaged only: argv that runs the system update in a terminal, or
+        None if this system cannot offer it (no ujust or no terminal)."""
+        if not self._packaged:
+            return None
+        return channel.system_update_command()
+
+    @property
+    def hint(self) -> "Hint":
+        return packaged_hint(self._state, self._latest,
+                             self.system_update_command is not None)
+
+    @property
     def label(self) -> str:
-        if self._packaged and self._state == UpdateState.UPDATE_AVAILABLE:
-            return f"New version v{self._latest} — arrives with a system update"
+        if self._packaged:
+            text = packaged_label(self._state, self._latest,
+                                  self.system_update_command is not None)
+            if text:
+                return text
         match self._state:
             case UpdateState.IDLE:
                 return "Check for Updates"
@@ -313,6 +366,8 @@ class Updater:
                 return f"Update available: v{self._latest} — Install"
             case UpdateState.AHEAD_OF_RELEASE:
                 return f"Rollback to v{self._latest}"
+            case UpdateState.RESTART_REQUIRED:
+                return f"Restart to finish updating to v{self._latest}"
             case UpdateState.ERROR:
                 return "Update check failed — retry"
 
@@ -345,6 +400,9 @@ class Updater:
         threading.Thread(target=self._check_thread, daemon=True).start()
 
     def _check_thread(self):
+        if self._packaged:
+            self._check_packaged()
+            return
         try:
             latest = _fetch_latest_tag()
             local  = local_version()
@@ -352,12 +410,6 @@ class Updater:
             log.info("latest: %s  local: %s", latest, local)
             if local != "unknown" and _parse_version(local) >= _parse_version(latest):
                 self._set_state(UpdateState.UP_TO_DATE)
-            elif local == "unknown" and self._packaged:
-                # No version from the package database: nothing to compare,
-                # and the git-based rollback logic does not apply. Do not
-                # claim an update that may not exist.
-                log.warning("packaged install, but local version unknown")
-                self._set_state(UpdateState.ERROR)
             elif local == "unknown":
                 # HEAD is not on an exact tag. Check whether it is *ahead* of the
                 # latest release (dev snapshot) or *behind* it (partial checkout).
@@ -373,6 +425,47 @@ class Updater:
         except Exception as e:
             log.warning("update check failed: %s", e)
             self._set_state(UpdateState.ERROR)
+
+    def _check_packaged(self):
+        """Channel-aware check (channel.py): compares the installed package
+        with the newest build the enabled channel offers, not with git tags."""
+        try:
+            result = channel.check(_THIS_FILE)
+        except Exception as e:
+            log.warning("update check failed: %s", e)
+            self._set_state(UpdateState.ERROR)
+            return
+        self._latest = result.version
+        self._set_state({
+            "up_to_date":       UpdateState.UP_TO_DATE,
+            "update_available": UpdateState.UPDATE_AVAILABLE,
+            "restart_required": UpdateState.RESTART_REQUIRED,
+        }[result.status])
+
+    def start_system_update(self) -> bool:
+        """Packaged only: open a terminal running the system update. Returns
+        False if this system cannot offer it. Re-checks once the terminal
+        closes, so the menu moves on to "Restart to finish…"."""
+        argv = self.system_update_command
+        if argv is None:
+            return False
+        log.info("starting system update: %s", channel.describe(argv))
+        try:
+            proc = subprocess.Popen(argv)
+        except OSError as e:
+            log.warning("could not start system update: %s", e)
+            return False
+
+        def _wait():
+            proc.wait()
+            GLib.idle_add(self._recheck_after_update)
+        threading.Thread(target=_wait, daemon=True).start()
+        return True
+
+    def _recheck_after_update(self) -> bool:
+        if self._state != UpdateState.CHECKING:
+            self._start_check()
+        return GLib.SOURCE_REMOVE
 
     def _run_update(self):
         """Open a terminal and run get.sh — fetches latest tag and re-runs install.
