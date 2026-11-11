@@ -26,7 +26,8 @@ from typing import NamedTuple
 log = logging.getLogger("deckery-tray")
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from updater import Updater, UpdateState, local_version, _DECKERY_DIR
+from updater import (Updater, UpdateState, local_version, _DECKERY_DIR,
+                     PACKAGED_HINT_TITLE, packaged_hint_text)
 import config_menu
 import state as makima_state_file
 import steam_bridge
@@ -678,6 +679,10 @@ class DeckeryTray:
 
     def _on_update_clicked(self, _item):
         state = self._updater.state
+        if self._updater.packaged and state == UpdateState.UPDATE_AVAILABLE:
+            # Packaged installs are updated by the system update (Issue #78).
+            self._show_system_update_hint()
+            return
         if state == UpdateState.AHEAD_OF_RELEASE:
             if not self._confirm_install(rollback=True):
                 return
@@ -686,6 +691,19 @@ class DeckeryTray:
             if dirty and not self._confirm_install(rollback=False, dirty=dirty):
                 return
         self._updater.on_clicked()
+
+    def _show_system_update_hint(self) -> None:
+        """Explain that Deckery arrives with the system update. Information
+        only: nothing is installed or launched from here."""
+        dialog = Gtk.MessageDialog(
+            flags=0,
+            message_type=Gtk.MessageType.INFO,
+            buttons=Gtk.ButtonsType.OK,
+            text=PACKAGED_HINT_TITLE,
+        )
+        dialog.format_secondary_text(packaged_hint_text(self._updater.latest))
+        dialog.run()
+        dialog.destroy()
 
     def _confirm_install(self, rollback: bool, dirty: list[str] | None = None) -> bool:
         """Confirmation dialog before update or rollback. Returns True if the user confirms."""

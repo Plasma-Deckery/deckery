@@ -10,6 +10,13 @@ State machine:
     AHEAD_OF_RELEASE → "Rollback to vX.Y.Z"           clickable → runs get.sh
     ERROR            → "Update check failed — retry"  clickable → retries
 
+Packaged installs (RPM, see is_packaged_install()) are updated by the system
+update, never by the tray. There the state machine only reports: the
+UPDATE_AVAILABLE label says the new version arrives with a system update, a
+click shows an explanation (deckery-tray.py), and get.sh is never run. The
+hourly check keeps running in UPDATE_AVAILABLE so the label follows newer
+tags. AHEAD_OF_RELEASE needs git and is never reached there (Issue #78).
+
 AHEAD_OF_RELEASE fires when HEAD is not at an exact tag but its commit
 timestamp is newer than the latest release tag — i.e. the user is running
 a development snapshot that is ahead of the published release. In this case
@@ -33,6 +40,8 @@ log = logging.getLogger("updater")
 _TRAY_DIR    = os.path.dirname(os.path.abspath(__file__))
 _DECKERY_DIR = os.path.dirname(_TRAY_DIR)
 _GET_SH      = os.path.join(_DECKERY_DIR, "get.sh")
+
+_THIS_FILE   = os.path.abspath(__file__)
 
 _GITHUB_TAGS_API = "https://api.github.com/repos/Plasma-Deckery/deckery/tags"
 
@@ -60,6 +69,78 @@ _SENSITIVE = {
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
+def _in_git_checkout(path: str) -> bool:
+    """True if path or any parent directory contains .git (a directory in a
+    clone, a file in a worktree)."""
+    d = path
+    while True:
+        if os.path.exists(os.path.join(d, ".git")):
+            return True
+        parent = os.path.dirname(d)
+        if parent == d:
+            return False
+        d = parent
+
+
+def _rpm_owner_version(path: str) -> str | None:
+    """Version of the RPM that owns path, or None if no package owns it
+    (or rpm is missing)."""
+    try:
+        r = subprocess.run(
+            ["rpm", "-qf", "--qf", "%{VERSION}", path],
+            capture_output=True, text=True, timeout=5,
+        )
+        if r.returncode == 0 and r.stdout.strip():
+            return r.stdout.strip()
+    except Exception:
+        pass
+    return None
+
+
+_packaged: bool | None = None
+
+
+def is_packaged_install() -> bool:
+    """True if this tray was installed by a package (RPM) rather than from a
+    source checkout. Decides whether the tray may update itself (Issue #78).
+
+    Packaged means both: no git checkout around the running tray, and the
+    running updater.py is owned by an RPM. Both conditions use the running
+    file, so a host with a source install and a layered RPM is classified by
+    whichever tray is actually running. Requiring the git check first keeps
+    every source install on today's path without even calling rpm.
+
+    Cached: the answer cannot change while the process runs."""
+    global _packaged
+    if _packaged is None:
+        _packaged = (not _in_git_checkout(_TRAY_DIR)
+                     and _rpm_owner_version(_THIS_FILE) is not None)
+        log.info("install type: %s", "packaged" if _packaged else "source")
+    return _packaged
+
+
+# User-facing text for packaged installs. Plain words for non-technical users:
+# no package or distribution jargon. The version comes from git tags, which can
+# be ahead of what the system update offers yet, so nothing here promises that
+# the update is installable right now.
+PACKAGED_HINT_TITLE = "Deckery updates come with your system updates"
+
+
+def packaged_hint_text(latest: str | None) -> str:
+    """Body of the explanation dialog shown on packaged installs."""
+    if latest:
+        first = (f"Deckery v{latest} has been released. On this system, Deckery "
+                 "is updated together with the rest of your system, so there is "
+                 "nothing to install here.")
+    else:
+        first = ("On this system, Deckery is updated together with the rest of "
+                 "your system, so there is nothing to install here.")
+    return (first + "\n\n"
+            "The new version will arrive with one of your next system updates. "
+            "It may not be available right away. Updates take effect after you "
+            "restart your device.")
+
+
 def local_version() -> str:
     """Returns the version of the currently running Deckery installation.
 
@@ -81,7 +162,7 @@ def local_version() -> str:
     except Exception:
         pass
 
-    # 2. RPM install fallback
+    # 2. RPM install fallback (deckery meta-package)
     try:
         r = subprocess.run(
             ["rpm", "-q", "deckery", "--qf", "%{VERSION}"],
@@ -91,6 +172,12 @@ def local_version() -> str:
             return r.stdout.strip()
     except Exception:
         pass
+
+    # 3. The package that owns this tray (deckery-tray), for systems where the
+    #    deckery meta-package is not installed. Same version scheme.
+    v = _rpm_owner_version(_THIS_FILE)
+    if v:
+        return v
 
     return "unknown"
 
@@ -173,8 +260,9 @@ class Updater:
     CHECK_INTERVAL_S      = 3600
     INITIAL_CHECK_DELAY_S = 30
 
-    def __init__(self, on_state_change):
+    def __init__(self, on_state_change, packaged: bool | None = None):
         self._on_state_change = on_state_change
+        self._packaged = is_packaged_install() if packaged is None else packaged
         self._latest: str | None = None
         self._state = UpdateState.IDLE
 
@@ -182,8 +270,15 @@ class Updater:
         GLib.timeout_add_seconds(self.INITIAL_CHECK_DELAY_S, self._auto_check)
 
     def _auto_check(self) -> bool:
-        """Called by GLib timer. Runs a check if idle, then reschedules."""
-        if self._state in (UpdateState.IDLE, UpdateState.UP_TO_DATE, UpdateState.ERROR):
+        """Called by GLib timer. Runs a check if idle, then reschedules.
+
+        Source installs stop checking once an update is offered: the next step
+        is the user's click. Packaged installs have no such step, so they keep
+        checking and the label follows newer releases."""
+        recheck = {UpdateState.IDLE, UpdateState.UP_TO_DATE, UpdateState.ERROR}
+        if self._packaged:
+            recheck.add(UpdateState.UPDATE_AVAILABLE)
+        if self._state in recheck:
             self._start_check()
         GLib.timeout_add_seconds(self.CHECK_INTERVAL_S, self._auto_check)
         return GLib.SOURCE_REMOVE  # don't repeat this particular timeout
@@ -195,7 +290,18 @@ class Updater:
         return self._state
 
     @property
+    def packaged(self) -> bool:
+        """True on packaged installs: updates come from the system update."""
+        return self._packaged
+
+    @property
+    def latest(self) -> str | None:
+        return self._latest
+
+    @property
     def label(self) -> str:
+        if self._packaged and self._state == UpdateState.UPDATE_AVAILABLE:
+            return f"New version v{self._latest} — arrives with a system update"
         match self._state:
             case UpdateState.IDLE:
                 return "Check for Updates"
@@ -215,9 +321,13 @@ class Updater:
         return _SENSITIVE.get(self._state, False)
 
     def on_clicked(self):
-        """Call when the menu item is activated."""
+        """Call when the menu item is activated. On packaged installs the
+        UPDATE_AVAILABLE click is handled by the tray (explanation dialog);
+        here it does nothing."""
         if self._state in (UpdateState.IDLE, UpdateState.UP_TO_DATE, UpdateState.ERROR):
             self._start_check()
+        elif self._packaged:
+            return
         elif self._state in (UpdateState.UPDATE_AVAILABLE, UpdateState.AHEAD_OF_RELEASE):
             self._run_update()
 
@@ -242,6 +352,12 @@ class Updater:
             log.info("latest: %s  local: %s", latest, local)
             if local != "unknown" and _parse_version(local) >= _parse_version(latest):
                 self._set_state(UpdateState.UP_TO_DATE)
+            elif local == "unknown" and self._packaged:
+                # No version from the package database: nothing to compare,
+                # and the git-based rollback logic does not apply. Do not
+                # claim an update that may not exist.
+                log.warning("packaged install, but local version unknown")
+                self._set_state(UpdateState.ERROR)
             elif local == "unknown":
                 # HEAD is not on an exact tag. Check whether it is *ahead* of the
                 # latest release (dev snapshot) or *behind* it (partial checkout).
@@ -259,7 +375,12 @@ class Updater:
             self._set_state(UpdateState.ERROR)
 
     def _run_update(self):
-        """Open a terminal and run get.sh — fetches latest tag and re-runs install."""
+        """Open a terminal and run get.sh — fetches latest tag and re-runs install.
+        Never on packaged installs: get.sh would build a second installation
+        whose user units shadow the package's (Issue #78)."""
+        if self._packaged:
+            log.warning("packaged install — not running get.sh")
+            return
         log.info("launching update: %s", _GET_SH)
         subprocess.Popen([
             "distrobox-host-exec", "konsole", "--noclose",

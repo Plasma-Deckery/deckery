@@ -11,6 +11,7 @@ Covers:
   • Updater._run_update: Popen receives distrobox-host-exec + get.sh
   • Updater.label: correct text for every UpdateState
   • Updater.sensitive: clickable only in the right states
+  • Packaged installs (#78): detection, labels, hint text, never launches get.sh
 
 GLib is mocked in conftest.py — GLib.timeout_add_seconds in Updater.__init__
 is captured but never executed, so no timer fires during tests.
@@ -431,3 +432,198 @@ class TestRunUpdate:
             u._run_update()
         args = mock_popen.call_args[0][0]
         assert upd._GET_SH in args
+
+
+# ── Packaged installs (Issue #78) ─────────────────────────────────────────────
+
+class TestInGitCheckout:
+    """_in_git_checkout finds .git in the path or any parent."""
+
+    def test_clone_parent(self, tmp_path):
+        (tmp_path / ".git").mkdir()
+        sub = tmp_path / "tray"
+        sub.mkdir()
+        assert upd._in_git_checkout(str(sub))
+
+    def test_worktree_git_file(self, tmp_path):
+        (tmp_path / ".git").write_text("gitdir: /elsewhere\n")
+        sub = tmp_path / "tray"
+        sub.mkdir()
+        assert upd._in_git_checkout(str(sub))
+
+    def test_no_git_anywhere(self, tmp_path):
+        sub = tmp_path / "usr" / "lib" / "deckery" / "tray"
+        sub.mkdir(parents=True)
+        # tmp_path lives under /tmp, which has no .git above it.
+        assert not upd._in_git_checkout(str(sub))
+
+
+class TestIsPackagedInstall:
+    """is_packaged_install: no git checkout around the tray AND the tray file
+    is owned by an RPM."""
+
+    @pytest.fixture(autouse=True)
+    def _reset_cache(self, monkeypatch):
+        monkeypatch.setattr(upd, "_packaged", None)
+
+    def _rpm(self, stdout="0.5.0", returncode=0):
+        r = MagicMock()
+        r.returncode = returncode
+        r.stdout = stdout
+        return r
+
+    def test_rpm_owned_without_git_is_packaged(self, monkeypatch):
+        monkeypatch.setattr(upd, "_in_git_checkout", lambda p: False)
+        with patch.object(upd.subprocess, "run", return_value=self._rpm()) as run:
+            assert upd.is_packaged_install()
+        argv = run.call_args[0][0]
+        assert argv[:2] == ["rpm", "-qf"]
+        assert argv[-1] == upd._THIS_FILE
+
+    def test_git_checkout_is_source_and_never_asks_rpm(self, monkeypatch):
+        monkeypatch.setattr(upd, "_in_git_checkout", lambda p: True)
+        with patch.object(upd.subprocess, "run") as run:
+            assert not upd.is_packaged_install()
+        run.assert_not_called()
+
+    def test_not_owned_by_any_package_is_source(self, monkeypatch):
+        monkeypatch.setattr(upd, "_in_git_checkout", lambda p: False)
+        not_owned = self._rpm(stdout="file /x is not owned by any package\n", returncode=1)
+        with patch.object(upd.subprocess, "run", return_value=not_owned):
+            assert not upd.is_packaged_install()
+
+    def test_no_rpm_binary_is_source(self, monkeypatch):
+        monkeypatch.setattr(upd, "_in_git_checkout", lambda p: False)
+        with patch.object(upd.subprocess, "run", side_effect=FileNotFoundError):
+            assert not upd.is_packaged_install()
+
+    def test_result_is_cached(self, monkeypatch):
+        monkeypatch.setattr(upd, "_in_git_checkout", lambda p: False)
+        with patch.object(upd.subprocess, "run", return_value=self._rpm()) as run:
+            upd.is_packaged_install()
+            upd.is_packaged_install()
+        assert run.call_count == 1
+
+    def test_this_test_checkout_is_source(self, monkeypatch):
+        # The test suite runs from a git checkout: the real detection must say
+        # "source", which is what every other Updater test relies on.
+        assert not upd.is_packaged_install()
+
+    def test_updater_uses_detection_by_default(self, monkeypatch):
+        monkeypatch.setattr(upd, "is_packaged_install", lambda: True)
+        assert Updater(on_state_change=MagicMock()).packaged
+
+
+class TestLocalVersionPackageOwner:
+    """Without the deckery meta-package, the version of the package owning the
+    tray (deckery-tray) is used."""
+
+    def test_falls_back_to_owning_package(self):
+        def run(argv, **kw):
+            r = MagicMock()
+            if argv[:2] == ["rpm", "-qf"]:
+                r.returncode, r.stdout = 0, "0.5.0"
+            else:
+                r.returncode, r.stdout = 1, ""
+            return r
+        with patch.object(upd.subprocess, "run", side_effect=run):
+            assert local_version() == "0.5.0"
+
+
+class TestPackagedMode:
+    """On packaged installs the tray only reports; it never installs."""
+
+    def _make(self, state=UpdateState.UPDATE_AVAILABLE, latest="0.6.0") -> Updater:
+        u = Updater(on_state_change=MagicMock(), packaged=True)
+        u._state = state
+        u._latest = latest
+        return u
+
+    @pytest.mark.parametrize("state", list(UpdateState))
+    def test_click_never_launches_anything(self, state):
+        u = self._make(state=state)
+        with patch.object(upd.subprocess, "Popen") as popen, \
+             patch.object(upd.threading, "Thread"):
+            u.on_clicked()
+        popen.assert_not_called()
+
+    def test_run_update_refuses(self):
+        # Defence in depth: even a direct call must not start get.sh.
+        u = self._make()
+        with patch.object(upd.subprocess, "Popen") as popen:
+            u._run_update()
+        popen.assert_not_called()
+
+    def test_update_available_label(self):
+        u = self._make()
+        assert u.label == "New version v0.6.0 — arrives with a system update"
+        assert "Install" not in u.label
+        assert u.sensitive
+
+    @pytest.mark.parametrize("state", [UpdateState.IDLE, UpdateState.CHECKING,
+                                       UpdateState.UP_TO_DATE, UpdateState.ERROR])
+    def test_other_labels_match_source_install(self, state):
+        packaged = self._make(state=state)
+        source = Updater(on_state_change=MagicMock(), packaged=False)
+        source._state, source._latest = state, "0.6.0"
+        assert packaged.label == source.label
+
+    def test_up_to_date_click_rechecks(self):
+        u = self._make(state=UpdateState.UP_TO_DATE)
+        with patch.object(u, "_start_check") as start:
+            u.on_clicked()
+        start.assert_called_once()
+
+    def test_update_available_keeps_auto_checking(self):
+        # Sticky state from #78: on packaged installs a newer tag must still
+        # be picked up while UPDATE_AVAILABLE is shown.
+        u = self._make()
+        with patch.object(u, "_start_check") as start:
+            u._auto_check()
+        start.assert_called_once()
+
+    def test_source_update_available_stops_auto_checking(self):
+        u = Updater(on_state_change=MagicMock(), packaged=False)
+        u._state = UpdateState.UPDATE_AVAILABLE
+        with patch.object(u, "_start_check") as start:
+            u._auto_check()
+        start.assert_not_called()
+
+    def test_unknown_local_version_is_not_an_update(self):
+        u = self._make(state=UpdateState.IDLE, latest=None)
+        with patch.object(upd, "_fetch_latest_tag", return_value="0.6.0"), \
+             patch.object(upd, "local_version",      return_value="unknown"):
+            u._check_thread()
+        assert u.state == UpdateState.ERROR
+
+    def test_newer_tag_is_update_available(self):
+        u = self._make(state=UpdateState.IDLE, latest=None)
+        with patch.object(upd, "_fetch_latest_tag", return_value="0.6.0"), \
+             patch.object(upd, "local_version",      return_value="0.5.0"):
+            u._check_thread()
+        assert u.state == UpdateState.UPDATE_AVAILABLE
+        assert u.latest == "0.6.0"
+
+
+class TestPackagedHintText:
+    """Explanation text: plain words, no promise that it is installable now."""
+
+    JARGON = ("rpm", "copr", "ostree", "layered", "package", "distrobox",
+              "terminal", "ujust", "get.sh")
+
+    def test_mentions_version(self):
+        assert "v0.6.0" in upd.packaged_hint_text("0.6.0")
+
+    def test_without_version(self):
+        text = upd.packaged_hint_text(None)
+        assert text and "vNone" not in text
+
+    @pytest.mark.parametrize("latest", ["0.6.0", None])
+    def test_no_jargon(self, latest):
+        text = (upd.PACKAGED_HINT_TITLE + " " + upd.packaged_hint_text(latest)).lower()
+        for word in self.JARGON:
+            assert word not in text, word
+
+    def test_does_not_promise_immediate_availability(self):
+        text = upd.packaged_hint_text("0.6.0")
+        assert "may not be available right away" in text

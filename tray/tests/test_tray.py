@@ -449,3 +449,51 @@ class TestStatePath:
     def test_it_is_the_same_directory_as_the_control_socket(self, tray_mod):
         import os, state
         assert os.path.dirname(state.STATE_JSON) == os.path.dirname(tray_mod._MAKIMA_SOCK)
+
+
+# ── Update item on packaged installs (Issue #78) ──────────────────────────────
+
+class TestPackagedUpdateClick:
+    """_on_update_clicked on a packaged install shows the explanation and
+    hands nothing to the updater."""
+
+    def _fake_self(self, tray_mod, packaged: bool):
+        fake = MagicMock()
+        fake._updater.packaged = packaged
+        fake._updater.state = tray_mod.UpdateState.UPDATE_AVAILABLE
+        fake._updater.latest = "0.6.0"
+        return fake
+
+    def test_packaged_shows_hint_and_does_not_update(self, tray_mod, monkeypatch):
+        fake = self._fake_self(tray_mod, packaged=True)
+        popen = MagicMock()
+        monkeypatch.setattr(tray_mod.subprocess, "Popen", popen)
+        tray_mod.DeckeryTray._on_update_clicked(fake, None)
+        fake._show_system_update_hint.assert_called_once()
+        fake._updater.on_clicked.assert_not_called()
+        fake._confirm_install.assert_not_called()
+        popen.assert_not_called()
+
+    def test_source_install_still_goes_to_updater(self, tray_mod, monkeypatch):
+        fake = self._fake_self(tray_mod, packaged=False)
+        monkeypatch.setattr(tray_mod, "_git_dirty_files", lambda d: [])
+        tray_mod.DeckeryTray._on_update_clicked(fake, None)
+        fake._show_system_update_hint.assert_not_called()
+        fake._updater.on_clicked.assert_called_once()
+
+    def test_hint_dialog_text(self, tray_mod, monkeypatch):
+        import updater as real_updater
+        monkeypatch.setattr(tray_mod, "PACKAGED_HINT_TITLE", real_updater.PACKAGED_HINT_TITLE)
+        monkeypatch.setattr(tray_mod, "packaged_hint_text", real_updater.packaged_hint_text)
+        dialog_cls = MagicMock()
+        monkeypatch.setattr(tray_mod.Gtk, "MessageDialog", dialog_cls)
+        fake = self._fake_self(tray_mod, packaged=True)
+        tray_mod.DeckeryTray._show_system_update_hint(fake)
+        kw = dialog_cls.call_args.kwargs
+        assert kw["text"] == real_updater.PACKAGED_HINT_TITLE
+        assert kw["buttons"] == tray_mod.Gtk.ButtonsType.OK
+        dialog = dialog_cls.return_value
+        dialog.format_secondary_text.assert_called_once_with(
+            real_updater.packaged_hint_text("0.6.0"))
+        dialog.run.assert_called_once()
+        dialog.destroy.assert_called_once()
