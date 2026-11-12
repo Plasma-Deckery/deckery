@@ -4,6 +4,11 @@
 # devices. The most-tuned part of the hardware configuration, which is why it
 # is its own file: haptics are a matter of taste and change more often than
 # anything else here.
+#
+# Nothing a pad does is a binding: movement, clicks, two-finger scroll and
+# gestures go straight to the virtual devices, so they never raise an OSD pill
+# or toast and there is no `silent` to set here. Trigger and stick clicks are
+# bindings in Steam Deck Base and are marked silent there.
 
 [trackpad]
 combined_gesture_device = true

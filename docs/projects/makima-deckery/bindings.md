@@ -35,6 +35,7 @@ BTN_THUMBL = { run = ["deckery-hud-toggle"], no_pause = true, label = "Toggle HU
 | `no_pause` | bool | command | Execute even when makima is paused (e.g. HUD open) |
 | `while_gaming` | bool | both | Not suppressed in Gaming Mode — active during normal use and also in Gaming Mode. Default: false. |
 | `haptic` | table | both | Feedback the controller plays when the binding fires. See [`haptic`](#haptic) below. |
+| `note` | string | both | Short second line the HUD shows under the label: how the action is used, not what it does (e.g. `"halten"` for push-to-talk). Kept apart from `label`, so OSD toasts stay clean. |
 
 ## Labels in the HUD
 
@@ -44,6 +45,14 @@ When a binding has a `label`, the HUD displays that string instead of the raw ke
 - With label: `L1 + Y` → `Copy`
 
 Labels also appear in OSD toast notifications on every action.
+
+A `note` adds a smaller, dimmed second line under the label in the HUD — for how a binding is used rather than what it does:
+
+```toml
+L1-R5 = { keys = ["KEY_LEFTCTRL", "KEY_PAGEDOWN"], label = "Text to Speech (Ctrl+PgDn)", note = "halten" }
+```
+
+Like a label, it belongs to the action: an app override that replaces the binding drops it unless the override gives its own.
 
 ## `no_pause`
 
