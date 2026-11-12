@@ -1,6 +1,6 @@
 # Trackpad Architecture
 
-Internal implementation notes for makima-deckery's trackpad emulation (merged to `main`, not yet in a release — see [Trackpad](../projects/makima-deckery/trackpad.md) for the user-facing config reference).
+Internal implementation notes for makima-deckery's trackpad emulation (released in 0.5.0; trackball mode only in the 2.0.0~beta1 beta — see [Trackpad](../projects/makima-deckery/trackpad.md) for the user-facing config reference).
 
 ## Why hidraw, not evdev
 

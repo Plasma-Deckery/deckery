@@ -1,7 +1,10 @@
 # Trackpad Emulation
 
-!!! info "On `main`, not yet in a release"
-    Trackpad emulation has been merged to `main` on [makima-deckery](https://github.com/Plasma-Deckery/makima-deckery) but has not appeared in a tagged release yet. Build from source or use the Deckery install script to get it.
+!!! info "Release status"
+    Trackpad emulation (`mt-trackpad`), the combined gesture device, click/movement/gesture haptics and the `[trackpad.*.kde]` defaults are in the stable release **0.5.0**. Two things on this page are only in the beta **2.0.0~beta1**, not yet in a stable release:
+
+    - [Trackball Mode](#trackball-mode) — in 0.5.0, `mode = "trackball"` is a placeholder that spawns no handler.
+    - The haptic value form described here (the binding [`haptic =`](bindings.md#haptic) form, with `pixel_interval` / `grid` as keys of the pad section). 0.5.0 still expects the old flat form, with `pixel_interval` inside `on_movement` / `on_gesture_move`.
 
 The Steam Deck has two trackpads that can each track a single finger, but the OS has no direct way to read them individually — whatever Steam Input does with the raw hardware is invisible to every other piece of software running on the system. Without Steam in the loop, that hardware is effectively unusable from the desktop.
 

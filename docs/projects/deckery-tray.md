@@ -12,7 +12,7 @@ System tray applet that monitors and controls the full Deckery stack from a sing
 - **Pause / Resume** — sends `pause` / `resume` over the makima IPC socket without restarting the service
 - **Restart / Start / Stop** — controls makima and deckery-hud via systemd user units
 - **Controller Bindings** — submenu listing all known configs with live status, modules indented under the base config they apply to; modules and app overrides toggle with a checkbox, mutually exclusive modules are a submenu of radio items instead; a row with a problem carries `⚠️` or `🛑` and opens a scrollable dialog on click
-- **Updates** — "Search for Updates" entry pulls all repos and re-runs the installer
+- **Updates** — "Search for Updates" entry; on an RPM install it points to the system update (and offers to start `rpm-ostree upgrade` where possible), on an install.sh checkout it pulls all repos and re-runs the installer
 - **Config folders** — "Open my configs" and "Open shipped configs" open either directory in the file manager
 - **Steam Input** — shows whether Steam's Desktop Input is disabled (green) or still active (yellow); clicking the yellow indicator opens a terminal that writes the configset entry and optionally restarts Steam
 - **Tooltip** — always shows "Deckery" on hover for quick identification
@@ -28,22 +28,22 @@ System tray applet that monitors and controls the full Deckery stack from a sing
 
 ## Architecture
 
-Built with GTK3 + AyatanaAppIndicator3. Runs inside the `deckery` distrobox container, launched via the `deckery-tray-launch` wrapper script.
+Built with GTK3 + AyatanaAppIndicator3. On an RPM install (the `deckery-tray` package) it runs directly on the host: `packaging/deckery-tray.service` starts `/usr/bin/python3 /usr/lib/deckery/tray/deckery-tray.py` with `PYTHONPATH=/usr/lib/deckery/tray`. No container is involved.
 
 **Service hierarchy:**
 
 ```
 graphical-session.target  ← desktop session; the tray skips itself while gamescope-session* is active
-    └── deckery-tray.service  ← owns the distrobox container, starts on login
+    └── deckery-tray.service  ← starts on login
             ├── makima.service       (BindsTo tray — cannot run without it)
             └── deckery-hud.service  (BindsTo tray — cannot run without it)
 ```
 
-`deckery-tray.service` is `After=` and `BindsTo=graphical-session.target`. The package enables it vendor-side, through a link in `/usr/lib/systemd/user/graphical-session.target.wants/`, so no `systemctl --user enable` is needed; makima and deckery-hud are `WantedBy=deckery-tray.service`. An `ExecCondition` guard skips the start while any `gamescope-session*` user unit is active, so in Gaming Mode Deckery does not start and does not interfere with Gamescope; a failed condition skips the service cleanly without a restart loop.
+`deckery-tray.service` is `After=` and `BindsTo=graphical-session.target`. The package enables it vendor-side, through a link in `/usr/lib/systemd/user/graphical-session.target.wants/`, so no `systemctl --user enable` is needed; makima and deckery-hud are pulled in the same way, through links in `/usr/lib/systemd/user/deckery-tray.service.wants/` (their units are `WantedBy=deckery-tray.service`). An `ExecCondition` guard skips the start while any `gamescope-session*` user unit is active, so in Gaming Mode Deckery does not start and does not interfere with Gamescope; a failed condition skips the service cleanly without a restart loop.
 
 Up to deckery-tray 0.4.0 the tray was `WantedBy=plasma-core.target` and enabled by hand. A `plasma-core.target.wants/deckery-tray.service` link left in `~/.config/systemd/user/` from that time would form an ordering cycle with `graphical-session.target`, so `deckery-tray-migrate.service` removes it on login.
 
-`deckery-tray.service` runs `podman start deckery` before launching the tray, ensuring the container's main `conmon` process always lands in the tray's cgroup. This makes the tray the true owner of the container — stopping the tray stops everything cleanly.
+**Legacy / dev path (install.sh):** the old `install.sh` install links `systemd/deckery-tray.service` into `~/.config/systemd/user/` and enables it with `systemctl --user enable`. That unit has the same `[Unit]` section and `ExecCondition`, but runs the tray inside the `deckery` distrobox container: `ExecStartPre=/usr/bin/podman start deckery`, then `ExecStart=%h/.local/bin/deckery-tray`, a symlink to the `deckery-tray-launch` wrapper, which runs `distrobox enter deckery -- python3 <repo>/tray/deckery-tray.py`. Starting the container from the tray unit puts its main `conmon` process in the tray's cgroup, so stopping the tray also stops the container.
 
 **State tracking:**
 
