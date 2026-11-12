@@ -70,10 +70,10 @@ if [ "$rows" = "$count" ]; then busctl --user set-property $v rows u $((count + 
 busctl --user get-property $v desktops | tr ' ' '\n' | awk '{ t[NR] = $0 } END { for (i = 2; i <= NR; i++) if (t[i] ~ /^"[0-9a-f-]+"$/ && t[i+1] == "\"Desktop" && t[i+2] ~ /^[0-9]+"$/ && t[i+2] != (t[i-1] + 1) "\"") { id = t[i]; gsub(/"/, "", id); print id, t[i-1] + 1 } }' | while read -r id n; do busctl --user call $v setDesktopName ss "$id" "Desktop $n"; done
 new=$(busctl --user get-property $v desktops | tr ' ' '\n' | tail -n +3 | grep -A1 -x "$((pos + 1))" | sed -n 2p | tr -d '"')
 busctl --user set-property $v current s "$new"
-'''], label = "✚ Insert Desktop" }
+'''], label = "▦✚ Insert Desktop" }
 
 # --- L1+R1+Select → send the window back where it came from ---
-L1-R1-Select = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'deckery-move-window-to-last-desktop'"], label = "Window to Last Desktop" }
+L1-R1-Select = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'deckery-move-window-to-last-desktop'"], label = "🗔▦⏭ Window to Last Desktop" }
 
 [hints]
 KEY_LEFTALT-KEY_TAB = "⇥ Tab (Switch Windows)"

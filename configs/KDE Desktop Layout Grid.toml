@@ -19,14 +19,15 @@ exclusive_group = "kde-desktop-layout"
 
 [commands]
 # --- L1 + DPad → move across the grid ---
-L1-Left  = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Switch One Desktop to the Left'"], label = "Desktop Left" }
-L1-Right = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Switch One Desktop to the Right'"], label = "Desktop Right" }
-L1-Up    = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Switch One Desktop Up'"], label = "Desktop Up" }
-L1-Down  = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Switch One Desktop Down'"], label = "Desktop Down" }
+# ▦ desktop and the D-pad's arrow (see Steam Deck Base).
+L1-Left  = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Switch One Desktop to the Left'"], label = "▦⮜ Desktop Left" }
+L1-Right = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Switch One Desktop to the Right'"], label = "▦⮞ Desktop Right" }
+L1-Up    = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Switch One Desktop Up'"], label = "▦⮝ Desktop Up" }
+L1-Down  = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Switch One Desktop Down'"], label = "▦⮟ Desktop Down" }
 
 # --- L1+R1+DPad → carry the window across the grid ---
-# 🗖 and the D-pad's arrow: the window goes that way.
-L1-R1-Left  = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Window One Desktop to the Left'"], label = "🗖⮜ Window Desktop Left" }
-L1-R1-Right = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Window One Desktop to the Right'"], label = "🗖⮞ Window Desktop Right" }
-L1-R1-Up    = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Window One Desktop Up'"], label = "🗖⮝ Window Desktop Up" }
-L1-R1-Down  = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Window One Desktop Down'"], label = "🗖⮟ Window Desktop Down" }
+# 🗔 window, then where it goes: ▦ desktop or ✣ activity, and the D-pad's arrow.
+L1-R1-Left  = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Window One Desktop to the Left'"], label = "🗔▦⮜ Window Desktop Left" }
+L1-R1-Right = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Window One Desktop to the Right'"], label = "🗔▦⮞ Window Desktop Right" }
+L1-R1-Up    = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Window One Desktop Up'"], label = "🗔▦⮝ Window Desktop Up" }
+L1-R1-Down  = { run = ["qdbus org.kde.kglobalaccel /component/kwin org.kde.kglobalaccel.Component.invokeShortcut 'Window One Desktop Down'"], label = "🗔▦⮟ Window Desktop Down" }

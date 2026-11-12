@@ -119,6 +119,9 @@ L1-R4 = { keys = ["KEY_LEFTCTRL", "KEY_A"], label = "⌶ Select All" }
 # A label may start with a Unicode symbol and a space ("☀ Brightness Up").
 # The HUD sets that symbol as an icon beside the text, on the button's side;
 # a toast shows it as part of the label, the classic HUD leaves it out.
+# Three symbols are stand-ins the HUD draws as KDE's own Breeze icons:
+# ▦ virtual desktop, ✣ activity, 🗔 window. Combine them with an arrow
+# into one head ("🗔▦⮝ Window to Previous Desktop").
 QAM-Up     = { keys = ["KEY_BRIGHTNESSUP"],   while_gaming = true, label = "☀ Brightness Up" }
 QAM-Down   = { keys = ["KEY_BRIGHTNESSDOWN"], while_gaming = true, label = "☼ Brightness Down" }
 QAM-Left   = { keys = ["KEY_PREVIOUSSONG"],   while_gaming = true, label = "⏮ Previous Track" }
