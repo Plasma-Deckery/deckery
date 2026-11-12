@@ -86,7 +86,8 @@ L1 = []
 R1 = []
 
 # --- Right stick ---
-R3 = ["BTN_LEFT"]
+# A mouse click like L2/R2, so it keeps as quiet as they do.
+R3 = { keys = ["BTN_LEFT"], silent = true }
 
 # --- Back paddles ---
 L4 = { keys = ["KEY_LEFTSHIFT"], label = "⇧ Shift" }
