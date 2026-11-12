@@ -7,6 +7,9 @@
 # Set VM_ROOT to keep the VM images somewhere other than ~/VMs.
 
 VMDIR="${VM_ROOT:-$HOME/VMs}/bazzite-test"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+bash "$SCRIPT_DIR/ensure-controller-tray.sh"
 
 rm -f "$VMDIR/monitor.sock" "$VMDIR/serial.sock"
 

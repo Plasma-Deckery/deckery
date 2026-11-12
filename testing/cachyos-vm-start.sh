@@ -11,10 +11,13 @@
 # Set VM_ROOT to keep the VM images somewhere other than ~/VMs.
 
 VMDIR="${VM_ROOT:-$HOME/VMs}/cachyos-test"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+bash "$SCRIPT_DIR/ensure-controller-tray.sh"
 
 # Kill any stale QEMU instance first — deleting socket files while an old
 # QEMU is still running creates an FD/inode mismatch that breaks monitor access.
-kill $(pgrep qemu-system) 2>/dev/null && sleep 1
+pkill -f "qemu-system.*$VMDIR/monitor\.sock" 2>/dev/null && sleep 1
 rm -f "$VMDIR/monitor.sock" "$VMDIR/serial.sock"
 
 setsid env GDK_BACKEND=x11 GDK_CORE_DEVICE_EVENTS=1 qemu-system-x86_64 \

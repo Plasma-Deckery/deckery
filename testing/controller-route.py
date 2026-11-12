@@ -44,12 +44,18 @@ def _qemu_send(sock_path: str, cmd: str) -> str:
             # drain initial banner / prompt
             buf = b""
             while b"(qemu)" not in buf:
-                buf += s.recv(4096)
+                chunk = s.recv(4096)
+                if not chunk:       # monitor closed (VM exiting)
+                    return "ERROR: monitor closed"
+                buf += chunk
             s.sendall((cmd + "\n").encode())
             resp = b""
             try:
                 while b"(qemu)" not in resp:
-                    resp += s.recv(4096)
+                    chunk = s.recv(4096)
+                    if not chunk:
+                        break
+                    resp += chunk
             except OSError:
                 pass
             return resp.decode(errors="replace")

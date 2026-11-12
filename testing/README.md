@@ -45,12 +45,15 @@ listening".
 
 Scripts for testing Deckery in QEMU virtual machines with live Steam Controller passthrough.
 
-Two VMs are supported:
+Three VMs are supported:
 
 | VM | Distro | SSH port | User | Start script |
 |----|--------|----------|------|--------------|
 | Bazzite 44 | Fedora/Bazzite (rpm-ostree) | `localhost:2222` | `liveuser` | `vm-start.sh` |
 | CachyOS Handheld | Arch/CachyOS (source install) | `localhost:2224` | `deck` | `cachyos-vm-start.sh` |
+| Pizzarchy | Arch/Omarchy (Hyprland), emulated Steam Deck OLED | `localhost:2226` | set during install | `pizzarchy-vm-start.sh` |
+
+Every start script also starts the [controller routing tray](#controller-routing-tray-host-side) if it is not already running.
 
 All scripts look for VM images under `~/VMs`. Override with `VM_ROOT=/other/path bash testing/vm-start.sh`.
 
@@ -136,7 +139,7 @@ qemu-img snapshot -a snap-bazzite44-clean ~/VMs/bazzite-test/install-disk.qcow2
 
 - **GTK display required:** VNC only shows the VGA framebuffer; KDE Wayland renders via DRM/KMS (virtio-vga), which the GTK backend forwards correctly.
 
-- **RAM returned to the host:** `vm-start.sh` and `cachyos-vm-start.sh` add `-device virtio-balloon-pci,free-page-reporting=on`, so the guest reports freed pages and QEMU's RSS shrinks again. The guest kernel only reports free blocks of `page_reporting_order` (default 9 = 2 MiB), which fragmentation limits; `echo 4 | sudo tee /sys/module/page_reporting/parameters/page_reporting_order` in the guest returns noticeably more (measured: ~2.9 GB → ~2.3 GB RSS). Check with `info balloon` on the monitor.
+- **RAM returned to the host:** `vm-start.sh`, `cachyos-vm-start.sh` and the Pizzarchy scripts add `-device virtio-balloon-pci,free-page-reporting=on`, so the guest reports freed pages and QEMU's RSS shrinks again. The guest kernel only reports free blocks of `page_reporting_order` (default 9 = 2 MiB), which fragmentation limits; `echo 4 | sudo tee /sys/module/page_reporting/parameters/page_reporting_order` in the guest returns noticeably more (measured: ~2.9 GB → ~2.3 GB RSS). Check with `info balloon` on the monitor.
 
 ---
 
@@ -202,19 +205,88 @@ SSH_ASKPASS="" SSH_ASKPASS_REQUIRE=never \
 
 - **`qdbus` not installed:** Qt 6-only; use `qdbus6`. The installer creates `~/.local/bin/qdbus → qdbus6` automatically.
 
-- **Monitor socket after VM restart:** Kill old QEMU process before deleting sockets, otherwise FD/inode mismatch → "Connection refused". `cachyos-vm-start.sh` does this automatically.
+- **Monitor socket after VM restart:** Kill old QEMU process before deleting sockets, otherwise FD/inode mismatch → "Connection refused". `cachyos-vm-start.sh` does this automatically — only for the QEMU that owns `cachyos-test/monitor.sock`, other VMs keep running.
+
+---
+
+## Pizzarchy VM
+
+Omarchy (Arch + Hyprland) as packaged by Pizzarchy for the Steam Deck OLED — a non-KDE desktop to test against.
+
+**VM disk:** `~/VMs/pizzarchy-test/install-disk.qcow2` (64 GB, attached as emulated NVMe)  
+**UEFI vars:** `~/VMs/pizzarchy-test/OVMF_VARS.fd`  
+**Serial log:** `~/VMs/pizzarchy-test/serial.log` (survives the QEMU process)  
+**SSH:** `localhost:2226` forwarded to guest port 22 (needs `sshd` enabled in the guest), user chosen in the installer, key `~/.ssh/vm_key` once copied in  
+**Installer ISO:** `pizzarchy-omarchy-4.0.4-2026-09-20-x86_64.iso` (stable v2026.09.20) from `/run/media/$USER/Ventoy/Boot ISOs/`; override with `PIZZARCHY_ISO=/path/to.iso`
+
+### Scripts
+
+| Script | What it does |
+|--------|-------------|
+| `pizzarchy-install-start.sh` | First boot: create a blank disk and boot the installer ISO |
+| `pizzarchy-vm-start.sh` | Every later boot, from the installed disk (no ISO) |
+| `pizzarchy-controller-attach.sh` | Pass Steam Controller host → Pizzarchy VM |
+| `pizzarchy-controller-detach.sh` | Return Steam Controller Pizzarchy VM → host |
+
+### Installing
+
+```bash
+# 1. Boot the installer (creates install-disk.qcow2 + fresh UEFI vars)
+bash testing/pizzarchy-install-start.sh
+
+# 2. The installer is controller-only: route the controller in once the
+#    QEMU window is up (or pick "Pizzarchy-Install" in the tray)
+bash testing/pizzarchy-controller-attach.sh
+
+# 3. Install onto the only disk offered, then power off the VM.
+#    The installer downloads Steam during setup — QEMU's user-mode NAT
+#    provides the internet access, nothing to configure.
+```
+
+`pizzarchy-install-start.sh` refuses to run if `install-disk.qcow2` already exists, so an installed VM can't be wiped by accident. To really reinstall from scratch: `PIZZARCHY_FORCE_REINSTALL=yes bash testing/pizzarchy-install-start.sh` (wipes the disk and the UEFI NVRAM).
+
+### Typical test session
+
+```bash
+# 1. Start VM
+bash testing/pizzarchy-vm-start.sh
+
+# 2. Pass controller to VM
+bash testing/pizzarchy-controller-attach.sh
+
+# 3. Return controller to host when done
+bash testing/pizzarchy-controller-detach.sh
+```
+
+### Known quirks — Pizzarchy VM
+
+- **NVMe, not virtio:** the installer only accepts `/dev/nvme0n1` or `/dev/mmcblk0` as a target. A virtio disk shows up as `/dev/vda` and is refused with "no eligible install disk".
+
+- **SMBIOS spoofed as Steam Deck OLED:** both scripts pass `-smbios type=1,manufacturer=Valve,product=Galileo` (and type 2). The installer's wipe gate checks `product_name == Galileo` and a `Valve` vendor before it touches any disk; without this, picking the disk bounces back to "no eligible install disk". Pizzarchy's own QEMU test harness does the same — there is no bypass.
+
+- **Stable release, not Fast-Install:** the Fast-Install prerelease aborts every interactive install with "cidata drive carries no 'preinstalls' file". The stable v2026.09.20 ISO does not have that check.
+
+- **No zoom-to-fit:** unlike the other VMs, `-display gtk` runs without `zoom-to-fit=on` — with it the display went permanently blank after a window resize during the install.
+
+- **Small footprint:** `-smp 2 -m 4G`, because the host is the Steam Deck itself.
+
+- **One QEMU at a time per VM:** both scripts kill only the QEMU that owns `pizzarchy-test/monitor.sock` before starting. The install script does so only after its disk check, so a refused run leaves a running VM alone.
 
 ---
 
 ## Controller routing tray (host-side)
 
-`controller-route.py` is a GTK3 system tray app that discovers all running QEMU VMs via their monitor sockets and lets you route the Steam Controller between host and any VM with one click.
+`controller-route.py` is a GTK3 system tray app that routes the Steam Deck controller (USB `28de:1205`) between the host and any running QEMU VM with one click.
+
+Every three seconds it lists the running `qemu-system` processes, takes each one's `-monitor unix:` socket and `-name`, and asks each monitor (`info usb`) which VM currently holds the controller. The menu shows "Host" plus one entry per VM, with a check mark on the current owner. Picking an entry detaches the controller from the VM that has it and `device_add`s it into the new one — the same `usb-host,bus=xhci.0,…,id=steamctrl` command the `*-controller-attach.sh` scripts send, so the tray and the scripts can be mixed freely. VMs without a monitor socket (such as unrelated QEMU instances) are not listed.
+
+You normally don't start it by hand: `vm-start.sh`, `cachyos-vm-start.sh`, `pizzarchy-vm-start.sh` and `pizzarchy-install-start.sh` all call `ensure-controller-tray.sh`, which starts the tray in the background (log: `/tmp/controller-route.log`) unless one is already running. To start it manually:
 
 ```bash
 python3 testing/controller-route.py &
 ```
 
-Requires `python-gobject` and `libayatana-appindicator` (gtk3) on the host, or falls back to `Gtk.StatusIcon`.
+Requires `python-gobject` and `libayatana-appindicator` (gtk3 variant) on the host; without the latter it falls back to `Gtk.StatusIcon`. Also needs `lsusb` and `pgrep`.
 
 ---
 
@@ -230,6 +302,11 @@ SSH_ASKPASS="" SSH_ASKPASS_REQUIRE=never ssh -i ~/.ssh/vm_key \
 SSH_ASKPASS="" SSH_ASKPASS_REQUIRE=never ssh -i ~/.ssh/vm_key \
   -o StrictHostKeyChecking=no -o PasswordAuthentication=no \
   -o BatchMode=yes -p 2224 deck@localhost
+
+# Pizzarchy (user chosen in the installer)
+SSH_ASKPASS="" SSH_ASKPASS_REQUIRE=never ssh -i ~/.ssh/vm_key \
+  -o StrictHostKeyChecking=no -o PasswordAuthentication=no \
+  -o BatchMode=yes -p 2226 <user>@localhost
 ```
 
 (`SSH_ASKPASS=""` + `SSH_ASKPASS_REQUIRE=never` suppress the KDE ksshaskpass dialog.)
