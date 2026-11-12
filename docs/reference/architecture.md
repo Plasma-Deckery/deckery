@@ -3,13 +3,15 @@
 ## Service hierarchy
 
 ```
-plasma-core.target                ← KDE-only, not active in Gamescope/Gaming Mode
+graphical-session.target          ← desktop session; the tray skips itself while gamescope-session* is active
     └── deckery-tray.service      ← starts on login, manages the stack
             ├── makima.service         (BindsTo tray — cannot run without it)
             └── deckery-hud.service    (BindsTo tray — cannot run without it)
 ```
 
-`deckery-tray.service` uses `BindsTo=plasma-core.target` and an `ExecCondition` guard that confirms `plasma-plasmashell.service` is active before starting. In Gaming Mode (Gamescope), `plasma-core.target` is not active and the guard check fails — Deckery does not start and does not interfere with Gamescope.
+`deckery-tray.service` is `After=` and `BindsTo=graphical-session.target`. The package enables it vendor-side, through a link in `/usr/lib/systemd/user/graphical-session.target.wants/`, so no `systemctl --user enable` is needed; makima and deckery-hud are `WantedBy=deckery-tray.service`. An `ExecCondition` guard skips the start while any `gamescope-session*` user unit is active, so in Gaming Mode Deckery does not start and does not interfere with Gamescope; a failed condition skips the service cleanly without a restart loop.
+
+Up to deckery-tray 0.4.0 the tray was `WantedBy=plasma-core.target` and enabled by hand. A `plasma-core.target.wants/deckery-tray.service` link left in `~/.config/systemd/user/` from that time would form an ordering cycle with `graphical-session.target`, so `deckery-tray-migrate.service` removes it on login.
 
 ## Data flow
 

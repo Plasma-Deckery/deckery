@@ -39,7 +39,7 @@ After step 8, the script runs two interactive prompts (skipped in non-interactiv
 Deckery-tray manages the entire stack:
 
 ```
-plasma-core.target     ← KDE-only, not active in Gamescope/Gaming Mode
+graphical-session.target   ← desktop session; the tray skips itself while gamescope-session* is active
     └── deckery-tray.service   ← starts on login, owns the distrobox container
             ├── makima.service         (BindsTo tray — cannot run without it)
             └── deckery-hud.service    (BindsTo tray — cannot run without it)

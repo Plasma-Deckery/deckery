@@ -8,7 +8,7 @@
 | Per-app button layouts | ✅ Covered |
 | Lizard Mode suppression | ✅ Covered — hidraw heartbeat keeps Steam Deck controller in full mode |
 | Suspend/resume reconnect | ✅ Covered — in-process reinit, ~1s recovery window |
-| Trackpad cursor movement | ✅ Works — right trackpad as mouse via virtual MT device and libinput. No inertial trackball yet (see challenges below). |
+| Trackpad cursor movement | ✅ Works — right trackpad as mouse via virtual MT device and libinput, or as an inertial trackball (`mode = "trackball"`, see [Trackball Mode](projects/makima-deckery/trackpad.md#trackball-mode)). |
 | Trackpad scrolling | ✅ Works — two-finger gesture via virtual MT device. Better than Steam Input. Single-trackpad scroll may be added in the future. |
 | Trackpad gestures (pinch-zoom, pan, scroll) | ✅ Works — both pads exposed as a combined two-finger MT device |
 | Haptic feedback on trackpads | ✅ Partially covered — makima sends haptic pulses on click press/release via hidraw; advanced tuning (gain, pulse shape) is an open issue ([makima-deckery#20](https://github.com/Plasma-Deckery/makima-deckery/issues/20)) |
@@ -29,10 +29,6 @@
 ## Open Challenges
 
 Known hard problems that don't have a clean solution yet.
-
-### Inertial trackball for cursor movement
-
-The right trackpad works as a mouse via libinput, but libinput applies generic touchpad profiles to unknown devices. For the trackball feel of Steam Input — with proper acceleration curves and momentum after lifting the finger — the Deckery trackpad devices need custom libinput configuration (libinput quirks or a device-specific profile). Without this, fast cursor throws don't coast.
 
 ### Controller-native authentication input
 

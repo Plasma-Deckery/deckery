@@ -87,8 +87,8 @@ A handler consumes one channel's frame stream (`SinglePadFrame` for an individua
 |---|---|---|
 | `"disabled"` | none | Default. No virtual device, no events forwarded. Position/touch/click still tracked into `state.json` by the router. |
 | `"mt-trackpad"` | `mt_trackpad.rs` | Implemented. Emits standard MT touchpad events (`Deckery Left/Right Trackpad`), plus haptic click-ticks on both the press and release edges. |
-| `"trackball"` | `trackball.rs` | **Stub only.** Accepted as a config value without warning, but no handler is actually wired into the router's `tokio::join!` — behaves identically to `"disabled"` today. Only its (currently empty) config struct exists, as a home for the shape once real relative-mouse behaviour lands. |
-| `"scroll"` | `scroll_pad.rs` | **Stub only**, same status as `"trackball"` — module exists, nothing dispatches to it yet. |
+| `"trackball"` | `trackball.rs` | Implemented. Relative pointer motion with momentum on the shared `Makima Virtual Pointer` device, the click as `BTN_LEFT`, plus click, drag and roll haptics on one `grid` raster. See [Trackball Mode](../projects/makima-deckery/trackpad.md#trackball-mode). |
+| `"scroll"` | `scroll_pad.rs` | **Stub only.** Accepted as a config value, but no handler is spawned — behaves identically to `"disabled"` today. |
 
 The combined gesture channel (`[trackpad.gestures]`, enabled via `combined_gesture_device = true`) is handled separately by `gesture_pad.rs` — see below.
 

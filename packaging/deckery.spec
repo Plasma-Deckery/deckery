@@ -1,6 +1,6 @@
 Name:           deckery
 Version:        2.0.0~beta1
-Release:        3%{?dist}
+Release:        4%{?dist}
 Summary:        Steam Deck input stack for KDE Plasma — meta-package
 
 # next_minor is the first version that would introduce a breaking change.
@@ -74,6 +74,10 @@ done
 %{_datadir}/deckery/
 
 %changelog
+* Thu Nov 12 2026 Philipp Schimmelfennig <philipp@plasma-deckery.dev> - 2.0.0~beta1-4
+- Shipped trackpad config: commented-out trackball example for the right pad
+- Docs: trackball mode, haptic defaults, graphical-session.target service wiring
+
 * Thu Nov 12 2026 Philipp Schimmelfennig <philipp@plasma-deckery.dev> - 2.0.0~beta1-3
 - Configs: icons in action labels (B-17), Insert Desktop, Voice Input and
   Text to Speech tweaks with a binding note, R3 click silent like L2/R2

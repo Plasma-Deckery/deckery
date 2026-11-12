@@ -108,7 +108,7 @@ Set per pad via `mode` in `[trackpad.left]` / `[trackpad.right]`:
 |---|---|---|
 | `disabled` | ✅ Available (default) | Pad is off — no virtual device. Position is still tracked internally for the HUD. |
 | `mt-trackpad` | ✅ Available | Standard Linux multi-touch trackpad, as used throughout this page. Circular scrolling (swipe around the pad's edge to scroll) is planned as an option here. |
-| `trackball` | ⏳ Planned | Cursor moves as a trackball — relative motion with momentum, closer to Steam Input's trackball feel, instead of absolute position. |
+| `trackball` | ✅ Available | Cursor moves as a trackball — relative motion with momentum, like Steam Input's trackball option. See [Trackball Mode](#trackball-mode). |
 | `scroll` | ⏳ Planned | Pad dedicated to scrolling only. |
 
 See [Trackpad Architecture](../../reference/trackpad-architecture.md) under Development for how this is implemented internally.
@@ -125,20 +125,64 @@ See [Trackpad Architecture](../../reference/trackpad-architecture.md) under Deve
 | ✅ | Movement haptics — `on_movement` pulse fires per distance traveled, not per time | [makima-deckery#22](https://github.com/Plasma-Deckery/makima-deckery/issues/22) |
 | ✅ | Gesture-lifecycle haptics — `on_gesture_start`/`on_gesture_move`/`on_gesture_end` | — |
 | ✅ | libinput defaults — `[trackpad.*.kde]` writes kcminputrc on startup (tap-to-click off, flat acceleration, scroll tuning) | [makima-deckery#25](https://github.com/Plasma-Deckery/makima-deckery/issues/25) |
-| ⏳ | Trackball mode — experimental, see below | — |
+| ✅ | Trackball mode — relative pointer motion with momentum, see below | — |
 | ⏳ | Gesture tool integration — discrete gesture zones trigger makima actions; continuous gestures go directly to the input stack | [deckery#3](https://github.com/Plasma-Deckery/deckery/issues/3) |
 | ✅ | Merge `trackpad-config` branch to `main` | — |
 
-## Trackball Mode (not implemented)
+## Trackball Mode
 
-!!! warning "Placeholder only — no behaviour yet"
-    `mode = "trackball"` is accepted by the config parser, but no handler is spawned: no virtual device is created and no events are forwarded. Setting it is equivalent to `mode = "disabled"`. The module (`src/trackball.rs`) exists only so the config schema has a home once real behaviour lands.
+`mode = "trackball"` turns a pad into the ball of a trackball, the way Steam Input's trackball option does:
 
-The intent is to turn a pad into a relative pointing device with momentum — the cursor continues moving after the finger lifts and gradually decelerates, similar to a physical trackball, rather than mapping absolute finger position.
+- **Dragging** moves the pointer by the finger's movement, scaled by `sensitivity`.
+- **Flicking** sets the ball rolling. On lift, the release velocity is the finger's average speed over the last 50 ms before the lift; if it is at least `min_fling_speed`, the pointer keeps moving in that direction. A finger that stopped before lifting does not fling.
+- **Decay** is exponential: `v(t) = v0 · e^(−friction · t)`. The ball stops once its speed falls below `stop_speed`. A fling travels about `v0 / friction` raw units in total; with `friction = 0` it rolls until touched.
+- **Touching the pad stops the ball** where it is, and moving from there carries on without a jump.
+- The **physical click** is `BTN_LEFT`. `click_pressure` applies as in `mt-trackpad`.
 
-Two design questions are deliberately still open:
+The output is relative pointer motion (`REL_X`/`REL_Y`) on the shared **Makima Virtual Pointer** device — the same device `RSTICK = "cursor"` writes to — not a per-pad multi-touch trackpad. So the `[trackpad.<side>.kde]` settings, which target the `Deckery Left/Right Trackpad` devices, do not apply to a trackball pad. When a two-finger gesture or Gaming Mode takes the pad away mid-touch, the ball stops without flinging and a held click is released.
 
-- Whether trackball is a *movement-type variant* inside the existing `mt-trackpad` handler, or a fully separate module with its own output device (relative mouse events instead of absolute multi-touch events).
-- What the config fields should be. An earlier draft carried momentum, velocity and deadzone knobs, but none of them were ever wired to the firmware, so they were removed rather than documented as if they worked.
+```toml
+[trackpad.right]
+mode            = "trackball"
+sensitivity     = 0.008   # pointer pixels per raw pad unit
+friction        = 2.0     # decay rate per second; 0 rolls until touched
+min_fling_speed = 40000   # raw units/s at lift needed to set the ball rolling
+stop_speed      = 1500    # raw units/s below which the ball stops
+grid            = 7       # cells per pad side, for drag and roll ticks
 
-There are consequently **no trackball config fields** at present, and no trackball haptic config.
+[trackpad.right.haptic]
+on_press    = { duration_us = 8000, interval_us = 8000, count = 3, gain_db = 0 }
+on_release  = { duration_us = 8000, interval_us = 8000, count = 3, gain_db = 0 }
+on_roll     = { duration_us = 4000, interval_us = 4000, count = 1, gain_db = 0 }   # tick per grid cell while rolling
+on_movement = { duration_us = 4000, interval_us = 4000, count = 1, gain_db = 0 }   # tick per grid cell while dragging
+```
+
+These are tested values; the shipped `Steam Deck Trackpads.toml` carries the same block, commented out.
+
+| Field | Unit | Default | Meaning |
+|---|---|---|---|
+| `sensitivity` | pointer pixels per raw pad unit | `0.02` | Scale for dragging and rolling alike. The pad is 65 536 raw units per axis, so `0.02` is about 1 300 px per full swipe. Must be above 0. |
+| `friction` | 1/s | `4.0` | Exponential decay rate of a rolling ball. Higher stops sooner; `0` never slows. Must be at least 0. |
+| `min_fling_speed` | raw units/s | `40000` | Finger speed at lift needed to set the ball rolling. Below it, a lift just stops. Must be at least 0. |
+| `stop_speed` | raw units/s | `1500` | Speed below which a rolling ball stops. Must be above 0, since an exponential decay never reaches 0 on its own. Also a lower bound for flinging. |
+| `grid` | cells per pad side | `8` | Detent raster for `on_movement` and `on_roll`: the pad is split into `grid` × `grid` cells (each `65536 / grid` raw units wide). Whole number from 1 to 65 536. |
+| `click_pressure` | raw u16 | firmware default | Physical click threshold, as in `mt-trackpad`. |
+
+Velocities are measured in raw pad units, not pixels, so whether a flick flings does not change with `sensitivity`. Every key is optional and parsed on its own: an invalid value or an unknown key logs a warning, and that key falls back to its default while the others stay as written.
+
+### The grid
+
+A real trackball has one detent spacing, so dragging and rolling share one raster. A tick fires each time the position crosses into a new cell. A cell is only left once the position is 0.1 cell past its edge, so a finger resting on a boundary does not buzz. While rolling, the ball keeps a virtual position that continues from where the finger lifted, so the raster carries on across the lift without an extra tick, and the tick rate follows the ball's speed as it slows. Roll ticks are capped at one per 8 ms roll step.
+
+### Haptics
+
+`[trackpad.<side>.haptic]` in trackball mode takes these keys:
+
+| Key | Default | Fires |
+|---|---|---|
+| `on_press` | 3-pulse burst | On the press edge of a physical click. |
+| `on_release` | 3-pulse burst | On the release edge of a physical click. |
+| `on_movement` | — (silent) | Once per grid cell the finger drags into. `true` switches on one short tick (`4000 µs`, count 1). |
+| `on_roll` | one short tick | Once per grid cell the rolling ball moves into. |
+
+`false` silences any of them. Each value takes the same form as the other pad haptics: a single event, or a list of steps with an optional `pause_ms` after each (see [Virtual Trackpads](#virtual-trackpads)). The tick spacing is `grid` in the pad section, never inside the haptic; a haptic that still carries `grid` or `pixel_interval` inside it is ignored with a warning and that key uses its default.

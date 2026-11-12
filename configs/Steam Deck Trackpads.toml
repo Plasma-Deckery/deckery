@@ -31,6 +31,26 @@ pointer_acceleration = 0.2
 pointer_acceleration_profile = "flat"   # or "adaptive"
 tap_to_click = false
 
+# Trackball alternative for the right pad: flick to roll the pointer on, touch
+# to stop it. To try it, replace the [trackpad.right] and
+# [trackpad.right.haptic] tables above with this block, uncommented. The
+# trackball moves the shared "Makima Virtual Pointer", so the
+# [trackpad.right.kde] settings do not apply to it.
+#
+# [trackpad.right]
+# mode            = "trackball"
+# sensitivity     = 0.008   # Pointer pixels per raw pad unit (the pad is 65 536 units wide)
+# friction        = 2.0     # Decay rate per second; higher stops sooner, 0 rolls until touched
+# min_fling_speed = 40000   # Raw units/s the finger must move at lift to set the ball rolling
+# stop_speed      = 1500    # Raw units/s below which a rolling ball stops
+# grid            = 7       # Cells per pad side: detent spacing for dragging and rolling ticks
+#
+# [trackpad.right.haptic]
+# on_press    = { duration_us = 8000, interval_us = 8000, count = 3, gain_db = 0 }
+# on_release  = { duration_us = 8000, interval_us = 8000, count = 3, gain_db = 0 }
+# on_roll     = { duration_us = 4000, interval_us = 4000, count = 1, gain_db = 0 }   # tick per grid cell while rolling
+# on_movement = { duration_us = 4000, interval_us = 4000, count = 1, gain_db = 0 }   # tick per grid cell while dragging
+
 [trackpad.left]
 mode = "disabled"
 

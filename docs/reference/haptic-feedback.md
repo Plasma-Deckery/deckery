@@ -15,9 +15,9 @@ Each step in the chain:
 
 | Field | Type | Default | Description |
 |---|---|---|---|
-| `duration_us` | integer | — | Pulse duration in microseconds |
-| `interval_us` | integer | — | Interval between pulses in microseconds |
-| `count` | integer | — | Number of pulses in this step |
+| `duration_us` | integer | `8000` | Pulse duration in microseconds |
+| `interval_us` | integer | `8000` | Interval between pulses in microseconds |
+| `count` | integer | `3` | Number of pulses in this step |
 | `gain_db` | integer | `0` | Gain offset in dB (optional). Accepted, but has no perceptible effect on Steam Deck hardware. |
 | `pause_ms` | integer | `0` | Pause after this step before the next (optional) |
 
