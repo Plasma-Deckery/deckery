@@ -46,3 +46,4 @@ KEY_ESC   = "⎋ Esc (Abort)"
 
 KEY_LEFTCTRL-KEY_UP   = "⇱ (Jump to Top)"
 KEY_LEFTCTRL-KEY_DOWN = "⇲ (Jump to Bottom)"
+KEY_LEFTCTRL-KEY_ENTER = "⏎ (Queue Message)"
