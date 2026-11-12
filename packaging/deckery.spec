@@ -1,6 +1,6 @@
 Name:           deckery
 Version:        2.0.0~beta1
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Steam Deck input stack for KDE Plasma — meta-package
 
 # next_minor is the first version that would introduce a breaking change.
@@ -74,6 +74,10 @@ done
 %{_datadir}/deckery/
 
 %changelog
+* Thu Nov 12 2026 Philipp Schimmelfennig <philipp@plasma-deckery.dev> - 2.0.0~beta1-2
+- Trackpad haptics in the shipped config and docs use the binding `haptic =`
+  form; movement gates (`pixel_interval`, trackball `grid`) sit in the pad section
+
 * Thu Nov 12 2026 Philipp Schimmelfennig <philipp@plasma-deckery.dev> - 2.0.0~beta1-1
 - Version aligned with makima-deckery and deckery-hud 2.0.0~beta1
 - Shipped config: auto_mute = true, focus_threshold_ms = 1000, haptic ticks on L2/R2

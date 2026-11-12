@@ -11,12 +11,14 @@ combined_gesture_device = true
 [trackpad.right]
 mode = "mt-trackpad"
 click_pressure = 30000   # Firmware click-pressure threshold, raw u16
+# pixel_interval = 3000  # on_movement fires at most once per this many raw units of travel
 
-# on_movement fires at most once per `pixel_interval` raw units of travel.
+# Each haptic is a single event or a list of steps (`pause_ms` between them),
+# the same form as a binding's `haptic =` without `pad`. `false` silences one.
 [trackpad.right.haptic]
 on_press   = { duration_us = 8000, interval_us = 8000, count = 3, gain_db = 0 }
 on_release = { duration_us = 8000, interval_us = 8000, count = 3, gain_db = 0 }
-# on_movement = { pixel_interval = 3000, duration_us = 4000, interval_us = 4000, count = 1, gain_db = 0 }
+# on_movement = { duration_us = 4000, interval_us = 4000, count = 1, gain_db = 0 }
 
 # KDE/libinput settings written to kcminputrc for this pad's virtual device.
 [trackpad.right.kde]

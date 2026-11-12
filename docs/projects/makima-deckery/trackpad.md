@@ -15,6 +15,7 @@ Each pad is configured independently under `[trackpad.left]` / `[trackpad.right]
 [trackpad.right]
 mode = "mt-trackpad"       # right trackpad acts as a standard mouse/trackpad
 click_pressure = 30000     # optional: firmware click-pressure threshold (raw u16, omit for firmware default)
+# pixel_interval = 3000    # optional: raw units of travel per on_movement tick
 
 [trackpad.right.kde]
 pointer_acceleration         = 0.2      # cursor speed within the chosen profile (-1.0..+1.0)
@@ -23,7 +24,7 @@ pointer_acceleration_profile = "flat"   # "flat" (1:1, recommended) or "adaptive
 [trackpad.right.haptic]
 on_press    = { duration_us = 8000, interval_us = 8000, count = 3, gain_db = 0 }   # fires when the finger presses down
 on_release  = { duration_us = 8000, interval_us = 8000, count = 3, gain_db = 0 }   # fires when the finger lifts off the click
-# on_movement = { pixel_interval = 3000, duration_us = 4000, interval_us = 4000, count = 1, gain_db = 0 }
+# on_movement = { duration_us = 4000, interval_us = 4000, count = 1, gain_db = 0 }
 
 [trackpad.left]
 mode = "disabled"          # default — left trackpad stays off
@@ -33,15 +34,25 @@ mode = "disabled"          # default — left trackpad stays off
 |---|---|---|
 | `mode` | `"disabled"` | See [Trackpad modes](#trackpad-modes) below. |
 | `click_pressure` | firmware default | Physical click threshold, as a raw firmware value. Optional. |
+| `pixel_interval` | `3000` | Raw units of cursor travel (≈2mm) per `haptic.on_movement` tick. |
 | `kde.pointer_acceleration` | `0.2` | Cursor speed multiplier within the chosen profile. Range −1.0 (slowest) to +1.0 (fastest). |
 | `kde.pointer_acceleration_profile` | `"flat"` | `"flat"` for 1:1 movement (recommended — consistent and predictable on a small pad surface); `"adaptive"` for the libinput default (slows slow movements, amplifies fast ones). |
 | `kde.tap_to_click` | `false` | Whether a light tap registers as a click. Disabled by default — accidental taps occur when switching between gesture mode and cursor mode. |
 | `kde.disable_while_typing` | `false` | Suppresses trackpad input while the keyboard is active. Disabled by default — not useful in a gaming context. |
-| `haptic.on_press` | 3-pulse burst | Haptic pulse fired on the press edge of a physical click. |
-| `haptic.on_release` | 3-pulse burst | Haptic pulse fired on the release edge of a physical click. |
-| `haptic.on_movement` | — (silent) | Pulse fired per `pixel_interval` raw units of cursor travel. `pixel_interval` defaults to 3000 (≈2mm). Silent by default — enable explicitly if you want a trackpad-click-wheel feel. |
+| `haptic.on_press` | 3-pulse burst | Haptic fired on the press edge of a physical click. `false` silences it. |
+| `haptic.on_release` | 3-pulse burst | Haptic fired on the release edge of a physical click. `false` silences it. |
+| `haptic.on_movement` | — (silent) | Haptic fired per `pixel_interval` raw units of cursor travel. Silent by default — enable explicitly (`true` is one short tick) if you want a trackpad-click-wheel feel. |
 
-Haptic pulses take four fields, each with its own default if omitted:
+Every haptic value takes the same form as a binding's [`haptic =`](bindings.md#haptic), without `pad` — the section already decides the pad. Either a single event, or a list of steps with an optional `pause_ms` after each:
+
+```toml
+on_press   = { duration_us = 8000, count = 3 }
+on_release = [{ duration_us = 8000, count = 1, pause_ms = 40 }, { duration_us = 4000, count = 1 }]
+```
+
+What decides *when* a movement tick fires (`pixel_interval`) is a key of the pad section, never of the haptic. A haptic still written in the old flat form with `pixel_interval` inside it is ignored with a warning.
+
+Each event takes four fields, each with its own default if omitted:
 
 | Field | Default | Meaning |
 |---|---|---|
@@ -78,13 +89,16 @@ The `[trackpad.gestures.kde]` block is optional — the values above are the def
 Rather than click, the combined device fires on the gesture's lifecycle — start, ongoing movement, and end — since a click has no established meaning mid-gesture:
 
 ```toml
+[trackpad.gestures]
+pixel_interval = 3000   # raw units of movement (both fingers summed) per on_gesture_move tick
+
 [trackpad.gestures.haptic]
 on_gesture_start = { duration_us = 2000, interval_us = 0, count = 1, gain_db = 0 }   # both pads become touched at once
-on_gesture_move  = { pixel_interval = 3000, duration_us = 1000, interval_us = 0, count = 1, gain_db = 0 }   # per pixel_interval units of movement
+on_gesture_move  = { duration_us = 1000, interval_us = 0, count = 1, gain_db = 0 }   # per pixel_interval units of movement
 on_gesture_end   = { duration_us = 2000, interval_us = 0, count = 1, gain_db = 0 }   # either pad lifts, ending the session
 ```
 
-All three are silent by default — gesture haptics have no established reference feel to fall back to, unlike a physical click edge.
+All three are silent by default — gesture haptics have no established reference feel to fall back to, unlike a physical click edge. They take the same single-event-or-list form as the pad haptics above.
 
 ## Trackpad modes
 
