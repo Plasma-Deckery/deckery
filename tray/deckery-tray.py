@@ -26,7 +26,8 @@ from typing import NamedTuple
 log = logging.getLogger("deckery-tray")
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from updater import Updater, UpdateState, local_version, _DECKERY_DIR
+from updater import (Updater, UpdateState, local_version, _DECKERY_DIR,
+                     UPDATE_NOW_BUTTON, LATER_BUTTON)
 import config_menu
 import state as makima_state_file
 import steam_bridge
@@ -650,7 +651,10 @@ class DeckeryTray:
             self._statuses,
             self._paused,
             self._steam_state,
-            self._updater.state == UpdateState.UPDATE_AVAILABLE,  # AHEAD_OF_RELEASE excluded — icon unchanged
+            # AHEAD_OF_RELEASE excluded — icon unchanged. RESTART_REQUIRED
+            # (packaged) keeps the badge: the user still has a step to take.
+            self._updater.state in (UpdateState.UPDATE_AVAILABLE,
+                                    UpdateState.RESTART_REQUIRED),
             gaming_mode=self._gaming_mode,
             no_device=self._makima.no_device,
             base_config_error=self._makima.base_config_error,
@@ -678,6 +682,11 @@ class DeckeryTray:
 
     def _on_update_clicked(self, _item):
         state = self._updater.state
+        if self._updater.packaged and state in (UpdateState.UPDATE_AVAILABLE,
+                                                UpdateState.RESTART_REQUIRED):
+            # Packaged installs are updated by the system update (Issue #78).
+            self._show_system_update_hint()
+            return
         if state == UpdateState.AHEAD_OF_RELEASE:
             if not self._confirm_install(rollback=True):
                 return
@@ -686,6 +695,29 @@ class DeckeryTray:
             if dirty and not self._confirm_install(rollback=False, dirty=dirty):
                 return
         self._updater.on_clicked()
+
+    def _show_system_update_hint(self) -> None:
+        """Explain that Deckery comes with the system update. Where the system
+        can run it (ujust + a terminal), offer to start it; otherwise the
+        dialog is information only."""
+        hint = self._updater.hint
+        offer = (self._updater.state == UpdateState.UPDATE_AVAILABLE
+                 and self._updater.system_update_command is not None)
+        dialog = Gtk.MessageDialog(
+            flags=0,
+            message_type=Gtk.MessageType.INFO,
+            buttons=Gtk.ButtonsType.NONE if offer else Gtk.ButtonsType.OK,
+            text=hint.title,
+        )
+        dialog.format_secondary_text(hint.text)
+        if offer:
+            dialog.add_button(LATER_BUTTON, Gtk.ResponseType.CANCEL)
+            dialog.add_button(UPDATE_NOW_BUTTON, Gtk.ResponseType.OK)
+            dialog.set_default_response(Gtk.ResponseType.CANCEL)
+        response = dialog.run()
+        dialog.destroy()
+        if offer and response == Gtk.ResponseType.OK:
+            self._updater.start_system_update()
 
     def _confirm_install(self, rollback: bool, dirty: list[str] | None = None) -> bool:
         """Confirmation dialog before update or rollback. Returns True if the user confirms."""

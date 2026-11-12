@@ -449,3 +449,106 @@ class TestStatePath:
     def test_it_is_the_same_directory_as_the_control_socket(self, tray_mod):
         import os, state
         assert os.path.dirname(state.STATE_JSON) == os.path.dirname(tray_mod._MAKIMA_SOCK)
+
+
+# ── Update item on packaged installs (Issue #78) ──────────────────────────────
+
+class TestPackagedUpdateClick:
+    """On a packaged install the update item opens the explanation dialog;
+    "Update now" (only where the system can run it) starts the system update
+    through the updater, never get.sh."""
+
+    def _fake_self(self, tray_mod, packaged=True, state="UPDATE_AVAILABLE",
+                   command=("konsole",)):
+        from types import SimpleNamespace
+        fake = MagicMock()
+        fake._updater.packaged = packaged
+        fake._updater.state = getattr(tray_mod.UpdateState, state)
+        fake._updater.latest = "0.6.0"
+        fake._updater.system_update_command = list(command) if command else None
+        fake._updater.hint = SimpleNamespace(title="Title", text="Text")
+        return fake
+
+    @pytest.fixture
+    def dialog_cls(self, tray_mod, monkeypatch):
+        cls = MagicMock()
+        monkeypatch.setattr(tray_mod.Gtk, "MessageDialog", cls)
+        return cls
+
+    @pytest.mark.parametrize("state", ["UPDATE_AVAILABLE", "RESTART_REQUIRED"])
+    def test_packaged_click_shows_hint_only(self, tray_mod, monkeypatch, state):
+        fake = self._fake_self(tray_mod, state=state)
+        popen = MagicMock()
+        monkeypatch.setattr(tray_mod.subprocess, "Popen", popen)
+        tray_mod.DeckeryTray._on_update_clicked(fake, None)
+        fake._show_system_update_hint.assert_called_once()
+        fake._updater.on_clicked.assert_not_called()
+        fake._confirm_install.assert_not_called()
+        popen.assert_not_called()
+
+    def test_source_install_still_goes_to_updater(self, tray_mod, monkeypatch):
+        fake = self._fake_self(tray_mod, packaged=False)
+        monkeypatch.setattr(tray_mod, "_git_dirty_files", lambda d: [])
+        tray_mod.DeckeryTray._on_update_clicked(fake, None)
+        fake._show_system_update_hint.assert_not_called()
+        fake._updater.on_clicked.assert_called_once()
+
+    def test_update_now_button_starts_system_update(self, tray_mod, dialog_cls, monkeypatch):
+        fake = self._fake_self(tray_mod)
+        dialog = dialog_cls.return_value
+        dialog.run.return_value = tray_mod.Gtk.ResponseType.OK
+        monkeypatch.setattr(tray_mod, "UPDATE_NOW_BUTTON", "Update now")
+        monkeypatch.setattr(tray_mod, "LATER_BUTTON", "Later")
+        tray_mod.DeckeryTray._show_system_update_hint(fake)
+        kw = dialog_cls.call_args.kwargs
+        assert kw["text"] == "Title"
+        assert kw["buttons"] == tray_mod.Gtk.ButtonsType.NONE
+        dialog.format_secondary_text.assert_called_once_with("Text")
+        labels = [c.args[0] for c in dialog.add_button.call_args_list]
+        assert labels == ["Later", "Update now"]
+        fake._updater.start_system_update.assert_called_once()
+        dialog.destroy.assert_called_once()
+
+    def test_later_does_nothing(self, tray_mod, dialog_cls):
+        fake = self._fake_self(tray_mod)
+        dialog_cls.return_value.run.return_value = tray_mod.Gtk.ResponseType.CANCEL
+        tray_mod.DeckeryTray._show_system_update_hint(fake)
+        fake._updater.start_system_update.assert_not_called()
+
+    def test_no_command_means_no_button(self, tray_mod, dialog_cls):
+        fake = self._fake_self(tray_mod, command=None)
+        dialog_cls.return_value.run.return_value = tray_mod.Gtk.ResponseType.OK
+        tray_mod.DeckeryTray._show_system_update_hint(fake)
+        assert dialog_cls.call_args.kwargs["buttons"] == tray_mod.Gtk.ButtonsType.OK
+        dialog_cls.return_value.add_button.assert_not_called()
+        fake._updater.start_system_update.assert_not_called()
+
+    def test_restart_dialog_has_no_button(self, tray_mod, dialog_cls):
+        fake = self._fake_self(tray_mod, state="RESTART_REQUIRED")
+        dialog_cls.return_value.run.return_value = tray_mod.Gtk.ResponseType.OK
+        tray_mod.DeckeryTray._show_system_update_hint(fake)
+        dialog_cls.return_value.add_button.assert_not_called()
+        fake._updater.start_system_update.assert_not_called()
+
+
+class TestUpdateBadge:
+    """The update badge: on for update available / restart needed, off when
+    updates are not available (packaged install without a Deckery channel)."""
+
+    @pytest.mark.parametrize("state,badge", [
+        ("UPDATE_AVAILABLE", True),
+        ("RESTART_REQUIRED", True),
+        ("UNAVAILABLE",      False),
+        ("UP_TO_DATE",       False),
+    ])
+    def test_badge(self, tray_mod, monkeypatch, state, badge):
+        seen = {}
+        def fake_state(statuses, paused, steam, has_update, **kw):
+            seen["has_update"] = has_update
+            return "ok"
+        monkeypatch.setattr(tray_mod, "_tray_state", fake_state)
+        fake = MagicMock()
+        fake._updater.state = getattr(tray_mod.UpdateState, state)
+        fake._makima.lifecycle = ""
+        tray_mod.DeckeryTray._refresh_tray_icon(fake)
+        assert seen["has_update"] is badge
