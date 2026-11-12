@@ -1,0 +1,2540 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://plasma-deckery.github.io/deckery/projects/makima-deckery/trackpad/">
+      
+      
+        <link rel="prev" href="../gaming-mode/">
+      
+      
+        <link rel="next" href="../../deckery-tray/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
+    
+    
+      
+        <title>Trackpad - Deckery</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="blue-grey" data-md-color-accent="teal">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#trackpad-emulation" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="Deckery" class="md-header__button md-logo" aria-label="Deckery" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Deckery
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Trackpad
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="blue-grey" data-md-color-accent="teal"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="blue-grey" data-md-color-accent="teal"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Plasma-Deckery/deckery" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Plasma-Deckery/deckery
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../.." class="md-tabs__link">
+          
+  
+  
+    
+  
+  Home
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../../" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Projects
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../development/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Development
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../reference/comparison-input-remapper/" class="md-tabs__link">
+          
+  
+  
+    
+  
+  Similar Tools
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="Deckery" class="md-nav__button md-logo" aria-label="Deckery" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Deckery
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Plasma-Deckery/deckery" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Plasma-Deckery/deckery
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_1" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../.." class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_1" id="__nav_1_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Home
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../setup-guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Setup Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../progress-and-challenges/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Progress & Challenges
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Projects
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2" id="__nav_2_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Projects
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2_2" id="__nav_2_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Own Projects
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Own Projects
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../deckery-hud/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deckery HUD
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_2_2" checked>
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Makima Deckery
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2_2_2" id="__nav_2_2_2_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_2_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Makima Deckery
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../app-config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    App Config
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bindings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Bindings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gaming-mode/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gaming Mode
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trackpad
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trackpad
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#virtual-trackpads" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Virtual Trackpads
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#combined-trackpad" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Combined Trackpad
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Combined Trackpad">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#haptic-feedback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Haptic feedback
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#trackpad-modes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Trackpad modes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#roadmap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Roadmap
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#trackball-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Trackball Mode
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Trackball Mode">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-grid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The grid
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#haptics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Haptics
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../deckery-tray/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deckery Tray
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../deckery-controller/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deckery Controller
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_2_5" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../steamdeck-dotfiles/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Steam Deck Dotfiles
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2_2_5" id="__nav_2_2_5_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_2_2_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_2_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Steam Deck Dotfiles
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../steamdeck-dotfiles/chezmoi/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Chezmoi & Tracking
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_3" id="__nav_2_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Forked Tools
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Forked Tools
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../kyanite/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kyanite
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../maximized-window-gaps/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    maximized-window-gaps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_4" id="__nav_2_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Further Tools
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Further Tools
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../krohnkite/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kröhnkite
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../openwhispr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OpenWhispr
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Development
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/trackpad-architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trackpad Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/installer-script/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installer Script
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/updates/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Updates
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/ipc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    IPC
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/gaming-mode/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gaming Mode
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/haptic-feedback/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Haptic Feedback
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/state-json/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    State JSON
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/lizard-mode/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Lizard Mode
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/steam-input-mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Steam Input Mapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Similar Tools
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Similar Tools
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../reference/comparison-input-remapper/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Input Remapper
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#virtual-trackpads" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Virtual Trackpads
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#combined-trackpad" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Combined Trackpad
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Combined Trackpad">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#haptic-feedback" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Haptic feedback
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#trackpad-modes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Trackpad modes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#roadmap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Roadmap
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#trackball-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Trackball Mode
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Trackball Mode">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-grid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The grid
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#haptics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Haptics
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/Plasma-Deckery/deckery/edit/main/docs/projects/makima-deckery/trackpad.md" title="Edit this page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+
+
+<h1 id="trackpad-emulation">Trackpad Emulation</h1>
+<div class="admonition info">
+<p class="admonition-title">Release status</p>
+<p>Trackpad emulation (<code>mt-trackpad</code>), the combined gesture device, click/movement/gesture haptics and the <code>[trackpad.*.kde]</code> defaults are in the stable release <strong>0.5.0</strong>. Two things on this page are only in the beta <strong>2.0.0~beta1</strong>, not yet in a stable release:</p>
+<ul>
+<li><a href="#trackball-mode">Trackball Mode</a> — in 0.5.0, <code>mode = "trackball"</code> is a placeholder that spawns no handler.</li>
+<li>The haptic value form described here (the binding <a href="../bindings/#haptic"><code>haptic =</code></a> form, with <code>pixel_interval</code> / <code>grid</code> as keys of the pad section). 0.5.0 still expects the old flat form, with <code>pixel_interval</code> inside <code>on_movement</code> / <code>on_gesture_move</code>.</li>
+</ul>
+</div>
+<p>The Steam Deck has two trackpads that can each track a single finger, but the OS has no direct way to read them individually — whatever Steam Input does with the raw hardware is invisible to every other piece of software running on the system. Without Steam in the loop, that hardware is effectively unusable from the desktop.</p>
+<p>Makima solves this by reading both trackpads itself, directly from the hardware, and turning them into standard Linux input devices. That means, for example, the right trackpad can act as a completely normal mouse. Once emulated, a trackpad registers with the system exactly like any other trackpad — the desktop environment sees an ordinary input device, configurable through the same touchpad settings panel as a laptop trackpad (pointer speed, tap-to-click, scrolling, and so on).</p>
+<h2 id="virtual-trackpads">Virtual Trackpads</h2>
+<p>Each pad is configured independently under <code>[trackpad.left]</code> / <code>[trackpad.right]</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="k">[trackpad.right]</span>
+<span class="n">mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"mt-trackpad"</span><span class="w">       </span><span class="c1"># right trackpad acts as a standard mouse/trackpad</span>
+<span class="n">click_pressure</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">30000</span><span class="w">     </span><span class="c1"># optional: firmware click-pressure threshold (raw u16, omit for firmware default)</span>
+<span class="c1"># pixel_interval = 3000    # optional: raw units of travel per on_movement tick</span>
+
+<span class="k">[trackpad.right.kde]</span>
+<span class="n">pointer_acceleration</span><span class="w">         </span><span class="o">=</span><span class="w"> </span><span class="mf">0.2</span><span class="w">      </span><span class="c1"># cursor speed within the chosen profile (-1.0..+1.0)</span>
+<span class="n">pointer_acceleration_profile</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"flat"</span><span class="w">   </span><span class="c1"># "flat" (1:1, recommended) or "adaptive" (KDE default)</span>
+
+<span class="k">[trackpad.right.haptic]</span>
+<span class="n">on_press</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">duration_us</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">8000</span><span class="p">,</span><span class="w"> </span><span class="n">interval_us</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">8000</span><span class="p">,</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="n">gain_db</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">}</span><span class="w">   </span><span class="c1"># fires when the finger presses down</span>
+<span class="n">on_release</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">duration_us</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">8000</span><span class="p">,</span><span class="w"> </span><span class="n">interval_us</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">8000</span><span class="p">,</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="n">gain_db</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">}</span><span class="w">   </span><span class="c1"># fires when the finger lifts off the click</span>
+<span class="c1"># on_movement = { duration_us = 4000, interval_us = 4000, count = 1, gain_db = 0 }</span>
+
+<span class="k">[trackpad.left]</span>
+<span class="n">mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"disabled"</span><span class="w">          </span><span class="c1"># default — left trackpad stays off</span>
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>mode</code></td>
+<td><code>"disabled"</code></td>
+<td>See <a href="#trackpad-modes">Trackpad modes</a> below.</td>
+</tr>
+<tr>
+<td><code>click_pressure</code></td>
+<td>firmware default</td>
+<td>Physical click threshold, as a raw firmware value. Optional.</td>
+</tr>
+<tr>
+<td><code>pixel_interval</code></td>
+<td><code>3000</code></td>
+<td>Raw units of cursor travel (≈2mm) per <code>haptic.on_movement</code> tick.</td>
+</tr>
+<tr>
+<td><code>kde.pointer_acceleration</code></td>
+<td><code>0.2</code></td>
+<td>Cursor speed multiplier within the chosen profile. Range −1.0 (slowest) to +1.0 (fastest).</td>
+</tr>
+<tr>
+<td><code>kde.pointer_acceleration_profile</code></td>
+<td><code>"flat"</code></td>
+<td><code>"flat"</code> for 1:1 movement (recommended — consistent and predictable on a small pad surface); <code>"adaptive"</code> for the libinput default (slows slow movements, amplifies fast ones).</td>
+</tr>
+<tr>
+<td><code>kde.tap_to_click</code></td>
+<td><code>false</code></td>
+<td>Whether a light tap registers as a click. Disabled by default — accidental taps occur when switching between gesture mode and cursor mode.</td>
+</tr>
+<tr>
+<td><code>kde.disable_while_typing</code></td>
+<td><code>false</code></td>
+<td>Suppresses trackpad input while the keyboard is active. Disabled by default — not useful in a gaming context.</td>
+</tr>
+<tr>
+<td><code>haptic.on_press</code></td>
+<td>3-pulse burst</td>
+<td>Haptic fired on the press edge of a physical click. <code>false</code> silences it.</td>
+</tr>
+<tr>
+<td><code>haptic.on_release</code></td>
+<td>3-pulse burst</td>
+<td>Haptic fired on the release edge of a physical click. <code>false</code> silences it.</td>
+</tr>
+<tr>
+<td><code>haptic.on_movement</code></td>
+<td>— (silent)</td>
+<td>Haptic fired per <code>pixel_interval</code> raw units of cursor travel. Silent by default — enable explicitly (<code>true</code> is one short tick) if you want a trackpad-click-wheel feel.</td>
+</tr>
+</tbody>
+</table>
+<p>Every haptic value takes the same form as a binding's <a href="../bindings/#haptic"><code>haptic =</code></a>, without <code>pad</code> — the section already decides the pad. Either a single event, or a list of steps with an optional <code>pause_ms</code> after each:</p>
+<div class="highlight"><pre><span></span><code><span class="n">on_press</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">duration_us</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">8000</span><span class="p">,</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="p">}</span>
+<span class="n">on_release</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[{</span><span class="w"> </span><span class="n">duration_us</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">8000</span><span class="p">,</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">pause_ms</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">40</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">duration_us</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">4000</span><span class="p">,</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="p">}]</span>
+</code></pre></div>
+<p>What decides <em>when</em> a movement tick fires (<code>pixel_interval</code>) is a key of the pad section, never of the haptic. A haptic still written in the old flat form with <code>pixel_interval</code> inside it is ignored with a warning.</p>
+<p>Each event takes four fields, each with its own default if omitted:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>duration_us</code></td>
+<td><code>8000</code></td>
+<td>Pulse length in microseconds.</td>
+</tr>
+<tr>
+<td><code>interval_us</code></td>
+<td><code>8000</code></td>
+<td>Gap between repeated pulses, in microseconds.</td>
+</tr>
+<tr>
+<td><code>count</code></td>
+<td><code>3</code></td>
+<td>Number of pulses fired.</td>
+</tr>
+<tr>
+<td><code>gain_db</code></td>
+<td><code>0</code></td>
+<td>Pulse loudness/strength adjustment, in dB.</td>
+</tr>
+</tbody>
+</table>
+<p>The default is a three-pulse burst (8ms on / 8ms off), tuned on real hardware against the Lizard Mode click buzz as a reference feel. Both edges fire the same tuned burst by default — a physical click is really two separate feelable edges, not one event.</p>
+<h2 id="combined-trackpad">Combined Trackpad</h2>
+<p>What Deckery does that Steam Input can't: both trackpads combine into a single multi-touch surface, enabling real two-finger gestures — two-thumb scroll and pinch-to-zoom — across both pads at once. That gets you very smooth horizontal and vertical scrolling and very smooth zooming, e.g. for comfortably navigating a canvas — noticeably better than the scroll wheel emulation Steam offers.</p>
+<div class="highlight"><pre><span></span><code><span class="k">[trackpad.left]</span>
+<span class="n">mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"disabled"</span>
+
+<span class="k">[trackpad.right]</span>
+<span class="n">mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"mt-trackpad"</span>
+
+<span class="k">[trackpad]</span>
+<span class="n">combined_gesture_device</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="w">   </span><span class="c1"># combines both pads into one gesture surface</span>
+
+<span class="k">[trackpad.gestures.kde]</span>
+<span class="n">natural_scroll</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="w">    </span><span class="c1"># content follows the finger — standard for two-finger scrolling</span>
+<span class="n">scroll_factor</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="mf">0.5</span><span class="w">     </span><span class="c1"># scrolls at half speed (raw pad range ±32767 makes the default too fast)</span>
+</code></pre></div>
+<p>The <code>[trackpad.gestures.kde]</code> block is optional — the values above are the defaults that apply even if the block is absent.</p>
+<h3 id="haptic-feedback">Haptic feedback</h3>
+<p>Rather than click, the combined device fires on the gesture's lifecycle — start, ongoing movement, and end — since a click has no established meaning mid-gesture:</p>
+<div class="highlight"><pre><span></span><code><span class="k">[trackpad.gestures]</span>
+<span class="n">pixel_interval</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3000</span><span class="w">   </span><span class="c1"># raw units of movement (both fingers summed) per on_gesture_move tick</span>
+
+<span class="k">[trackpad.gestures.haptic]</span>
+<span class="n">on_gesture_start</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">duration_us</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">2000</span><span class="p">,</span><span class="w"> </span><span class="n">interval_us</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">gain_db</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">}</span><span class="w">   </span><span class="c1"># both pads become touched at once</span>
+<span class="n">on_gesture_move</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">duration_us</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">1000</span><span class="p">,</span><span class="w"> </span><span class="n">interval_us</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">gain_db</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">}</span><span class="w">   </span><span class="c1"># per pixel_interval units of movement</span>
+<span class="n">on_gesture_end</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">duration_us</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">2000</span><span class="p">,</span><span class="w"> </span><span class="n">interval_us</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">gain_db</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">}</span><span class="w">   </span><span class="c1"># either pad lifts, ending the session</span>
+</code></pre></div>
+<p>All three are silent by default — gesture haptics have no established reference feel to fall back to, unlike a physical click edge. They take the same single-event-or-list form as the pad haptics above.</p>
+<h2 id="trackpad-modes">Trackpad modes</h2>
+<p>Set per pad via <code>mode</code> in <code>[trackpad.left]</code> / <code>[trackpad.right]</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Status</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>disabled</code></td>
+<td>✅ Available (default)</td>
+<td>Pad is off — no virtual device. Position is still tracked internally for the HUD.</td>
+</tr>
+<tr>
+<td><code>mt-trackpad</code></td>
+<td>✅ Available</td>
+<td>Standard Linux multi-touch trackpad, as used throughout this page. Circular scrolling (swipe around the pad's edge to scroll) is planned as an option here.</td>
+</tr>
+<tr>
+<td><code>trackball</code></td>
+<td>✅ Available</td>
+<td>Cursor moves as a trackball — relative motion with momentum, like Steam Input's trackball option. See <a href="#trackball-mode">Trackball Mode</a>.</td>
+</tr>
+<tr>
+<td><code>scroll</code></td>
+<td>⏳ Planned</td>
+<td>Pad dedicated to scrolling only.</td>
+</tr>
+</tbody>
+</table>
+<p>See <a href="../../../reference/trackpad-architecture/">Trackpad Architecture</a> under Development for how this is implemented internally.</p>
+<h2 id="roadmap">Roadmap</h2>
+<table>
+<thead>
+<tr>
+<th>Status</th>
+<th>Feature</th>
+<th>Issue</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>✅</td>
+<td>Virtual MT devices — expose raw trackpad data to the Linux input stack</td>
+<td>—</td>
+</tr>
+<tr>
+<td>✅</td>
+<td>Lizard Mode suppression — hold the hidraw device open so the kernel driver doesn't override our output</td>
+<td><a href="https://github.com/Plasma-Deckery/makima-deckery/issues/11">makima-deckery#11</a></td>
+</tr>
+<tr>
+<td>✅</td>
+<td>Combined two-pad gesture device — both pads together as two fingers for pinch-zoom and pan</td>
+<td><a href="https://github.com/Plasma-Deckery/deckery/issues/7">deckery#7</a></td>
+</tr>
+<tr>
+<td>✅</td>
+<td>Haptic feedback — click-tick pulses, matching Steam's click-grid feel</td>
+<td><a href="https://github.com/Plasma-Deckery/makima-deckery/issues/9">makima-deckery#9</a></td>
+</tr>
+<tr>
+<td>✅</td>
+<td>Hardware settings via TOML — click-pressure threshold, per-mode haptic config</td>
+<td><a href="https://github.com/Plasma-Deckery/makima-deckery/issues/13">makima-deckery#13</a></td>
+</tr>
+<tr>
+<td>✅</td>
+<td>Movement haptics — <code>on_movement</code> pulse fires per distance traveled, not per time</td>
+<td><a href="https://github.com/Plasma-Deckery/makima-deckery/issues/22">makima-deckery#22</a></td>
+</tr>
+<tr>
+<td>✅</td>
+<td>Gesture-lifecycle haptics — <code>on_gesture_start</code>/<code>on_gesture_move</code>/<code>on_gesture_end</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td>✅</td>
+<td>libinput defaults — <code>[trackpad.*.kde]</code> writes kcminputrc on startup (tap-to-click off, flat acceleration, scroll tuning)</td>
+<td><a href="https://github.com/Plasma-Deckery/makima-deckery/issues/25">makima-deckery#25</a></td>
+</tr>
+<tr>
+<td>✅</td>
+<td>Trackball mode — relative pointer motion with momentum, see below</td>
+<td>—</td>
+</tr>
+<tr>
+<td>⏳</td>
+<td>Gesture tool integration — discrete gesture zones trigger makima actions; continuous gestures go directly to the input stack</td>
+<td><a href="https://github.com/Plasma-Deckery/deckery/issues/3">deckery#3</a></td>
+</tr>
+<tr>
+<td>✅</td>
+<td>Merge <code>trackpad-config</code> branch to <code>main</code></td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<h2 id="trackball-mode">Trackball Mode</h2>
+<p><code>mode = "trackball"</code> turns a pad into the ball of a trackball, the way Steam Input's trackball option does:</p>
+<ul>
+<li><strong>Dragging</strong> moves the pointer by the finger's movement, scaled by <code>sensitivity</code>.</li>
+<li><strong>Flicking</strong> sets the ball rolling. On lift, the release velocity is the finger's average speed over the last 50 ms before the lift; if it is at least <code>min_fling_speed</code>, the pointer keeps moving in that direction. A finger that stopped before lifting does not fling.</li>
+<li><strong>Decay</strong> is exponential: <code>v(t) = v0 · e^(−friction · t)</code>. The ball stops once its speed falls below <code>stop_speed</code>. A fling travels about <code>v0 / friction</code> raw units in total; with <code>friction = 0</code> it rolls until touched.</li>
+<li><strong>Touching the pad stops the ball</strong> where it is, and moving from there carries on without a jump.</li>
+<li>The <strong>physical click</strong> is <code>BTN_LEFT</code>. <code>click_pressure</code> applies as in <code>mt-trackpad</code>.</li>
+</ul>
+<p>The output is relative pointer motion (<code>REL_X</code>/<code>REL_Y</code>) on the shared <strong>Makima Virtual Pointer</strong> device — the same device <code>RSTICK = "cursor"</code> writes to — not a per-pad multi-touch trackpad. So the <code>[trackpad.&lt;side&gt;.kde]</code> settings, which target the <code>Deckery Left/Right Trackpad</code> devices, do not apply to a trackball pad. When a two-finger gesture or Gaming Mode takes the pad away mid-touch, the ball stops without flinging and a held click is released.</p>
+<div class="highlight"><pre><span></span><code><span class="k">[trackpad.right]</span>
+<span class="n">mode</span><span class="w">            </span><span class="o">=</span><span class="w"> </span><span class="s2">"trackball"</span>
+<span class="n">sensitivity</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="mf">0.008</span><span class="w">   </span><span class="c1"># pointer pixels per raw pad unit</span>
+<span class="n">friction</span><span class="w">        </span><span class="o">=</span><span class="w"> </span><span class="mf">2.0</span><span class="w">     </span><span class="c1"># decay rate per second; 0 rolls until touched</span>
+<span class="n">min_fling_speed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">40000</span><span class="w">   </span><span class="c1"># raw units/s at lift needed to set the ball rolling</span>
+<span class="n">stop_speed</span><span class="w">      </span><span class="o">=</span><span class="w"> </span><span class="mi">1500</span><span class="w">    </span><span class="c1"># raw units/s below which the ball stops</span>
+<span class="n">grid</span><span class="w">            </span><span class="o">=</span><span class="w"> </span><span class="mi">7</span><span class="w">       </span><span class="c1"># cells per pad side, for drag and roll ticks</span>
+
+<span class="k">[trackpad.right.haptic]</span>
+<span class="n">on_press</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">duration_us</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">8000</span><span class="p">,</span><span class="w"> </span><span class="n">interval_us</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">8000</span><span class="p">,</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="n">gain_db</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">}</span>
+<span class="n">on_release</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">duration_us</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">8000</span><span class="p">,</span><span class="w"> </span><span class="n">interval_us</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">8000</span><span class="p">,</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="n">gain_db</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">}</span>
+<span class="n">on_roll</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">duration_us</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">4000</span><span class="p">,</span><span class="w"> </span><span class="n">interval_us</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">4000</span><span class="p">,</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">gain_db</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">}</span><span class="w">   </span><span class="c1"># tick per grid cell while rolling</span>
+<span class="n">on_movement</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">duration_us</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">4000</span><span class="p">,</span><span class="w"> </span><span class="n">interval_us</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">4000</span><span class="p">,</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">gain_db</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">}</span><span class="w">   </span><span class="c1"># tick per grid cell while dragging</span>
+</code></pre></div>
+<p>These are tested values; the shipped <code>Steam Deck Trackpads.toml</code> carries the same block, commented out.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Unit</th>
+<th>Default</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sensitivity</code></td>
+<td>pointer pixels per raw pad unit</td>
+<td><code>0.02</code></td>
+<td>Scale for dragging and rolling alike. The pad is 65 536 raw units per axis, so <code>0.02</code> is about 1 300 px per full swipe. Must be above 0.</td>
+</tr>
+<tr>
+<td><code>friction</code></td>
+<td>1/s</td>
+<td><code>4.0</code></td>
+<td>Exponential decay rate of a rolling ball. Higher stops sooner; <code>0</code> never slows. Must be at least 0.</td>
+</tr>
+<tr>
+<td><code>min_fling_speed</code></td>
+<td>raw units/s</td>
+<td><code>40000</code></td>
+<td>Finger speed at lift needed to set the ball rolling. Below it, a lift just stops. Must be at least 0.</td>
+</tr>
+<tr>
+<td><code>stop_speed</code></td>
+<td>raw units/s</td>
+<td><code>1500</code></td>
+<td>Speed below which a rolling ball stops. Must be above 0, since an exponential decay never reaches 0 on its own. Also a lower bound for flinging.</td>
+</tr>
+<tr>
+<td><code>grid</code></td>
+<td>cells per pad side</td>
+<td><code>8</code></td>
+<td>Detent raster for <code>on_movement</code> and <code>on_roll</code>: the pad is split into <code>grid</code> × <code>grid</code> cells (each <code>65536 / grid</code> raw units wide). Whole number from 1 to 65 536.</td>
+</tr>
+<tr>
+<td><code>click_pressure</code></td>
+<td>raw u16</td>
+<td>firmware default</td>
+<td>Physical click threshold, as in <code>mt-trackpad</code>.</td>
+</tr>
+</tbody>
+</table>
+<p>Velocities are measured in raw pad units, not pixels, so whether a flick flings does not change with <code>sensitivity</code>. Every key is optional and parsed on its own: an invalid value or an unknown key logs a warning, and that key falls back to its default while the others stay as written.</p>
+<h3 id="the-grid">The grid</h3>
+<p>A real trackball has one detent spacing, so dragging and rolling share one raster. A tick fires each time the position crosses into a new cell. A cell is only left once the position is 0.1 cell past its edge, so a finger resting on a boundary does not buzz. While rolling, the ball keeps a virtual position that continues from where the finger lifted, so the raster carries on across the lift without an extra tick, and the tick rate follows the ball's speed as it slows. Roll ticks are capped at one per 8 ms roll step.</p>
+<h3 id="haptics">Haptics</h3>
+<p><code>[trackpad.&lt;side&gt;.haptic]</code> in trackball mode takes these keys:</p>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Default</th>
+<th>Fires</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>on_press</code></td>
+<td>3-pulse burst</td>
+<td>On the press edge of a physical click.</td>
+</tr>
+<tr>
+<td><code>on_release</code></td>
+<td>3-pulse burst</td>
+<td>On the release edge of a physical click.</td>
+</tr>
+<tr>
+<td><code>on_movement</code></td>
+<td>— (silent)</td>
+<td>Once per grid cell the finger drags into. <code>true</code> switches on one short tick (<code>4000 µs</code>, count 1).</td>
+</tr>
+<tr>
+<td><code>on_roll</code></td>
+<td>one short tick</td>
+<td>Once per grid cell the rolling ball moves into.</td>
+</tr>
+</tbody>
+</table>
+<p><code>false</code> silences any of them. Each value takes the same form as the other pad haptics: a single event, or a list of steps with an optional <code>pause_ms</code> after each (see <a href="#virtual-trackpads">Virtual Trackpads</a>). The tick spacing is <code>grid</code> in the pad section, never inside the haptic; a haptic that still carries <code>grid</code> or <code>pixel_interval</code> inside it is ignored with a warning and that key uses its default.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "navigation.indexes", "search.suggest", "search.highlight", "content.code.copy", "content.action.edit"], "search": "../../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
+      
+    
+  </body>
+</html>
