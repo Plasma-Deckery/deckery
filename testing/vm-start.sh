@@ -11,12 +11,13 @@ VMDIR="${VM_ROOT:-$HOME/VMs}/bazzite-test"
 rm -f "$VMDIR/monitor.sock" "$VMDIR/serial.sock"
 
 setsid env GDK_BACKEND=x11 GDK_CORE_DEVICE_EVENTS=1 qemu-system-x86_64 \
-  -enable-kvm -cpu host -smp 4 -m 4G \
+  -enable-kvm -cpu host -smp 4 -m 3G \
   -drive if=pflash,format=raw,readonly=on,file=/usr/share/edk2/ovmf/OVMF_CODE.fd \
   -drive if=pflash,format=qcow2,file="$VMDIR/OVMF_VARS.qcow2" \
   -drive file="$VMDIR/install-disk.qcow2",format=qcow2,if=virtio \
   -net nic,model=virtio -net user,hostfwd=tcp::2222-:22 \
   -device virtio-vga \
+  -device virtio-balloon-pci,free-page-reporting=on \
   -display gtk,zoom-to-fit=on \
   -device qemu-xhci,id=xhci \
   -monitor unix:"$VMDIR/monitor.sock",server,nowait \

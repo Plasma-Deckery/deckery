@@ -136,6 +136,8 @@ qemu-img snapshot -a snap-bazzite44-clean ~/VMs/bazzite-test/install-disk.qcow2
 
 - **GTK display required:** VNC only shows the VGA framebuffer; KDE Wayland renders via DRM/KMS (virtio-vga), which the GTK backend forwards correctly.
 
+- **RAM returned to the host:** `vm-start.sh` and `cachyos-vm-start.sh` add `-device virtio-balloon-pci,free-page-reporting=on`, so the guest reports freed pages and QEMU's RSS shrinks again. The guest kernel only reports free blocks of `page_reporting_order` (default 9 = 2 MiB), which fragmentation limits; `echo 4 | sudo tee /sys/module/page_reporting/parameters/page_reporting_order` in the guest returns noticeably more (measured: ~2.9 GB → ~2.3 GB RSS). Check with `info balloon` on the monitor.
+
 ---
 
 ## CachyOS Handheld VM

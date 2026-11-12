@@ -24,6 +24,7 @@ setsid env GDK_BACKEND=x11 GDK_CORE_DEVICE_EVENTS=1 qemu-system-x86_64 \
   -drive file="$VMDIR/install-disk.qcow2",format=qcow2,if=virtio \
   -net nic,model=virtio -net user,hostfwd=tcp::2224-:22 \
   -device virtio-vga \
+  -device virtio-balloon-pci,free-page-reporting=on \
   -display gtk,zoom-to-fit=on \
   -device qemu-xhci,id=xhci \
   -monitor unix:"$VMDIR/monitor.sock",server,nowait \
