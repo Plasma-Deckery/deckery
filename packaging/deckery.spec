@@ -1,13 +1,13 @@
 Name:           deckery
-Version:        0.5.0
-Release:        2%{?dist}
+Version:        2.0.0~beta1
+Release:        1%{?dist}
 Summary:        Steam Deck input stack for KDE Plasma — meta-package
 
 # next_minor is the first version that would introduce a breaking change.
 # Patch releases (0.3.x) are compatible and update independently.
 # When a minor bump (0.4.0) happens: update Version, next_minor, and tag
 # all component repos simultaneously.
-%global next_minor 0.6
+%global next_minor 2.1
 
 License:        GPL-3.0-only
 URL:            https://github.com/Plasma-Deckery/deckery
@@ -74,6 +74,12 @@ done
 %{_datadir}/deckery/
 
 %changelog
+* Thu Nov 12 2026 Philipp Schimmelfennig <philipp@plasma-deckery.dev> - 2.0.0~beta1-1
+- Version aligned with makima-deckery and deckery-hud 2.0.0~beta1
+- Shipped config: auto_mute = true, focus_threshold_ms = 1000, haptic ticks on L2/R2
+- The new config keys need makima-deckery 2.0.0~beta1, which this package requires
+- Docs for auto-mute, focus delay and binding haptics
+
 * Tue Nov 10 2026 Philipp Schimmelfennig <philipp@plasma-deckery.dev> - 0.5.0-2
 - Description: services are enabled by deckery-tray, no manual enable step
 

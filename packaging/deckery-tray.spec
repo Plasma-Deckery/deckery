@@ -1,6 +1,6 @@
 Name:           deckery-tray
-Version:        0.5.0
-Release:        2%{?dist}
+Version:        2.0.0~beta1
+Release:        1%{?dist}
 Summary:        Deckery system tray — service monitor and control for KDE Plasma
 
 License:        GPL-3.0-only
@@ -106,6 +106,13 @@ ln -s ../deckery-tray-migrate.service \
 %{_userunitdir}/default.target.wants/deckery-tray-migrate.service
 
 %changelog
+* Thu Nov 12 2026 Philipp Schimmelfennig <philipp@plasma-deckery.dev> - 2.0.0~beta1-1
+- Update flow for packaged installs (Issue #78): "Update available" follows
+  the enabled Deckery channel, "Update now" runs Bazzite's ujust update and
+  then asks for a restart; never runs the source installer
+- "Updates not available" when no Deckery channel is enabled
+- Version aligned with makima-deckery and deckery-hud 2.0.0~beta1
+
 * Tue Nov 10 2026 Philipp Schimmelfennig <philipp@plasma-deckery.dev> - 0.5.0-2
 - Enabled for every user by the package: the tray starts with the graphical
   session and pulls in makima and the HUD; no manual systemctl --user enable
