@@ -8,4 +8,4 @@
 # OpenWhispr's own activation mode decides how this behaves. Its default is
 # "tap": press once to start dictating, once more to stop. Switch the note to
 # "halten" if you set OpenWhispr to push-to-talk.
-L1-R5 = { keys = ["KEY_LEFTCTRL", "KEY_PAGEDOWN"], label = "🎙 Voice Input", note = "an / aus" }
+L1-R5 = { keys = ["KEY_LEFTCTRL", "KEY_PAGEDOWN"], label = "🎙 Voice Input" }
