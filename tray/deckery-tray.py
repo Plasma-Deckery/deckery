@@ -698,7 +698,7 @@ class DeckeryTray:
 
     def _show_system_update_hint(self) -> None:
         """Explain that Deckery comes with the system update. Where the system
-        can run it (ujust + a terminal), offer to start it; otherwise the
+        can run it (rpm-ostree + a terminal), offer to start it; otherwise the
         dialog is information only."""
         hint = self._updater.hint
         offer = (self._updater.state == UpdateState.UPDATE_AVAILABLE

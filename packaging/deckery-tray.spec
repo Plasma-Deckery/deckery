@@ -1,6 +1,6 @@
 Name:           deckery-tray
 Version:        2.0.0~beta1
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Deckery system tray — service monitor and control for KDE Plasma
 
 License:        GPL-3.0-only
@@ -106,6 +106,11 @@ ln -s ../deckery-tray-migrate.service \
 %{_userunitdir}/default.target.wants/deckery-tray-migrate.service
 
 %changelog
+* Thu Nov 12 2026 Philipp Schimmelfennig <philipp@plasma-deckery.dev> - 2.0.0~beta1-2
+- "Update now" runs rpm-ostree upgrade instead of ujust update (Issue #78):
+  uupd skipped updates that only touch layered packages, and ujust asked for
+  a password. Says "No update was found" when nothing was staged.
+
 * Thu Nov 12 2026 Philipp Schimmelfennig <philipp@plasma-deckery.dev> - 2.0.0~beta1-1
 - Update flow for packaged installs (Issue #78): "Update available" follows
   the enabled Deckery channel, "Update now" runs Bazzite's ujust update and

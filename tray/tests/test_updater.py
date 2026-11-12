@@ -613,9 +613,9 @@ class TestPackagedMode:
 
 
 class TestSystemUpdate:
-    """start_system_update: terminal with ujust, only on packaged installs."""
+    """start_system_update: terminal with rpm-ostree upgrade, only on packaged installs."""
 
-    ARGV = ["konsole", "-e", "bash", "-c", "ujust update"]
+    ARGV = ["konsole", "-e", "bash", "-c", "rpm-ostree upgrade"]
 
     def test_source_install_has_no_system_update(self):
         u = Updater(on_state_change=MagicMock(), packaged=False)

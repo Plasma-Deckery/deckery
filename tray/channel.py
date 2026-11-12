@@ -10,7 +10,10 @@ case:
    reference, so "update available" only appears when the system update can
    actually deliver it.)
 2. Can the tray start the system update?  (system_update_command() — only on
-   images that ship `ujust`, i.e. Universal Blue / Bazzite.)
+   rpm-ostree systems such as Bazzite. It runs `rpm-ostree upgrade` without
+   sudo; the image's polkit rules allow that for the active local user.
+   Not `ujust update`: its `uupd` skips updates that only touch layered
+   packages, which is exactly what a Deckery release is.)
 
 Channel source: the repository metadata (repomd.xml → primary.xml.gz) at the
 baseurl of the enabled repo file. That is exactly what the system update reads,
@@ -297,15 +300,21 @@ def check(tray_file: str) -> Result:
 
 # ── Starting the system update ────────────────────────────────────────────────
 
+OSTREE_BOOTED = "/run/ostree-booted"
+
 # Shown inside the terminal window. Plain words, no tool names.
+# --unchanged-exit-77: exit 77 when nothing new was staged, so the window
+# never claims an update that did not happen.
 TERMINAL_SCRIPT = """\
 echo "Updating your system. This can take a while. Please keep this window open."
 echo
-ujust update
+rpm-ostree upgrade --unchanged-exit-77
 status=$?
 echo
 if [ "$status" -eq 0 ]; then
   echo "Done. Restart your device to finish the update."
+elif [ "$status" -eq 77 ]; then
+  echo "No update was found. Try again later."
 else
   echo "The update did not finish. You can close this window and try again later."
 fi
@@ -331,9 +340,9 @@ def _terminal_argv(script: str) -> list[str] | None:
 
 def system_update_command() -> list[str] | None:
     """argv that runs the system update in a visible terminal, or None when the
-    tray cannot offer it (no `ujust`, i.e. not a Universal Blue image, or no
-    terminal). Runs natively — the packaged tray is not in a container."""
-    if not shutil.which("ujust"):
+    tray cannot offer it (not an rpm-ostree system, or no terminal). Runs
+    natively — the packaged tray is not in a container."""
+    if not (shutil.which("rpm-ostree") and os.path.exists(OSTREE_BOOTED)):
         return None
     return _terminal_argv(TERMINAL_SCRIPT)
 

@@ -14,7 +14,7 @@ Packaged installs (RPM, see is_packaged_install()) are updated by the system
 update, never by get.sh (Issue #78). There the check asks the enabled package
 channel instead of git tags (channel.py), so UPDATE_AVAILABLE only appears
 when the system update can deliver it. A click opens a dialog in
-deckery-tray.py that explains this and, where the image has `ujust`, offers
+deckery-tray.py that explains this and, on rpm-ostree systems, offers
 to start the system update in a terminal. RESTART_REQUIRED (packaged only)
 means the update is downloaded and waits for a restart; UNAVAILABLE (packaged
 only, greyed out, no badge) means no Deckery channel is enabled. The hourly check
@@ -344,7 +344,7 @@ class Updater:
     @property
     def system_update_command(self) -> list[str] | None:
         """Packaged only: argv that runs the system update in a terminal, or
-        None if this system cannot offer it (no ujust or no terminal)."""
+        None if this system cannot offer it (not rpm-ostree or no terminal)."""
         if not self._packaged:
             return None
         return channel.system_update_command()

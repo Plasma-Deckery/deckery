@@ -8,8 +8,9 @@ Covers:
   • newest_in_repo / newest_offered: repo metadata parsing, $releasever/$basearch
   • pending_package: staged deployment from rpm-ostree status --json
   • check: up to date / update available / restart required / errors
-  • system_update_command: no ujust → None, no terminal → None, terminal order,
-    never distrobox-host-exec / get.sh / install.sh
+  • system_update_command: not rpm-ostree → None, no terminal → None, terminal
+    order, never sudo / distrobox-host-exec / get.sh / install.sh; the script
+    reports staged / nothing found / failed from rpm-ostree's exit code
 
 subprocess and urllib are mocked; nothing touches the network or the system.
 """
@@ -409,21 +410,33 @@ class TestCheck:
 
 class TestSystemUpdateCommand:
 
+    @pytest.fixture(autouse=True)
+    def _ostree(self, monkeypatch, tmp_path):
+        booted = tmp_path / "ostree-booted"
+        booted.touch()
+        monkeypatch.setattr(ch, "OSTREE_BOOTED", str(booted))
+        self.booted = booted
+
     def _which(self, *present):
         return lambda n: f"/usr/bin/{n}" if n in present else None
 
-    def test_no_ujust_no_command(self, monkeypatch):
+    def test_no_rpm_ostree_no_command(self, monkeypatch):
         monkeypatch.setattr(ch.shutil, "which", self._which("konsole", "ptyxis"))
         assert ch.system_update_command() is None
 
+    def test_not_ostree_booted_no_command(self, monkeypatch):
+        self.booted.unlink()
+        monkeypatch.setattr(ch.shutil, "which", self._which("rpm-ostree", "konsole"))
+        assert ch.system_update_command() is None
+
     def test_no_terminal_no_command(self, monkeypatch):
-        monkeypatch.setattr(ch.shutil, "which", self._which("ujust"))
+        monkeypatch.setattr(ch.shutil, "which", self._which("rpm-ostree"))
         assert ch.system_update_command() is None
 
     @pytest.mark.parametrize("present,first", [
-        (("ujust", "konsole", "ptyxis", "xdg-terminal-exec"), ["konsole", "-e"]),
-        (("ujust", "ptyxis", "xdg-terminal-exec"),            ["ptyxis", "--"]),
-        (("ujust", "xdg-terminal-exec"),                      ["xdg-terminal-exec"]),
+        (("rpm-ostree", "konsole", "ptyxis", "xdg-terminal-exec"), ["konsole", "-e"]),
+        (("rpm-ostree", "ptyxis", "xdg-terminal-exec"),            ["ptyxis", "--"]),
+        (("rpm-ostree", "xdg-terminal-exec"),                      ["xdg-terminal-exec"]),
     ])
     def test_terminal_order(self, monkeypatch, present, first):
         monkeypatch.setattr(ch.shutil, "which", self._which(*present))
@@ -432,13 +445,32 @@ class TestSystemUpdateCommand:
         assert argv[len(first):len(first) + 2] == ["bash", "-c"]
         assert argv[-1] == ch.TERMINAL_SCRIPT
 
-    def test_runs_ujust_update_natively(self, monkeypatch):
-        monkeypatch.setattr(ch.shutil, "which", self._which("ujust", "konsole"))
+    def test_runs_rpm_ostree_upgrade_natively_without_sudo(self, monkeypatch):
+        monkeypatch.setattr(ch.shutil, "which", self._which("rpm-ostree", "konsole"))
         argv = ch.system_update_command()
         joined = " ".join(argv)
-        assert "ujust update" in ch.TERMINAL_SCRIPT
+        assert "rpm-ostree upgrade --unchanged-exit-77" in ch.TERMINAL_SCRIPT
+        assert "sudo" not in joined and "ujust" not in joined
         assert "distrobox-host-exec" not in joined
         assert "get.sh" not in joined and "install.sh" not in joined
+
+    @pytest.mark.parametrize("code,expected,absent", [
+        (0,  "Done. Restart your device to finish the update.", "No update was found"),
+        (77, "No update was found. Try again later.",           "Done."),
+        (1,  "The update did not finish.",                      "Done."),
+    ])
+    def test_script_reports_what_rpm_ostree_did(self, tmp_path, code, expected, absent):
+        bash = shutil.which("bash")
+        if not bash:
+            pytest.skip("no bash")
+        fake = tmp_path / "rpm-ostree"
+        fake.write_text(f"#!/bin/sh\nexit {code}\n")
+        fake.chmod(0o755)
+        env = {**os.environ, "PATH": f"{tmp_path}:{os.environ.get('PATH', '')}"}
+        r = subprocess.run([bash, "-c", ch.TERMINAL_SCRIPT], input="\n",
+                           capture_output=True, text=True, env=env, timeout=10)
+        assert expected in r.stdout
+        assert absent not in r.stdout
 
     def test_script_keeps_window_open_and_mentions_restart(self):
         assert "read -r" in ch.TERMINAL_SCRIPT
