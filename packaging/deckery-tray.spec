@@ -1,7 +1,12 @@
 Name:           deckery-tray
 Version:        2.0.0~beta1
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        Deckery system tray — service monitor and control for KDE Plasma
+
+# Same lockstep bounds as deckery.spec: the tray reads makima's socket and
+# state format, so mixed-minor installs must be impossible. Keep next_minor
+# in sync with deckery.spec.
+%global next_minor 2.1
 
 License:        GPL-3.0-only
 URL:            https://github.com/Plasma-Deckery/deckery
@@ -29,7 +34,9 @@ Requires:       python3-psutil
 Requires:       glib2
 
 Requires:       makima-deckery >= %{version}
-Requires:       deckery-hud >= %{version}
+Requires:       makima-deckery <  %{next_minor}
+Requires:       deckery-hud    >= %{version}
+Requires:       deckery-hud    <  %{next_minor}
 
 %description
 deckery-tray is a GTK3 system tray applet that monitors and controls the
@@ -37,7 +44,8 @@ Deckery input stack. It shows the current state of makima-deckery (active,
 paused, gaming mode), detects running Steam games, and lets the user toggle
 the HUD overlay, pause remapping, and configure per-application profiles.
 
-Includes an onboarding wizard for first-run setup and a self-update checker.
+Includes an onboarding wizard for first-run setup and update notifications
+that follow the enabled Deckery package channel.
 
 %prep
 %autosetup -n deckery-%{version}
@@ -106,6 +114,11 @@ ln -s ../deckery-tray-migrate.service \
 %{_userunitdir}/default.target.wants/deckery-tray-migrate.service
 
 %changelog
+* Fri Nov 13 2026 Philipp Schimmelfennig <philipp@plasma-deckery.dev> - 2.0.0~beta1-3
+- Requires makima-deckery and deckery-hud below the next minor (2.1), same
+  lockstep bounds as the deckery meta-package
+- Description: update notifications follow the package channel
+
 * Thu Nov 12 2026 Philipp Schimmelfennig <philipp@plasma-deckery.dev> - 2.0.0~beta1-2
 - "Update now" runs rpm-ostree upgrade instead of ujust update (Issue #78):
   uupd skipped updates that only touch layered packages, and ujust asked for

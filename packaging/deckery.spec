@@ -4,9 +4,9 @@ Release:        5%{?dist}
 Summary:        Steam Deck input stack for KDE Plasma — meta-package
 
 # next_minor is the first version that would introduce a breaking change.
-# Patch releases (0.3.x) are compatible and update independently.
-# When a minor bump (0.4.0) happens: update Version, next_minor, and tag
-# all component repos simultaneously.
+# Patch releases (2.0.x) are compatible and update independently.
+# When a minor bump (2.1.0) happens: update Version and next_minor here and
+# in deckery-tray.spec, and tag all component repos simultaneously.
 %global next_minor 2.1
 
 License:        GPL-3.0-only
