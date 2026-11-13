@@ -1,20 +1,10 @@
 NAME    := deckery
 outdir  ?= $(CURDIR)/outdir
 
-# Beta channel: BETA=1 make srpm  →  date+hash release, version from git tag.
-# Stable channel: make srpm        →  Release: 1, version from spec file.
-ifdef BETA
-spec      ?= packaging/deckery-tray-beta.spec
-VERSION   := $(shell git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//')
-GIT_DATE  := $(shell date +%Y%m%d)
-GIT_HASH  := $(shell git rev-parse --short HEAD)
-BETA_DEFINES := --define "git_version $(VERSION)" \
-                --define "beta_release 0.$(GIT_DATE).g$(GIT_HASH)"
-else
+# Used by COPR (make_srpm). The beta project builds from main with the same
+# spec files; there is no separate beta spec. Version comes from the spec file.
 spec      ?= packaging/deckery-tray.spec
 VERSION   := $(shell awk '/^Version:/{print $$2; exit}' $(spec))
-BETA_DEFINES :=
-endif
 
 .PHONY: srpm builddeps clean
 
@@ -31,7 +21,6 @@ srpm: builddeps
 	    --define "_sourcedir $(outdir)" \
 	    --define "_srcrpmdir $(outdir)" \
 	    --define "_topdir $(outdir)/rpmbuild" \
-	    $(BETA_DEFINES) \
 	    $(spec)
 	@echo "SRPM written to $(outdir)"
 
