@@ -73,7 +73,7 @@ Every failure is `error <message>`, on one line, and is also logged to the journ
 |---|---|
 | `error a session is already open (id <id>)` | `begin` while a session is open. Only one at a time. |
 | `error no session is open` | `set`, `clear` or `end` without a session. |
-| `error <path>: …` | A `set` that was refused: invalid JSON, a path that cannot be set, or a config the parser rejects. |
+| `error <where>: …` | A `set` that was refused: invalid JSON, a path that cannot be set, or a config the parser rejects. `<where>` is the spot the check found, in path form (`remap.BTN_NOPE`, `trackpad.right.mode`), or the path that was set when the error is about the document as a whole. It is named once. |
 | `error usage: …` | A line that starts with `override` but is none of the above. |
 
 ```bash
@@ -93,7 +93,7 @@ The layer is a config document, written as you would write a config file, only i
 - The first segment is one of `remap`, `commands`, `movements`, `hints`, `settings`, `trackpad`. `device`, `module` and `gaming_mode` cannot be overridden.
 - `remap` sets the whole `[remap]` table of the layer, `remap.BTN_SOUTH` one binding in it, `trackpad.right.mode` one key. A `set` replaces whatever the layer held at that path and creates the tables on the way. Keys are the config file's: device aliases (`A`, `L1-X`) work.
 - Bindings in the layer win over the same button and combination underneath, exactly like an app override; everything the layer does not name is the user's — unless `clear` took it out. Setting `remap` to `{}` drops the layer's own remaps, not the user's.
-- `trackpad` is merged key by key into the pad tables underneath, so `trackpad.right.mode` switches the mode and keeps that pad's `click_pressure` and KDE settings.
+- `trackpad` is merged key by key into the pad tables underneath, so `trackpad.right.mode` switches the mode and keeps that pad's `click_pressure` and KDE settings. The other mode's keys stay in the table too; they are inactive, and no handler warns about a key some pad mode reads.
 
 The layer is validated through the same code a config file goes through, and stricter: what a file only warns about is an error here. Validation is all or nothing — if anything in the resulting layer is wrong, nothing of the `set` applies. Refused are:
 
@@ -107,7 +107,7 @@ A change to `trackpad` or `settings` rebuilds the device session, the same as a 
 
 ### While a session is open
 
-- `context.override_active` is `true` in `makima-state.json`, and `bindings` shows the effective config with the layer on top — see [state.json](state-json.md#context).
+- `context.override_active` is `true` in `makima-state.json`, and `bindings` shows the effective config with the layer on top, what the layer set with the origin `"Override"` — see [state.json](state-json.md#context).
 - Gaming Mode is off and refused — by `gaming_mode enable`, Steam game detection and the double-click alike. The double-click trigger is switched off; QAM is an ordinary button for the session. `pause` and `resume` work as usual.
 - Config file changes are not read. They apply when the session ends, which reads the files anyway.
 

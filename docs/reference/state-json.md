@@ -219,7 +219,7 @@ Published so a frontend can offer to open either folder without re-deriving the 
 | `available_modifiers` | `object` | Modifier buttons that, if pressed next, would unlock additional combo bindings. Keys are button names; value is `{ "has_app_combos": bool }`. `has_app_combos: true` means at least one qualifying combo for that modifier comes from an app-specific config override — the HUD signals this with a distinct accent. Use to hint which modifiers are worth showing. |
 | `held_hint_modifiers` | `[string]` | Hint modifiers currently held — buttons whose output is a modifier key (e.g. R5 → `KEY_LEFTCTRL`) and which unlock `[hints]` entries, but are not makima modifiers themselves. Same button names as the keys of `available_modifiers` (where such a button appears with `"virtual": true` while not held), e.g. `["BTN_GRIPR2"]`. Real modifiers are never listed here, only in `held_modifiers`. Empty when none is held. **Use this to draw a held hint modifier like a held real modifier.** |
 | `analog_state_export` | `bool` | Whether analog data (sticks, trackpads) is currently being written into this file. |
-| `override_active` | `bool` | An override session is open — the onboarding tour is setting the live bindings over the control socket (see [IPC → Override session](ipc.md#override-session)). While it is `true`, `bindings` and `modifier_active` show the effective config *with the tour's layer on top*, so they hold only what the tour has unlocked, and `gaming_mode_trigger` is `null`. **Use this to show an "Onboarding" state.** |
+| `override_active` | `bool` | An override session is open — the onboarding tour is setting the live bindings over the control socket (see [IPC → Override session](ipc.md#override-session)). While it is `true`, `bindings` and `modifier_active` show the effective config *with the tour's layer on top*, so they hold only what the tour has unlocked. What the layer set has the `origin` `"Override"`, in `bindings`, `modifier_active` and for hints alike; a combo the layer set does not count towards `has_app_combos`. `gaming_mode_trigger` is `null`. **Use this to show an "Onboarding" state.** |
 
 ---
 
@@ -238,7 +238,7 @@ Value fields:
 | `action` | `[string]` | Output keys (remap) or shell commands (command) |
 | `kind` | `string` | `"remap"` / `"command"` / `"movement"` |
 | `label` | `string\|null` | Human-readable binding name, or `null` if not configured |
-| `origin` | `string` | Config file this binding comes from |
+| `origin` | `string` | Config file this binding comes from — or `"Override"` for a binding an override session's layer set (see `context.override_active`) |
 | `silent` | `bool` | If `true`, this binding is intentionally hidden from the HUD display |
 | `no_pause` | `bool` | (command only) Fires even when makima is paused |
 

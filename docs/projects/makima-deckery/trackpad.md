@@ -171,7 +171,7 @@ These are tested values; the shipped `Steam Deck Trackpads.toml` carries the sam
 | `grid` | cells per pad side | `8` | Detent raster for `on_movement` and `on_roll`: the pad is split into `grid` × `grid` cells (each `65536 / grid` raw units wide). Whole number from 1 to 65 536. |
 | `click_pressure` | raw u16 | firmware default | Physical click threshold, as in `mt-trackpad`. |
 
-Velocities are measured in raw pad units, not pixels, so whether a flick flings does not change with `sensitivity`. Every key is optional and parsed on its own: an invalid value or an unknown key logs a warning, and that key falls back to its default while the others stay as written.
+Velocities are measured in raw pad units, not pixels, so whether a flick flings does not change with `sensitivity`. Every key is optional and parsed on its own: an invalid value or an unknown key logs a warning, and that key falls back to its default while the others stay as written. A key another pad mode reads is not unknown: switch `mode` and leave the other mode's keys in the table, and they are simply inactive until you switch back.
 
 ### The grid
 
