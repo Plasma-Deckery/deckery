@@ -220,6 +220,47 @@ class TestNewestInRepo:
             ch.newest_in_repo("https://r/", "deckery-tray")
 
 
+class TestDecompress:
+
+    XML = b'<?xml version="1.0"?><metadata/>'
+
+    def test_gzip(self):
+        assert ch._decompress("repodata/a-primary.xml.gz", gzip.compress(self.XML)) == self.XML
+
+    def test_plain_xml(self):
+        assert ch._decompress("repodata/a-primary.xml", self.XML) == self.XML
+
+    def test_zstd(self):
+        zstd = pytest.importorskip("compression.zstd")
+        assert ch._decompress("repodata/a-primary.xml.zst", zstd.compress(self.XML)) == self.XML
+
+    def test_zstd_without_module_is_a_clear_error(self, monkeypatch):
+        import builtins
+        real_import = builtins.__import__
+        def no_compression(name, *a, **kw):
+            if name == "compression" or name.startswith("compression."):
+                raise ImportError(name)
+            return real_import(name, *a, **kw)
+        monkeypatch.setattr(builtins, "__import__", no_compression)
+        with pytest.raises(ValueError, match="Python 3.14"):
+            ch._decompress("repodata/a-primary.xml.zst", b"whatever")
+
+    def test_unknown_compression_raises(self):
+        with pytest.raises(ValueError, match="unsupported metadata compression"):
+            ch._decompress("repodata/a-primary.xml.xz", b"whatever")
+
+    def test_newest_in_repo_reads_zstd_primary(self, monkeypatch):
+        zstd = pytest.importorskip("compression.zstd")
+        repomd = REPOMD.replace(b"abc-primary.xml.gz", b"abc-primary.xml.zst")
+        prim = zstd.compress(gzip.decompress(
+            _primary(("deckery-tray", "noarch", "0", "0.5.0", "4.fc44"))))
+        def fetch(url):
+            return {"https://r/repodata/repomd.xml": repomd,
+                    "https://r/repodata/abc-primary.xml.zst": prim}[url]
+        monkeypatch.setattr(ch, "_fetch", fetch)
+        assert ch.newest_in_repo("https://r", "deckery-tray") == EVR("0", "0.5.0", "4.fc44")
+
+
 class TestNewestOffered:
 
     def _setup(self, tmp_path, monkeypatch, repos, beta=True, stable=True):
@@ -460,17 +501,49 @@ class TestSystemUpdateCommand:
         (1,  "The update did not finish.",                      "Done."),
     ])
     def test_script_reports_what_rpm_ostree_did(self, tmp_path, code, expected, absent):
+        r, calls = self._run_script(tmp_path, refresh=0, upgrade=code)
+        assert expected in r.stdout
+        assert absent not in r.stdout
+        assert calls == ["refresh-md -f", "upgrade --unchanged-exit-77"]
+
+    def _run_script(self, tmp_path, refresh, upgrade):
+        """Runs TERMINAL_SCRIPT against a fake rpm-ostree that logs its
+        arguments and exits with `refresh` for refresh-md, `upgrade` for
+        upgrade. Returns (CompletedProcess, logged calls)."""
         bash = shutil.which("bash")
         if not bash:
             pytest.skip("no bash")
+        log = tmp_path / "calls"
         fake = tmp_path / "rpm-ostree"
-        fake.write_text(f"#!/bin/sh\nexit {code}\n")
+        fake.write_text(
+            "#!/bin/sh\n"
+            f'echo "$*" >> "{log}"\n'
+            'case "$1" in\n'
+            f"  refresh-md) exit {refresh} ;;\n"
+            f"  upgrade) exit {upgrade} ;;\n"
+            "esac\n"
+            "exit 99\n")
         fake.chmod(0o755)
         env = {**os.environ, "PATH": f"{tmp_path}:{os.environ.get('PATH', '')}"}
         r = subprocess.run([bash, "-c", ch.TERMINAL_SCRIPT], input="\n",
                            capture_output=True, text=True, env=env, timeout=10)
-        assert expected in r.stdout
-        assert absent not in r.stdout
+        calls = log.read_text().splitlines() if log.exists() else []
+        return r, calls
+
+    def test_refreshes_metadata_before_upgrading(self):
+        # Without the refresh, upgrade trusts rpm-ostree's cached metadata
+        # (up to 48 h) and misses the build the tray just found.
+        s = ch.TERMINAL_SCRIPT
+        assert "rpm-ostree refresh-md -f" in s
+        assert s.index("rpm-ostree refresh-md -f") < s.index("rpm-ostree upgrade")
+
+    def test_failed_refresh_stops_before_upgrade(self, tmp_path):
+        r, calls = self._run_script(tmp_path, refresh=1, upgrade=0)
+        assert calls == ["refresh-md -f"]
+        assert r.returncode != 0
+        assert "Could not check for new updates." in r.stdout
+        assert "Done." not in r.stdout
+        assert "No update was found" not in r.stdout
 
     def test_script_keeps_window_open_and_mentions_restart(self):
         assert "read -r" in ch.TERMINAL_SCRIPT

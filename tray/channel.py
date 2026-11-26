@@ -12,10 +12,13 @@ case:
 2. Can the tray start the system update?  (system_update_command() — only on
    rpm-ostree systems such as Bazzite. It runs `rpm-ostree upgrade` without
    sudo; the image's polkit rules allow that for the active local user.
+   It refreshes the repository metadata first (`rpm-ostree refresh-md -f`):
+   the upgrade otherwise trusts its cached copy for up to 48 hours and
+   would miss the build this check just found.
    Not `ujust update`: its `uupd` skips updates that only touch layered
    packages, which is exactly what a Deckery release is.)
 
-Channel source: the repository metadata (repomd.xml → primary.xml.gz) at the
+Channel source: the repository metadata (repomd.xml → primary.xml.gz/.zst) at the
 baseurl of the enabled repo file. That is exactly what the system update reads,
 for the user's own Fedora release and architecture: a build that failed or was
 never made for that chroot is not offered. The COPR API's "latest succeeded
@@ -215,6 +218,29 @@ def _fetch(url: str) -> bytes:
         return r.read()
 
 
+def _zstd_decompress(data: bytes) -> bytes:
+    """zstd via the standard library (Python 3.14+, compression.zstd — Fedora
+    43/44 ship it). Raises ValueError on older Pythons, so the check shows its
+    error state instead of a wrong answer."""
+    try:
+        from compression import zstd
+    except ImportError:
+        raise ValueError("zstd-compressed repo metadata needs Python 3.14 or newer") from None
+    return zstd.decompress(data)
+
+
+def _decompress(href: str, data: bytes) -> bytes:
+    """Primary metadata by file extension: .gz (COPR today), .zst (createrepo_c's
+    default on current Fedora) or plain .xml."""
+    if href.endswith(".gz"):
+        return gzip.decompress(data)
+    if href.endswith(".zst"):
+        return _zstd_decompress(data)
+    if href.endswith(".xml"):
+        return data
+    raise ValueError(f"unsupported metadata compression: {href}")
+
+
 def newest_in_repo(baseurl: str, name: str) -> EVR | None:
     """Newest binary build of `name` in the repo at baseurl, or None if the
     repo has none. Raises on network or format errors."""
@@ -227,11 +253,7 @@ def newest_in_repo(baseurl: str, name: str) -> EVR | None:
             href = loc.get("href") if loc is not None else None
     if not href:
         raise ValueError("repo metadata has no primary entry")
-    raw = _fetch(base + href)
-    if href.endswith(".gz"):
-        raw = gzip.decompress(raw)
-    elif not href.endswith(".xml"):
-        raise ValueError(f"unsupported metadata compression: {href}")
+    raw = _decompress(href, _fetch(base + href))
     best: EVR | None = None
     for pkg in ET.fromstring(raw).findall(f"{_NS_COMMON}package"):
         if pkg.findtext(f"{_NS_COMMON}name") != name:
@@ -303,10 +325,23 @@ def check(tray_file: str) -> Result:
 OSTREE_BOOTED = "/run/ostree-booted"
 
 # Shown inside the terminal window. Plain words, no tool names.
+# refresh-md -f first: rpm-ostree upgrade reads its cached repo metadata
+# (metadata_expire, 48 h by default) and would answer "no upgrade" for a build
+# the tray's live check already found. Polkit allows repo-refresh for the
+# active local user, like upgrade. If the refresh fails, stop: an upgrade on
+# stale metadata would only report "No update was found".
 # --unchanged-exit-77: exit 77 when nothing new was staged, so the window
 # never claims an update that did not happen.
 TERMINAL_SCRIPT = """\
 echo "Updating your system. This can take a while. Please keep this window open."
+echo
+if ! rpm-ostree refresh-md -f; then
+  echo
+  echo "Could not check for new updates. Check your internet connection, then close this window and try again later."
+  echo
+  read -r -p "Press Enter to close this window." _
+  exit 1
+fi
 echo
 rpm-ostree upgrade --unchanged-exit-77
 status=$?

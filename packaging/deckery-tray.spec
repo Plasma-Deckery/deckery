@@ -1,6 +1,6 @@
 Name:           deckery-tray
 Version:        2.0.0~beta1
-Release:        3%{?dist}
+Release:        4%{?dist}
 Summary:        Deckery system tray — service monitor and control for KDE Plasma
 
 # Same lockstep bounds as deckery.spec: the tray reads makima's socket and
@@ -114,6 +114,13 @@ ln -s ../deckery-tray-migrate.service \
 %{_userunitdir}/default.target.wants/deckery-tray-migrate.service
 
 %changelog
+* Thu Nov 26 2026 Philipp Schimmelfennig <philipp@plasma-deckery.dev> - 2.0.0~beta1-4
+- "Update now" refreshes the repository metadata (rpm-ostree refresh-md -f)
+  before upgrading: the upgrade read rpm-ostree's cached metadata (up to
+  48 h old) and said "No update was found" for a build the tray had just
+  offered. Stops with a clear message if the refresh fails.
+- Update check reads zstd-compressed channel metadata (primary.xml.zst)
+
 * Fri Nov 13 2026 Philipp Schimmelfennig <philipp@plasma-deckery.dev> - 2.0.0~beta1-3
 - Requires makima-deckery and deckery-hud below the next minor (2.1), same
   lockstep bounds as the deckery meta-package

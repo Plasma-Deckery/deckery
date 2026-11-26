@@ -12,7 +12,7 @@ System tray applet that monitors and controls the full Deckery stack from a sing
 - **Pause / Resume** — sends `pause` / `resume` over the makima IPC socket without restarting the service
 - **Restart / Start / Stop** — controls makima and deckery-hud via systemd user units
 - **Controller Bindings** — submenu listing all known configs with live status, modules indented under the base config they apply to; modules and app overrides toggle with a checkbox, mutually exclusive modules are a submenu of radio items instead; a row with a problem carries `⚠️` or `🛑` and opens a scrollable dialog on click
-- **Updates** — "Search for Updates" entry; on an RPM install it points to the system update (and offers to start `rpm-ostree upgrade` where possible), on an install.sh checkout it pulls all repos and re-runs the installer
+- **Updates** — "Search for Updates" entry; on an RPM install it points to the system update (and offers to start `rpm-ostree refresh-md -f` followed by `rpm-ostree upgrade` where possible — the refresh makes the upgrade see the same channel metadata the tray just read, instead of rpm-ostree's up to 48-hour-old cache), on an install.sh checkout it pulls all repos and re-runs the installer
 - **Config folders** — "Open my configs" and "Open shipped configs" open either directory in the file manager
 - **Steam Input** — shows whether Steam's Desktop Input is disabled (green) or still active (yellow); clicking the yellow indicator opens a terminal that writes the configset entry and optionally restarts Steam
 - **Tooltip** — always shows "Deckery" on hover for quick identification
