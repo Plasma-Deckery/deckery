@@ -153,3 +153,10 @@ RSTICK_DEADZONE = "15"     # Deadzone against stick drift (value * 200 = raw thr
 LSTICK_DEADZONE = "15"     # Same drift threshold for the left stick
 
 16_BIT_AXIS = "true"   # Steam Deck uses 16-bit axis values like Xbox
+
+# --- Ctrl hints (shown while R5 = Ctrl is held) ---
+# Hints only label what a key already does in most text fields; they bind nothing.
+[hints]
+KEY_LEFTCTRL-KEY_BACKSPACE = "⌫ (Delete Word)"
+KEY_LEFTCTRL-KEY_LEFT      = "⇤ (Word Left)"
+KEY_LEFTCTRL-KEY_RIGHT     = "⇥ (Word Right)"

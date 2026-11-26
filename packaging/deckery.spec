@@ -1,6 +1,6 @@
 Name:           deckery
 Version:        2.0.0~beta1
-Release:        5%{?dist}
+Release:        6%{?dist}
 Summary:        Steam Deck input stack for KDE Plasma — meta-package
 
 # next_minor is the first version that would introduce a breaking change.
@@ -74,6 +74,9 @@ done
 %{_datadir}/deckery/
 
 %changelog
+* Thu Nov 26 2026 Philipp Schimmelfennig <philipp@plasma-deckery.dev> - 2.0.0~beta1-6
+- Base config: Ctrl hints for Delete Word and Word Left/Right
+
 * Thu Nov 12 2026 Philipp Schimmelfennig <philipp@plasma-deckery.dev> - 2.0.0~beta1-5
 - Claude Desktop config: hint for Ctrl+Enter (Queue Message)
 
