@@ -11,3 +11,9 @@ L1-Y = { keys = ["KEY_LEFTCTRL", "KEY_LEFTSHIFT", "KEY_V"], label = "📋 Paste"
 # --- R1 + Face → Tab-Verwaltung (parallel zu Firefox) ---
 R1-A = { keys = ["KEY_LEFTCTRL", "KEY_LEFTSHIFT", "KEY_T"], label = "✚ New Tab" }
 R1-B = { keys = ["KEY_LEFTCTRL", "KEY_LEFTSHIFT", "KEY_W"], label = "✕ Close Tab" }
+
+[hints]
+# bash's readline does not bind Ctrl+Backspace to delete a word, so the base
+# hint would promise something Konsole does not do. Alt+Backspace does it.
+KEY_LEFTCTRL-KEY_BACKSPACE = ""
+KEY_LEFTALT-KEY_BACKSPACE  = "⌫ (Delete Word)"

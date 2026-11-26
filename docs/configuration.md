@@ -199,4 +199,13 @@ R1-A    = { keys = ["KEY_LEFTCTRL", "KEY_N"], label = "New Chat" }
 L1-Right = { run = ["qdbus org.kde.KWin /KWin nextDesktop"], label = "Next Desktop" }
 ```
 
-`label` is what the HUD overlay shows for that button. Refer to the [makima-deckery](https://github.com/Plasma-Deckery/makima-deckery) README for the full reference including trackpad modes and gaming mode.
+`label` is what the HUD overlay shows for that button.
+
+`[hints]` labels shortcuts that already work without a binding of their own — R5 emits Ctrl, so `KEY_LEFTCTRL-KEY_UP = "Jump to Top"` shows on Up while R5 is held. Hints from the base config and an app override merge key by key; an empty label removes an inherited hint for that app:
+
+```toml
+[hints]
+KEY_LEFTCTRL-KEY_BACKSPACE = ""   # the base hint does not apply here
+```
+
+Refer to the [makima-deckery](https://github.com/Plasma-Deckery/makima-deckery) README for the full reference including trackpad modes and gaming mode.
