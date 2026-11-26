@@ -57,7 +57,8 @@ done
     ],
     "available_modifiers": { "BTN_MODE": { "has_app_combos": false } },
     "held_hint_modifiers": [],
-    "analog_state_export": false
+    "analog_state_export": false,
+    "override_active": false
   },
   "bindings": {
     "BTN_SOUTH": {
@@ -218,6 +219,7 @@ Published so a frontend can offer to open either folder without re-deriving the 
 | `available_modifiers` | `object` | Modifier buttons that, if pressed next, would unlock additional combo bindings. Keys are button names; value is `{ "has_app_combos": bool }`. `has_app_combos: true` means at least one qualifying combo for that modifier comes from an app-specific config override — the HUD signals this with a distinct accent. Use to hint which modifiers are worth showing. |
 | `held_hint_modifiers` | `[string]` | Hint modifiers currently held — buttons whose output is a modifier key (e.g. R5 → `KEY_LEFTCTRL`) and which unlock `[hints]` entries, but are not makima modifiers themselves. Same button names as the keys of `available_modifiers` (where such a button appears with `"virtual": true` while not held), e.g. `["BTN_GRIPR2"]`. Real modifiers are never listed here, only in `held_modifiers`. Empty when none is held. **Use this to draw a held hint modifier like a held real modifier.** |
 | `analog_state_export` | `bool` | Whether analog data (sticks, trackpads) is currently being written into this file. |
+| `override_active` | `bool` | An override session is open — the onboarding tour is setting the live bindings over the control socket (see [IPC → Override session](ipc.md#override-session)). While it is `true`, `bindings` and `modifier_active` show the effective config *with the tour's layer on top*, so they hold only what the tour has unlocked, and `gaming_mode_trigger` is `null`. **Use this to show an "Onboarding" state.** |
 
 ---
 
@@ -240,7 +242,7 @@ Value fields:
 | `silent` | `bool` | If `true`, this binding is intentionally hidden from the HUD display |
 | `no_pause` | `bool` | (command only) Fires even when makima is paused |
 
-**This map is static while the config doesn't change.** Reload it when `context.config_stack` changes.
+**This map is static while the config doesn't change.** Reload it when `context.config_stack` changes — and on every write while `context.override_active` is `true`, because an override session changes the bindings without changing the stack.
 
 ---
 
@@ -258,7 +260,7 @@ Empty `{}` when no modifier is held.
 
 ### `gaming_mode_trigger`
 
-The configured Gaming Mode toggle button. `null` if the trigger is disabled (`trigger = { key = "disabled" }` in config).
+The configured Gaming Mode toggle button. `null` if the trigger is disabled (`trigger = { key = "disabled" }` in config), and while an override session is open (`context.override_active`), which switches the trigger off for its duration.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -374,6 +376,14 @@ for each button in layout:
 // Draw deadzone circle with radius = stick.deadzone
 // Place dot at (stick.x, stick.y)
 // Tint ring or dot when stick.active == true
+```
+
+### Override session (onboarding)
+
+```
+if context.override_active:
+    show_badge("Onboarding")
+    display = bindings            ← already only what the tour unlocked
 ```
 
 ### Paused state
