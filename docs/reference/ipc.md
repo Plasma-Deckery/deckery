@@ -101,6 +101,7 @@ The layer is validated through the same code a config file goes through, and str
 - anything the config parser rejects: an unknown section or key, an unknown output key, a section that is not a table;
 - a binding that names an unknown button, or a movement that is no movement;
 - a trackpad mode makima does not know, or a setting its parser rejects;
+- anything that would only fall back to a default in a file: a pad side or `gestures` value that is not a table (it would parse as a disabled pad), a pad handler value its parser would replace, a KDE value that does not parse, a hint that can never be shown or loses its button to another hint. A hint shown on several buttons is fine. Only what the `set` writes counts — a warning the user's own config already raises underneath does not refuse it;
 - a `[commands]` entry whose command line is not bound in any loaded config. An override may bind the HUD toggle or a brightness command the configs already have, matched on the whole argument list, but never a new one.
 
 A change to `trackpad` or `settings` rebuilds the device session, the same as a config reload — the pads reset for a moment. Bindings apply at once.
