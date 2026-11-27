@@ -6,7 +6,7 @@ Gaming Mode solves this by deactivating all of makima's bindings for as long as 
 
 ## Activating Gaming Mode
 
-By default, double-pressing the **QAM button** (···) toggles Gaming Mode on and off. A haptic pulse on both trackpads confirms the switch.
+By default, double-pressing the **QAM button** (···) toggles Gaming Mode on and off. A haptic pulse on both trackpads confirms the switch. While the onboarding tour runs (an [override session](../../reference/ipc.md#override-session)), the same double-press ends the tour instead, and Gaming Mode stays off.
 
 ## Automatic detection
 
