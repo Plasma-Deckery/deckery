@@ -5,12 +5,14 @@
 #   - All Deckery systemd user services (stopped, disabled, deleted)
 #   - Installed binaries and symlinks in ~/.local/bin/
 #   - The deckery distrobox container
+#   - The Steam Input configset entry (Desktop controller block in
+#     configset_controller_neptune.vdf), so Steam Input works again
 #   - Icon and .desktop launcher
 #   - Config symlinks into the repo left by installs predating auto-discovery
+#   - The cloned repos in ~/.local/share/deckery/
 #
 # What this does NOT remove:
 #   - Your own config files in ~/.config/deckery/
-#   - Steam Input configset entry (413080 block removed from configset_controller_neptune.vdf)
 #
 # Pass --yes to skip the confirmation prompt.
 

@@ -6,6 +6,6 @@
 [remap]
 # --- L1 + R5 → OpenWhispr (Ctrl + PageDown) ---
 # OpenWhispr's own activation mode decides how this behaves. Its default is
-# "tap": press once to start dictating, once more to stop. Switch the note to
-# "halten" if you set OpenWhispr to push-to-talk.
+# "tap": press once to start dictating, once more to stop. If you set
+# OpenWhispr to push-to-talk instead, hold the buttons while you speak.
 L1-R5 = { keys = ["KEY_LEFTCTRL", "KEY_PAGEDOWN"], label = "🎙 Voice Input" }

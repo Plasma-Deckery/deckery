@@ -1,6 +1,6 @@
 Name:           deckery
 Version:        2.0.0~beta1
-Release:        9%{?dist}
+Release:        10%{?dist}
 Summary:        Steam Deck input stack for KDE Plasma — meta-package
 
 # next_minor is the first version that would introduce a breaking change.
@@ -34,9 +34,13 @@ without Steam. This meta-package installs all components:
   deckery-hud     — Wayland layer-shell button layout overlay (GTK4)
   deckery-tray    — System tray applet, game detector, onboarding (GTK3)
 
-Install this package to get the full stack:
-  dnf copr enable phischx/Deckery
-  dnf install deckery
+Install this package to get the full stack. On Bazzite and other
+Fedora Atomic systems:
+  sudo dnf5 copr enable phischx/Deckery
+  sudo rpm-ostree install deckery
+On plain Fedora:
+  sudo dnf copr enable phischx/Deckery
+  sudo dnf install deckery
 
 The services start automatically with the next graphical login, for every
 user. To opt out for one user:
@@ -65,6 +69,8 @@ find configs -name "*.toml" | while read f; do
     rel="${f#configs/}"
     install -Dpm644 "$f" "%{buildroot}%{_datadir}/deckery/configs/$rel"
 done
+# Explainer for ~/.config/deckery/ — makima copies it there on every start.
+install -pm644 configs/README.md %{buildroot}%{_datadir}/deckery/configs/README.md
 
 %files
 %license LICENSE
@@ -74,6 +80,12 @@ done
 %{_datadir}/deckery/
 
 %changelog
+* Sat Nov 28 2026 Philipp Schimmelfennig <philipp@plasma-deckery.dev> - 2.0.0~beta1-10
+- Ship configs/README.md, so makima can copy the explainer into
+  ~/.config/deckery/ for package installs too
+- Description: install commands for Fedora Atomic (rpm-ostree) and plain Fedora
+- Voice Control config: comment on push-to-talk in English
+
 * Fri Nov 27 2026 Philipp Schimmelfennig <philipp@plasma-deckery.dev> - 2.0.0~beta1-9
 - Trackpads config and docs: the mt-trackpad pixel_interval default is now
   12000 (needs makima-deckery 2.0.0~beta1-12)
