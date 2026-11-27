@@ -76,7 +76,7 @@ A      = ["KEY_ENTER"]
 B      = ["KEY_ESC"]
 X      = { keys = ["KEY_BACKSPACE"], label = "⌫ Backspace" }
 Y      = { keys = ["KEY_SPACE"], label = "␣ Space" }
-Start  = ["KEY_F10"]   # three-stripes button → menu bar
+Start  = { keys = ["KEY_F10"], label = "Menu" }   # three-stripes button → menu bar
 Select = { keys = ["KEY_TAB"], label = "⇥ Tab" }
 
 # Not redundant: a modifier that is held and released without any combo firing

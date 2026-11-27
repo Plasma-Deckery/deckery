@@ -1,6 +1,6 @@
 Name:           deckery
 Version:        2.0.0~beta1
-Release:        7%{?dist}
+Release:        8%{?dist}
 Summary:        Steam Deck input stack for KDE Plasma — meta-package
 
 # next_minor is the first version that would introduce a breaking change.
@@ -74,6 +74,9 @@ done
 %{_datadir}/deckery/
 
 %changelog
+* Fri Nov 27 2026 Philipp Schimmelfennig <philipp@plasma-deckery.dev> - 2.0.0~beta1-8
+- Base config: label the Start button (F10) as Menu
+
 * Thu Nov 26 2026 Philipp Schimmelfennig <philipp@plasma-deckery.dev> - 2.0.0~beta1-7
 - Konsole config: drop the inherited Ctrl+Backspace hint, hint Alt+Backspace
   as Delete Word instead (needs makima-deckery 2.0.0~beta1-11)
