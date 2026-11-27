@@ -10,7 +10,6 @@ Requires: python-gobject, libayatana-appindicator (gtk3 variant)
 """
 
 import os
-import re
 import socket
 import subprocess
 import sys
@@ -89,13 +88,21 @@ def find_vms() -> list[tuple[str, str]]:
         return []
     vms = []
     for line in out.strip().splitlines():
-        m_name = re.search(r"-name\s+(\S+)", line)
-        name   = m_name.group(1) if m_name else "QEMU"
-        m_sock = re.search(r"-monitor\s+unix:([^,\s]+)", line)
-        if not m_sock:
+        # pgrep -a flattens argv into one space-joined line, which cuts a
+        # "-name" containing spaces short — read the real argv from /proc.
+        pid = line.split(None, 1)[0]
+        try:
+            with open(f"/proc/{pid}/cmdline", "rb") as f:
+                argv = f.read().decode(errors="replace").split("\0")
+        except OSError:
             continue
-        sock = m_sock.group(1)
-        if os.path.exists(sock):
+        name, sock = "QEMU", None
+        for flag, value in zip(argv, argv[1:]):
+            if flag == "-name":
+                name = value
+            elif flag == "-monitor" and value.startswith("unix:"):
+                sock = value[len("unix:"):].split(",", 1)[0]
+        if sock and os.path.exists(sock):
             vms.append((name, sock))
     return vms
 
@@ -162,11 +169,11 @@ class ControllerRouteTray:
 
         # ── header ────────────────────────────────────────────────────────────
         if not present:
-            hdr = Gtk.MenuItem(label="⚠ Controller nicht gefunden")
+            hdr = Gtk.MenuItem(label="⚠ Controller not found")
             hdr.set_sensitive(False)
             self._menu.append(hdr)
         else:
-            hdr = Gtk.MenuItem(label="Controller routen zu:")
+            hdr = Gtk.MenuItem(label="Route controller to:")
             hdr.set_sensitive(False)
             self._menu.append(hdr)
 
@@ -190,7 +197,7 @@ class ControllerRouteTray:
 
         self._menu.append(Gtk.SeparatorMenuItem())
 
-        quit_item = Gtk.MenuItem(label="Beenden")
+        quit_item = Gtk.MenuItem(label="Quit")
         quit_item.connect("activate", lambda _: Gtk.main_quit())
         self._menu.append(quit_item)
 
@@ -199,7 +206,7 @@ class ControllerRouteTray:
         # update indicator label / tooltip
         if HAS_INDICATOR:
             if not present:
-                self._ind.set_title("Controller: nicht gefunden")
+                self._ind.set_title("Controller: not found")
             elif host_active:
                 self._ind.set_title("Controller → Host")
             else:
@@ -224,7 +231,7 @@ class ControllerRouteTray:
 
 def main() -> None:
     if not HAS_INDICATOR:
-        print("libayatana-appindicator nicht gefunden — StatusIcon Fallback aktiv",
+        print("libayatana-appindicator not found — falling back to StatusIcon",
               file=sys.stderr)
     ControllerRouteTray()
     Gtk.main()
