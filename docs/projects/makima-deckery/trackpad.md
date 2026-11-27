@@ -37,6 +37,7 @@ mode = "disabled"          # default — left trackpad stays off
 |---|---|---|
 | `mode` | `"disabled"` | See [Trackpad modes](#trackpad-modes) below. |
 | `click_pressure` | firmware default | Physical click threshold, as a raw firmware value. Optional. |
+| `click` | `true` | `false` switches the pad's physical click off: a press sends no `BTN_LEFT` and plays no `on_press`/`on_release` haptic, while touch and movement go on as before. A haptic that confirms a click nothing receives would be misleading, so it goes with it. It is an output switch in makima, not the firmware threshold — `click_pressure` is left alone — so it can be turned off and on again freely. Same in `trackball` mode. |
 | `pixel_interval` | `3000` | Raw units of cursor travel (≈2mm) per `haptic.on_movement` tick. |
 | `kde.pointer_acceleration` | `0.2` | Cursor speed multiplier within the chosen profile. Range −1.0 (slowest) to +1.0 (fastest). |
 | `kde.pointer_acceleration_profile` | `"flat"` | `"flat"` for 1:1 movement (recommended — consistent and predictable on a small pad surface); `"adaptive"` for the libinput default (slows slow movements, amplifies fast ones). |
@@ -86,6 +87,8 @@ scroll_factor  = 0.5     # scrolls at half speed (raw pad range ±32767 makes th
 ```
 
 The `[trackpad.gestures.kde]` block is optional — the values above are the defaults that apply even if the block is absent.
+
+A physical click on either pad during a gesture is passed on as `BTN_LEFT` of the gesture device. `click = false` in `[trackpad.gestures]` switches that off; pinch, scroll and pan are the two fingers and carry on unchanged. Default `true`.
 
 ### Haptic feedback
 
@@ -170,6 +173,7 @@ These are tested values; the shipped `Steam Deck Trackpads.toml` carries the sam
 | `stop_speed` | raw units/s | `1500` | Speed below which a rolling ball stops. Must be above 0, since an exponential decay never reaches 0 on its own. Also a lower bound for flinging. |
 | `grid` | cells per pad side | `8` | Detent raster for `on_movement` and `on_roll`: the pad is split into `grid` × `grid` cells (each `65536 / grid` raw units wide). Whole number from 1 to 65 536. |
 | `click_pressure` | raw u16 | firmware default | Physical click threshold, as in `mt-trackpad`. |
+| `click` | bool | `true` | `false`: the click sends no `BTN_LEFT` and plays no click haptic, as in `mt-trackpad`. Rolling and dragging stay. |
 
 Velocities are measured in raw pad units, not pixels, so whether a flick flings does not change with `sensitivity`. Every key is optional and parsed on its own: an invalid value or an unknown key logs a warning, and that key falls back to its default while the others stay as written. A key another pad mode reads is not unknown: switch `mode` and leave the other mode's keys in the table, and they are simply inactive until you switch back.
 

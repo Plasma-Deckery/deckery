@@ -106,6 +106,8 @@ The layer is validated through the same code a config file goes through, and str
 
 A change to `trackpad` or `settings` rebuilds the device session, the same as a config reload — the pads reset for a moment. Bindings apply at once.
 
+To keep the pads moving but switch their clicks off — the tour's text stages — set `trackpad.right.click false` (and `trackpad.left.click`, `trackpad.gestures.click` as needed), and `true` to switch them back on within the same session. Only `BTN_LEFT` and the click haptics go; movement, scrolling and zoom stay. Anything but `true` or `false` is refused. See [Trackpads](../projects/makima-deckery/trackpad.md).
+
 ### While a session is open
 
 - `context.override_active` is `true` in `makima-state.json`, and `bindings` shows the effective config with the layer on top, what the layer set with the origin `"Override"` — see [state.json](state-json.md#context).
