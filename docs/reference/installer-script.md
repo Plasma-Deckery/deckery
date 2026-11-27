@@ -53,4 +53,4 @@ Starting the tray starts everything. Stopping it stops everything cleanly.
 bash <(curl -sSL https://raw.githubusercontent.com/Plasma-Deckery/deckery/main/get.sh)
 ```
 
-`get.sh` fetches the latest release tag, checks out that tag, sets `DECKERY_RELEASE_TAG`, and then calls `install.sh`. Running `install.sh` directly without this env var skips release pinning and runs in development mode (sub-repos pull their latest main branch instead of a matching tag).
+`get.sh` fetches the latest release tag (pre-releases sort below their release: `v2.0.0-beta1` < `v2.0.0-rc1` < `v2.0.0`), checks out that tag, sets `DECKERY_RELEASE_TAG`, and then calls `install.sh`. Running `install.sh` directly without this env var skips release pinning and runs in development mode (sub-repos pull their latest main branch instead of a matching tag).

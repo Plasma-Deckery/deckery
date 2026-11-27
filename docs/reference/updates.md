@@ -58,7 +58,7 @@ In both cases the dialog defaults to **Cancel** — clicking the `X` or pressing
 Clicking "Install" opens a Konsole terminal window and runs `get.sh`:
 
 1. `get.sh` fetches all tags from GitHub with `--force` (so re-tagged releases overwrite stale local refs)
-2. Finds the highest release tag via version sort
+2. Finds the highest `v<digit>` release tag via version sort, with `versionsort.suffix` set for `-alpha`, `-beta` and `-rc` so a pre-release sorts below its release (`v2.0.0-beta1` < `v2.0.0`, but above `v0.5.0`)
 3. Checks out that tag in the deckery repo (with `--force` to overwrite any manually modified files)
 4. Exports `DECKERY_RELEASE_TAG` and calls `install.sh`
 5. `install.sh` checks out the same tag in every sub-repo (`makima-deckery`, `deckery-hud`) — the three repos are always pinned to the same version

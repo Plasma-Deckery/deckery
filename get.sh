@@ -37,7 +37,12 @@ if [ "$USE_MAIN" = "1" ]; then
 else
     # Find the latest release tag by version sort — works regardless of HEAD position
     # (describe --abbrev=0 fails when repo is left in detached HEAD from a prior update).
-    LATEST_TAG="$(git -C "$DECKERY_DIR" tag --sort=-version:refname | head -1)"
+    # The versionsort.suffix entries sort pre-releases before their release
+    # (v2.0.0-beta1 < v2.0.0-rc1 < v2.0.0); without them git ranks any
+    # suffixed tag above the bare version. Only v<digit> tags are releases.
+    LATEST_TAG="$(git -C "$DECKERY_DIR" -c versionsort.suffix=-alpha \
+        -c versionsort.suffix=-beta -c versionsort.suffix=-rc \
+        tag --list 'v[0-9]*' --sort=-version:refname | head -1)"
     if [ -n "$LATEST_TAG" ]; then
         echo "Checking out latest release: $LATEST_TAG"
         git -C "$DECKERY_DIR" checkout --force "$LATEST_TAG"
