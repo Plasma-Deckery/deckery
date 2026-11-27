@@ -111,13 +111,13 @@ To keep the pads moving but switch their clicks off — the tour's text stages �
 ### While a session is open
 
 - `context.override_active` is `true` in `makima-state.json`, and `bindings` shows the effective config with the layer on top, what the layer set with the origin `"Override"` — see [state.json](state-json.md#context).
-- Gaming Mode is off and refused — by `gaming_mode enable`, Steam game detection and the double-click alike. The double-click trigger is switched off; QAM is an ordinary button for the session. `pause` and `resume` work as usual.
+- Gaming Mode is off and refused — by `gaming_mode enable` and Steam game detection alike. The QAM double-click does not toggle it: during a session it is the emergency exit (below). `pause` and `resume` work as usual.
 - Config file changes are not read. They apply when the session ends, which reads the files anyway.
 
 ### How a session ends
 
 - `override end`.
-- The **emergency exit**: holding Steam and QAM (···) together for 3 seconds ends the session, whatever the layer has cleared. It is built into makima and cannot be configured away.
+- The **emergency exit**: a double-click on QAM (···) ends the session, like `override end`, whatever the layer has cleared and also while paused. Two presses count when the second comes at most the Gaming Mode trigger's `ms` after the first (default 400 ms), measured press to press. It is built into makima and cannot be configured away. Outside a session the same double-click is the Gaming Mode trigger as always; during one the trigger is off, so only the exit acts. The first click is remembered across a stage change that rebuilds the pads. The journal says `deckery: override: emergency exit: double-click — ending the session`.
 - A makima restart: the session lives in memory only, and a new process starts without one.
 
 There is no heartbeat and no timeout: a tour that crashes leaves its session open until one of the above.

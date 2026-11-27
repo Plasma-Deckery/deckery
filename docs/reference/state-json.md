@@ -260,7 +260,7 @@ Empty `{}` when no modifier is held.
 
 ### `gaming_mode_trigger`
 
-The configured Gaming Mode toggle button. `null` if the trigger is disabled (`trigger = { key = "disabled" }` in config), and while an override session is open (`context.override_active`), which switches the trigger off for its duration.
+The configured Gaming Mode toggle button. `null` if the trigger is disabled (`trigger = { key = "disabled" }` in config), and while an override session is open (`context.override_active`), which switches the trigger off for its duration — the double-click on that button ends the session instead.
 
 | Field | Type | Meaning |
 |---|---|---|
