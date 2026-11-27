@@ -6,12 +6,23 @@
 #
 # Usage (first install / update — always use get.sh for release pinning):
 #   bash <(curl -sSL https://raw.githubusercontent.com/Plasma-Deckery/deckery/main/get.sh)
+#
+# Options:
+#   --force-source   Install even though Deckery is installed as a system
+#                    package (RPM); same as DECKERY_FORCE_SOURCE=1
 
 set -e
+
+for _arg in "$@"; do
+    [ "$_arg" = "--force-source" ] && export DECKERY_FORCE_SOURCE=1
+done
 
 DECKERY_DIR="$(dirname "$(readlink -f "$0")")"
 PARENT_DIR="$(dirname "$DECKERY_DIR")"
 
+# shellcheck source=package-guard.sh
+source "$DECKERY_DIR/package-guard.sh"
+deckery_package_guard || exit 1
 
 MAKIMA_DIR="$PARENT_DIR/makima-deckery"
 HUD_DIR="$PARENT_DIR/deckery-hud"

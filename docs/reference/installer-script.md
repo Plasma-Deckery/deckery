@@ -4,6 +4,8 @@
 
 ## What it does
 
+0. **Refuse on a packaged install** — if Deckery is installed as a system package (`deckery`, `deckery-tray`, `makima-deckery` or `deckery-hud` found by `rpm -q` on the host, or requested/layered in any `rpm-ostree` deployment), the installer stops before touching anything and names the packages: update via the system update (`rpm-ostree upgrade` / `dnf upgrade`), or remove the packages first to switch to a source install. A source install next to the packages would shadow them, and their updates would stop having any effect. The check runs on the host also when the installer runs inside a container (via `distrobox-host-exec`). Developers who want both anyway set `DECKERY_FORCE_SOURCE=1` or pass `--force-source` (to `get.sh` or `install.sh`). `get.sh` runs the same check (`package-guard.sh`) before it checks out any tag.
+
 1. **Clone / update sub-repos** — clones `makima-deckery` and `deckery-hud` next to the deckery repo. When running from a tagged release, each sub-repo is checked out at the **same tag** as the main repo. If a matching tag is missing in a sub-repo, the installer exits with a clear error. See [Updates](updates.md) for details on the release-pinning mechanism.
 
 2. **Create the distrobox container** — runs `distrobox create --name deckery --image archlinux:latest`. The container is shared by all three services. On subsequent runs this step is a no-op.

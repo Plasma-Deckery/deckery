@@ -41,6 +41,22 @@ listening".
 
 ---
 
+## Installer self-check
+
+```bash
+bash testing/test-installer-guards.sh
+```
+
+Runs `get.sh` against a throwaway `HOME` and a local fake origin whose
+`install.sh` only reports, with `rpm`, `rpm-ostree` and `distrobox-host-exec`
+stubbed — nothing is installed. Checks that the newest release tag wins with
+pre-releases sorted below their release (`v2.0.0-beta1` over `v0.5.0`,
+`v2.0.0` over `v2.0.0-beta1`), and that `get.sh` and `install.sh` refuse when
+Deckery is installed as a system package unless `--force-source` /
+`DECKERY_FORCE_SOURCE=1` is given.
+
+---
+
 ## VM testing
 
 Scripts for testing Deckery in QEMU virtual machines with live Steam Controller passthrough.

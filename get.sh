@@ -6,16 +6,25 @@
 #   curl -sSL https://raw.githubusercontent.com/Plasma-Deckery/deckery/main/get.sh | bash -s -- --main
 #
 # Options:
-#   --main   Skip release tag checkout and install directly from main (dev/test)
+#   --main           Skip release tag checkout and install directly from main (dev/test)
+#   --force-source   Install from source even though Deckery is installed as a
+#                    system package (RPM); same as DECKERY_FORCE_SOURCE=1
 
 set -e
 
 USE_MAIN=0
-for _arg in "$@"; do [ "$_arg" = "--main" ] && USE_MAIN=1; done
+for _arg in "$@"; do
+    case "$_arg" in
+        --main)         USE_MAIN=1 ;;
+        --force-source) export DECKERY_FORCE_SOURCE=1 ;;
+    esac
+done
 
 DECKERY_DIR="$HOME/.local/share/deckery/deckery"
 
+_FRESH_CLONE=0
 if [ ! -d "$DECKERY_DIR" ]; then
+    _FRESH_CLONE=1
     echo "Cloning deckery..."
     mkdir -p "$(dirname "$DECKERY_DIR")"
     git clone https://github.com/Plasma-Deckery/deckery.git "$DECKERY_DIR"
@@ -26,6 +35,16 @@ else
     echo "deckery: fetching..."
     # --force so re-tagged releases overwrite stale local refs
     git -C "$DECKERY_DIR" fetch origin --tags --force
+fi
+
+# Refuse before anything is checked out or built if Deckery is installed as a
+# system package. The guard comes from the fetched main, not from whatever
+# release the checkout currently sits on.
+# shellcheck disable=SC1090
+source <(git -C "$DECKERY_DIR" show origin/main:package-guard.sh)
+if ! deckery_package_guard; then
+    [ "$_FRESH_CLONE" = "1" ] && rm -rf "$DECKERY_DIR"
+    exit 1
 fi
 
 # --main: always use the latest commit on main, skip release tag logic.
