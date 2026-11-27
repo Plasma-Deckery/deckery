@@ -1,6 +1,6 @@
 Name:           deckery
 Version:        2.0.0~beta1
-Release:        8%{?dist}
+Release:        9%{?dist}
 Summary:        Steam Deck input stack for KDE Plasma — meta-package
 
 # next_minor is the first version that would introduce a breaking change.
@@ -74,6 +74,10 @@ done
 %{_datadir}/deckery/
 
 %changelog
+* Fri Nov 27 2026 Philipp Schimmelfennig <philipp@plasma-deckery.dev> - 2.0.0~beta1-9
+- Trackpads config and docs: the mt-trackpad pixel_interval default is now
+  12000 (needs makima-deckery 2.0.0~beta1-12)
+
 * Fri Nov 27 2026 Philipp Schimmelfennig <philipp@plasma-deckery.dev> - 2.0.0~beta1-8
 - Base config: label the Start button (F10) as Menu
 

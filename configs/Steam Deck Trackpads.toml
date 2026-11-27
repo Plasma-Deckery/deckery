@@ -16,7 +16,7 @@ combined_gesture_device = true
 [trackpad.right]
 mode = "mt-trackpad"
 click_pressure = 30000   # Firmware click-pressure threshold, raw u16
-# pixel_interval = 3000  # on_movement fires at most once per this many raw units of travel
+# pixel_interval = 12000 # on_movement fires once per this many raw units of travel (~7 mm, 5 ticks across)
 
 # Each haptic is a single event or a list of steps (`pause_ms` between them),
 # the same form as a binding's `haptic =` without `pad`. `false` silences one.
