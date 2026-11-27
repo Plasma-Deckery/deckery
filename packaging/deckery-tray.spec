@@ -1,6 +1,6 @@
 Name:           deckery-tray
 Version:        2.0.0~beta1
-Release:        4%{?dist}
+Release:        5%{?dist}
 Summary:        Deckery system tray — service monitor and control for KDE Plasma
 
 # Same lockstep bounds as deckery.spec: the tray reads makima's socket and
@@ -114,6 +114,12 @@ ln -s ../deckery-tray-migrate.service \
 %{_userunitdir}/default.target.wants/deckery-tray-migrate.service
 
 %changelog
+* Sat Nov 28 2026 Philipp Schimmelfennig <philipp@plasma-deckery.dev> - 2.0.0~beta1-5
+- Source-install update check orders pre-release tags like get.sh
+  (v0.5.0 < v2.0.0-beta1 < v2.0.0-rc1 < v2.0.0): a checkout on v2.0.0-beta1
+  no longer offers v0.5.0 in a loop. Unparseable tags are skipped, only
+  v<digit> tags count, and all pages of GitHub's tag list are read.
+
 * Thu Nov 26 2026 Philipp Schimmelfennig <philipp@plasma-deckery.dev> - 2.0.0~beta1-4
 - "Update now" refreshes the repository metadata (rpm-ostree refresh-md -f)
   before upgrading: the upgrade read rpm-ostree's cached metadata (up to

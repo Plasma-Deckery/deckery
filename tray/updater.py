@@ -31,6 +31,7 @@ is the rollback target). The tray icon is NOT changed in this state.
 import json
 import logging
 import os
+import re
 import subprocess
 import threading
 import urllib.request
@@ -40,6 +41,7 @@ from enum import Enum, auto
 from gi.repository import GLib
 
 import channel
+import versions
 
 log = logging.getLogger("updater")
 
@@ -224,13 +226,10 @@ def local_version() -> str:
     return "unknown"
 
 
-def _parse_version(v: str) -> tuple:
-    """Parse a version string like '0.1.5' into a comparable tuple (0, 1, 5).
-    Returns (0,) for anything that can't be parsed."""
-    try:
-        return tuple(int(x) for x in v.split("."))
-    except (ValueError, AttributeError):
-        return (0,)
+def _parse_version(v: str) -> tuple | None:
+    """Sort key for a release version ('0.5.0', '2.0.0-beta1'), None if v is
+    not one. The ordering rule is versions.py's and must match get.sh's."""
+    return versions.parse(v)
 
 
 def _local_commit_timestamp() -> int | None:
@@ -262,26 +261,38 @@ def _tag_commit_timestamp(tag: str) -> int | None:
     return None
 
 
+_TAG_PAGES_MAX = 10  # 1000 tags; a bound, not a limit we expect to reach
+
+
+def _next_page(link_header: str | None) -> str | None:
+    """URL of rel="next" in a GitHub Link header, or None."""
+    for part in (link_header or "").split(","):
+        m = re.match(r'\s*<([^>]+)>\s*;\s*rel="next"', part)
+        if m:
+            return m.group(1)
+    return None
+
+
 def _fetch_latest_tag() -> str:
-    """Fetches the highest semver tag from GitHub. Raises on any error.
+    """Fetches the highest release tag from GitHub, without its 'v'.
+    Raises on any error.
     Uses the /tags API so no GitHub Release needs to be published —
-    pushing a tag is sufficient to make a new version discoverable."""
-    req = urllib.request.Request(
-        _GITHUB_TAGS_API,
-        headers={"User-Agent": "deckery-tray"},
-    )
-    with urllib.request.urlopen(req, timeout=10) as r:
-        tags = json.loads(r.read())
-    versions = []
-    for t in tags:
-        name = t["name"].lstrip("v")
-        parsed = _parse_version(name)
-        if parsed != (0,):
-            versions.append((parsed, name))
-    if not versions:
+    pushing a tag is sufficient to make a new version discoverable.
+    Reads every page (the API returns 30 tags by default and does not sort
+    by version) and ranks them with get.sh's rule (versions.py)."""
+    names = []
+    url = f"{_GITHUB_TAGS_API}?per_page=100"
+    for _ in range(_TAG_PAGES_MAX):
+        req = urllib.request.Request(url, headers={"User-Agent": "deckery-tray"})
+        with urllib.request.urlopen(req, timeout=10) as r:
+            names.extend(t["name"] for t in json.loads(r.read()))
+            url = _next_page(r.headers.get("Link"))
+        if not url:
+            break
+    tag = versions.latest(names)
+    if tag is None:
         raise ValueError("no version tags found")
-    versions.sort(reverse=True)
-    return versions[0][1]
+    return tag[1:]
 
 
 # ── Updater ───────────────────────────────────────────────────────────────────
@@ -416,11 +427,13 @@ class Updater:
             local  = local_version()
             self._latest = latest
             log.info("latest: %s  local: %s", latest, local)
-            if local != "unknown" and _parse_version(local) >= _parse_version(latest):
+            local_key = _parse_version(local)
+            if local_key is not None and local_key >= _parse_version(latest):
                 self._set_state(UpdateState.UP_TO_DATE)
-            elif local == "unknown":
-                # HEAD is not on an exact tag. Check whether it is *ahead* of the
-                # latest release (dev snapshot) or *behind* it (partial checkout).
+            elif local_key is None:
+                # HEAD is not on an exact release tag ("unknown"). Check whether
+                # it is *ahead* of the latest release (dev snapshot) or *behind*
+                # it (partial checkout).
                 local_ts = _local_commit_timestamp()
                 tag_ts   = _tag_commit_timestamp(latest)
                 if local_ts and tag_ts and local_ts > tag_ts:

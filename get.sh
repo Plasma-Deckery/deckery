@@ -59,6 +59,8 @@ else
     # The versionsort.suffix entries sort pre-releases before their release
     # (v2.0.0-beta1 < v2.0.0-rc1 < v2.0.0); without them git ranks any
     # suffixed tag above the bare version. Only v<digit> tags are releases.
+    # The tray's update check ranks tags the same way (tray/versions.py);
+    # change both together, or the tray offers a tag this never installs.
     LATEST_TAG="$(git -C "$DECKERY_DIR" -c versionsort.suffix=-alpha \
         -c versionsort.suffix=-beta -c versionsort.suffix=-rc \
         tag --list 'v[0-9]*' --sort=-version:refname | head -1)"

@@ -2,9 +2,9 @@
 test_updater.py — Tests for updater.py.
 
 Covers:
-  • _parse_version: string → comparable tuple, including edge cases
+  • _parse_version: string → sort key (None if not a version)
   • local_version: reads highest git tag, handles missing tags and errors
-  • _fetch_latest_tag: parses GitHub /tags API, picks highest semver
+  • _fetch_latest_tag: reads every GitHub /tags page, picks highest release
   • Updater._check_thread: UP_TO_DATE / UPDATE_AVAILABLE / ERROR routing
   • Updater.on_clicked: dispatches to _start_check or _run_update by state
   • Updater._auto_check: only checks when idle, always reschedules
@@ -31,26 +31,26 @@ from updater import Updater, UpdateState, local_version, _parse_version, _fetch_
 # ── _parse_version ────────────────────────────────────────────────────────────
 
 class TestParseVersion:
-    """_parse_version converts a version string to a comparable int tuple."""
+    """_parse_version returns a sort key for a release version, None otherwise."""
 
     def test_standard_version(self):
-        assert _parse_version("0.1.5") == (0, 1, 5)
+        assert _parse_version("0.1.5") == _parse_version("v0.1.5")
 
     def test_major_version(self):
-        assert _parse_version("1.0.0") == (1, 0, 0)
+        assert _parse_version("1.0.0") > _parse_version("0.9.9")
 
     def test_numeric_ordering_not_lexicographic(self):
         # "0.1.10" > "0.1.9" numerically — lexicographic comparison would fail this.
         assert _parse_version("0.1.10") > _parse_version("0.1.9")
 
-    def test_unknown_string_returns_fallback(self):
-        assert _parse_version("unknown") == (0,)
+    def test_unknown_string_is_not_a_version(self):
+        assert _parse_version("unknown") is None
 
-    def test_empty_string_returns_fallback(self):
-        assert _parse_version("") == (0,)
+    def test_empty_string_is_not_a_version(self):
+        assert _parse_version("") is None
 
-    def test_non_numeric_segment_returns_fallback(self):
-        assert _parse_version("0.1.x") == (0,)
+    def test_non_numeric_segment_is_not_a_version(self):
+        assert _parse_version("0.1.x") is None
 
     def test_equal_versions(self):
         assert _parse_version("0.1.6") == _parse_version("0.1.6")
@@ -194,13 +194,46 @@ class TestUpdaterSensitive:
 class TestFetchLatestTag:
     """_fetch_latest_tag fetches and parses the GitHub /tags API."""
 
-    def _urlopen(self, tags: list[dict]):
-        """Return a mock context manager whose .read() returns JSON tag data."""
+    def _urlopen(self, tags: list[dict], next_url: str | None = None):
+        """Return a mock context manager whose .read() returns JSON tag data
+        and whose Link header points at next_url, if given."""
         cm = MagicMock()
         cm.__enter__ = MagicMock(return_value=cm)
         cm.__exit__  = MagicMock(return_value=False)
         cm.read      = MagicMock(return_value=json.dumps(tags).encode())
+        cm.headers   = ({"Link": f'<{next_url}>; rel="next", <{next_url}x>; rel="last"'}
+                        if next_url else {})
         return cm
+
+    def test_requests_100_per_page(self):
+        with patch.object(upd.urllib.request, "urlopen",
+                          return_value=self._urlopen([{"name": "v0.5.0"}])) as uo:
+            _fetch_latest_tag()
+        assert "per_page=100" in uo.call_args[0][0].full_url
+
+    def test_follows_pagination(self):
+        # The newest tag is on page 2 — the old single request never saw it.
+        pages = [self._urlopen([{"name": "v0.5.0"}], next_url="https://api.example/p2"),
+                 self._urlopen([{"name": "v2.0.0-beta1"}])]
+        with patch.object(upd.urllib.request, "urlopen", side_effect=pages) as uo:
+            assert _fetch_latest_tag() == "2.0.0-beta1"
+        assert uo.call_args_list[1][0][0].full_url == "https://api.example/p2"
+
+    def test_prerelease_beats_older_release(self):
+        tags = [{"name": "v0.5.0"}, {"name": "v2.0.0-beta1"}]
+        with patch.object(upd.urllib.request, "urlopen", return_value=self._urlopen(tags)):
+            assert _fetch_latest_tag() == "2.0.0-beta1"
+
+    def test_release_beats_its_prereleases(self):
+        tags = [{"name": "v2.0.0-rc1"}, {"name": "v2.0.0"}, {"name": "v2.0.0-beta2"}]
+        with patch.object(upd.urllib.request, "urlopen", return_value=self._urlopen(tags)):
+            assert _fetch_latest_tag() == "2.0.0"
+
+    def test_skips_non_v_tags(self):
+        # Only v<digit> tags are releases, as in get.sh's 'v[0-9]*'.
+        tags = [{"name": "9.9.9"}, {"name": "backup-x"}, {"name": "v0.5.0"}]
+        with patch.object(upd.urllib.request, "urlopen", return_value=self._urlopen(tags)):
+            assert _fetch_latest_tag() == "0.5.0"
 
     def test_returns_highest_semver(self):
         tags = [{"name": "v0.1.5"}, {"name": "v0.2.0"}, {"name": "v0.1.9"}]
@@ -300,6 +333,31 @@ class TestCheckThread:
              patch.object(upd, "_tag_commit_timestamp",    return_value=None):
             u._check_thread()
         assert u._state == UpdateState.UPDATE_AVAILABLE
+
+    # Pre-release loop (installed beta offered an older release, get.sh then
+    # reinstalled the beta, and the offer came back).
+
+    def _check(self, local: str, tags: list[str]) -> Updater:
+        u = self._make()
+        latest = upd.versions.latest(tags)[1:]
+        with patch.object(upd, "_fetch_latest_tag", return_value=latest), \
+             patch.object(upd, "local_version",      return_value=local):
+            u._check_thread()
+        return u
+
+    def test_beta_installed_older_release_no_offer(self):
+        u = self._check("2.0.0-beta1", ["v0.5.0", "v2.0.0-beta1"])
+        assert u._state == UpdateState.UP_TO_DATE
+
+    def test_release_installed_offers_beta(self):
+        u = self._check("0.5.0", ["v0.5.0", "v2.0.0-beta1"])
+        assert u._state  == UpdateState.UPDATE_AVAILABLE
+        assert u._latest == "2.0.0-beta1"
+
+    def test_beta_installed_offers_final_release(self):
+        u = self._check("2.0.0-beta1", ["v0.5.0", "v2.0.0-beta1", "v2.0.0"])
+        assert u._state  == UpdateState.UPDATE_AVAILABLE
+        assert u._latest == "2.0.0"
 
     def test_error_when_network_fails(self):
         u = self._make()
