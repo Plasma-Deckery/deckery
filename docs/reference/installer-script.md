@@ -29,10 +29,9 @@
 
     After the stamp is set, nothing under `~/.config/deckery/` is ever swept again.
 
-After step 8, the script runs two interactive prompts (skipped in non-interactive mode):
+After step 8, the script runs one interactive prompt (skipped in non-interactive mode):
 
 - **Disable Steam Input** — asks whether to write the `configset_controller_neptune.vdf` entry that points Steam's Desktop controller profile to `empty.vdf`. You can always do this later via the tray.
-- **Remove leftover chattr lock** — checks whether `~/.local/share/Steam/controller_base/desktop_neptune.vdf` still carries the `chattr +i` immutable flag from a previous Deckery version, and if so prompts to remove it.
 
 ## Service hierarchy
 

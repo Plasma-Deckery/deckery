@@ -387,32 +387,6 @@ echo ""
 
 # ── 9. Done ───────────────────────────────────────────────────────────────────
 
-# ── Migration: remove legacy chattr +i lock if present ───────────────────────
-
-_LEGACY_VDF="$HOME/.local/share/Steam/controller_base/desktop_neptune.vdf"
-if lsattr "$_LEGACY_VDF" 2>/dev/null | awk '{print $1}' | grep -q 'i'; then
-    echo "── Legacy lock detected ─────────────────────────────────────────────────"
-    echo ""
-    echo "  desktop_neptune.vdf is still locked with chattr +i from a previous"
-    echo "  Deckery version. This is no longer needed — Steam Input is now"
-    echo "  disabled via Steam's own config mechanism instead."
-    echo ""
-    if [ -t 0 ]; then
-        read -p "  Remove the legacy lock now? [Y/n] " _ans
-        _ans=${_ans:-Y}
-        if [[ "$_ans" =~ ^[Yy]$ ]]; then
-            if sudo chattr -i "$_LEGACY_VDF"; then
-                echo "  ✓ Legacy lock removed."
-            else
-                echo "  ✗ Could not remove lock — run manually: sudo chattr -i $_LEGACY_VDF"
-            fi
-        fi
-    else
-        echo "  ⚠ Non-interactive install — remove manually: sudo chattr -i $_LEGACY_VDF"
-    fi
-    echo ""
-fi
-
 # ── Optional: disable Steam Input now ────────────────────────────────────────
 #
 # The tray will show a yellow indicator and let the user disable Steam Input
