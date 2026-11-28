@@ -152,11 +152,37 @@ disabled = ["Voice Control"]
 ```
 
 Deckery rewrites the file whenever you toggle something in the tray, and reads
-it at startup and on every reload. It is machine state rather than something to
-edit: the file watcher deliberately skips it, so a change made by hand is not
-noticed the way a change to a config file is. Only your deviations are recorded
-— a module that appears nowhere in the file is on, which is what lets a newly
-shipped module arrive already active.
+it at startup and on every reload. Its own writes do not trigger a reload; a
+change from anywhere else — the onboarding tour recording a choice, or you
+editing it — is picked up like a change to a config file. Only your deviations
+are recorded — a module that appears nowhere in the file is on, which is what
+lets a newly shipped module arrive already active.
+
+#### Your trackpad choice
+
+The file also holds how you want the pads to work, which the onboarding tour
+asks in its first stage:
+
+```toml
+[trackpad.right]
+mode = "trackball"     # or "mt-trackpad", "disabled"
+
+[trackpad.left]
+mode = "disabled"
+```
+
+`[trackpad.right] mode` here is your value for the key of the same name in the
+configs, laid over it key by key: the rest of the pad's settings —
+`click_pressure`, haptics, KDE settings — still come from the module. That is
+something a config file of your own cannot do: one named like the shipped
+`Steam Deck Trackpads.toml` replaces the whole module, and `[trackpad]` is taken
+whole from one file.
+
+The choice sits above the base config and every module. An app override that
+brings a trackpad table of its own, and the onboarding tour while it runs, sit
+above it. A mode Deckery does not know is reported in the journal and ignored;
+the rest of the file still applies. Only `mode` is read today, and other keys in
+these tables are kept when Deckery rewrites the file.
 
 Deckery creates the file at the first start that does not find one, by copying
 the shipped `preferences.toml` into your config directory. After that it is

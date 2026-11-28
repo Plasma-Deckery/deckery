@@ -105,6 +105,8 @@ All three are silent by default — gesture haptics have no established referenc
 
 ## Trackpad modes
 
+Which mode a pad runs is the module's `mode` — unless you chose one: `[trackpad.right] mode` in `~/.config/deckery/preferences.toml` is laid over it, and only over the mode (see [Remembering your choices](../../configuration.md#your-trackpad-choice)). The onboarding tour records your trackball-or-trackpad choice there.
+
 Set per pad via `mode` in `[trackpad.left]` / `[trackpad.right]`:
 
 | Mode | Status | Description |
