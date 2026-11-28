@@ -90,6 +90,8 @@ requires_compositor = "KDE"
 
 Modules gated to different compositors never load together, so identical bindings in `KDE Desktop.toml` and `Hyprland Desktop.toml` are not a conflict.
 
+The value is matched against the desktop makima detects at startup: `KDE`, `Hyprland`, `sway` or `niri`, taken from the session's `XDG_CURRENT_DESKTOP` (the first supported entry if it is a list such as `Hyprland:wlroots`). If the session did not export that variable to the systemd user manager, makima falls back to the running compositor process (`kwin_wayland`, `Hyprland`, `sway`, `niri`). The journal names the result as `compositor adapter: KDE/KWin`, `Hyprland` or `fallback (polling)`.
+
 ### Two base configs for one controller
 
 Base configs do not layer. makima walks them and opens the first evdev device each one matches, so two declarations covering the same controller both find it — and which of them ends up driving it is not defined. The losing config's bindings are simply absent, with nothing in either file to explain why.
